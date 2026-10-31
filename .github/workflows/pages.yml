@@ -35,7 +35,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -e .
-      - name: Auditoría (no frena la publicación: el dashboard la muestra)
+      - name: "Auditoría (no frena la publicación: el dashboard la muestra)"
         run: python -m bt.auditoria --json results/auditoria.json || true
       - run: python -m bt.sitio --salida _site
       - uses: actions/upload-pages-artifact@v3

@@ -188,3 +188,9 @@ def test_sitio_con_y_sin_evaluaciones(mundo, tmp_path):
     pagina = sitio.generar(tmp_path)
     assert "2026-11-01-prueba" in pagina and "Aprobada" in pagina and "holdout →" in pagina
     assert "<script>alert(1)</script>" not in pagina  # el texto de la spec se escapa
+
+
+def test_workflows_son_yaml_valido():
+    from pathlib import Path
+    for ruta in Path(".github/workflows").glob("*.yml"):
+        yaml.safe_load(ruta.read_text())
