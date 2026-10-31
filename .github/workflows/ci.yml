@@ -16,3 +16,23 @@ jobs:
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
+
+  # Auditor determinista del proceso: falla si se viola una regla de la metodología (CLAUDE.md).
+  auditoria:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # necesita la historia para verificar el pre-registro
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Auditar
+        run: |
+          set -o pipefail
+          python -m bt.auditoria --md auditoria.md
+      - name: Resumen
+        if: always()
+        run: cat auditoria.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true

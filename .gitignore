@@ -7,3 +7,4 @@ __pycache__/
 # Las velas no van a git: se reconstruyen con `python -m bt.data`.
 data/
 _site/
+results/auditoria.json

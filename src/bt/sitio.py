@@ -159,6 +159,28 @@ def _paso_eje(rango: float) -> float:
     return 10 * mag
 
 
+AUDITORIA = {"ok": ("good", "✓", "Cumple"), "aviso": ("warning", "!", "Advertencia"),
+             "falla": ("critical", "✕", "Violación")}
+
+
+def _seccion_auditoria(ruta: Path) -> str:
+    if not ruta.exists():
+        return ""
+    chequeos = json.loads(ruta.read_text(encoding="utf-8"))
+    filas = []
+    for c in chequeos:
+        rol, icono, texto = AUDITORIA.get(c["estado"], AUDITORIA["aviso"])
+        estado = (f'<span class="badge"><span class="dot" style="background:var(--{rol})" aria-hidden="true">'
+                  f"{icono}</span>{texto}</span>")
+        detalle = "<br>".join(_e(d) for d in c["detalle"]) or "—"
+        filas.append(f"<tr><td>{estado}</td><td>{_e(c['nombre'])}</td><td>{_e(c['regla'])}</td>"
+                     f'<td class="meta">{detalle}</td></tr>')
+    return ("<h2>Auditoría del proceso</h2><p class=\"sub\">Chequeos automáticos de la metodología "
+            "(<code>bt.auditoria</code>). El auditor con criterio propone mejoras en "
+            "<code>02-DOCS/auditorias/</code>.</p><table><thead><tr><th>Estado</th><th>Chequeo</th>"
+            f"<th>Regla</th><th>Detalle</th></tr></thead><tbody>{''.join(filas)}</tbody></table>")
+
+
 def generar(base: Path = Path("results")) -> str:
     evs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted((base / "evaluaciones").glob("*.json"))]
     evs.sort(key=lambda e: e["fecha"], reverse=True)
@@ -190,6 +212,7 @@ def generar(base: Path = Path("results")) -> str:
             f'<table><thead><tr><th>Criterio pre-registrado</th><th>Valor</th><th></th></tr></thead>'
             f"<tbody>{crit}</tbody></table></section>"
         )
+    auditoria = _seccion_auditoria(base / "auditoria.json")
     tiles = [("Evaluadas", len(evs)), ("Aprobadas", cuenta["APROBADA"]), ("Rechazadas", cuenta["RECHAZADA"]),
              ("No concluyentes", cuenta["NO_CONCLUYENTE"])]
     cuerpo_tabla = "".join(filas) or '<tr><td colspan="9">Todavía no hay evaluaciones.</td></tr>'
@@ -206,6 +229,7 @@ se mira una vez y sólo si pasa desarrollo. Resultados en R, netos de comisión 
 <table><thead><tr><th>Spec</th><th>Estrategia</th><th>TF</th><th class="num">Símbolos</th><th>Veredicto</th>
 <th class="num">n dev</th><th class="num">avgR dev [±2 EE]</th><th class="num">Nulo p95</th>
 <th class="num">avgR holdout</th></tr></thead><tbody>{cuerpo_tabla}</tbody></table>
+{auditoria}
 {"".join(detalles)}
 </div></div><script>{JS}</script></body></html>
 """

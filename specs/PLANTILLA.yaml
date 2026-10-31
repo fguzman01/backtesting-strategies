@@ -4,6 +4,7 @@
 id: 2026-11-01-ejemplo
 estado: borrador            # borrador | pre-registrada
 fuente: "de dónde salió la idea (issue, paper, repo, etc.)"
+pregunta: "¿La pregunta que responde, como se buscaría en 02-DOCS/decisiones.md?"
 
 hipotesis: >
   Qué mecanismo de mercado debería producir el edge y por qué no se lo comería la comisión.

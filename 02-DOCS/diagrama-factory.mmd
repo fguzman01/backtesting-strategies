@@ -1,0 +1,80 @@
+flowchart TD
+    %% ── Actores ─────────────────────────────────────────────
+    FELIPE(["👤 Felipe<br/>· aporta ideas (issues)<br/>· aprueba lo que va a dinero real<br/>· revisa el dashboard"])
+
+    subgraph BRAIN["🧠 Brain · 02-DOCS/ + CLAUDE.md"]
+        direction LR
+        B1["alcance.md<br/>qué se busca: 5m–1d,<br/>trades ≤ 7 días"]
+        B2["decisiones.md<br/>qué ya se midió<br/>(no repetir)"]
+        B3["reglas-de-medicion.md<br/>R neto, holdout,<br/>concluyente"]
+    end
+
+    subgraph RUTINA["🤖 Rutina diaria de Claude · 1 sesión/día (Fase 4, pendiente)"]
+        direction TB
+        A1["Investigador / Spec writer<br/>· toma una idea de la cola o busca una nueva<br/>· descarta lo ya probado<br/>· escribe el pre-registro:<br/>hipótesis + reglas + criterio"]
+        A2["Builder (TDD)<br/>· estrategia en src/bt/strategies/<br/>· test con chequeo de look-ahead<br/>· rama propia"]
+        A3["Revisor de sesgos (subagente)<br/>· overfitting, data snooping<br/>(pendiente)"]
+        A1 --> A2 --> A3
+    end
+
+    subgraph GHA["⚙️ GitHub Actions · sin tokens, gratis"]
+        direction TB
+        CI["ci.yml · Revisor determinista<br/>lint + tests + look-ahead<br/>+ determinismo"]
+        VAL["validacion.yml · Auditor del motor<br/>¿sigue reproduciendo<br/>btc-signal-web?"]
+        EV["evaluar.yml · Approver (bt.evaluar)<br/>1. baja velas y funding<br/>2. corre DESARROLLO<br/>3. criterio + control nulo + alcance<br/>4. sólo si pasa: HOLDOUT, una vez"]
+        PAGES["pages.yml · Publicador<br/>dashboard en GitHub Pages"]
+        AUD1["ci.yml · Auditor determinista (bt.auditoria)<br/>pre-registro antes de evaluar · holdout una vez<br/>approved.json coherente · look-ahead por estrategia<br/>Brain al día · bitácora determinista · data snooping"]
+    end
+
+    AUD2["🔍 Auditor con criterio · Claude, semanal<br/>1. proceso: hipótesis, criterios, variantes<br/>2. metodología: ¿más o menos años?, costos,<br/>supervivencia, robustez, holdout<br/>3. rechazadas: ¿versión con mecanismo nuevo?<br/>4. paridad backtest ↔ bot real<br/>5. ≤ 5 mejoras → 02-DOCS/auditorias/ + PR"]
+    IDEAS[("02-DOCS/ideas.md<br/>cola de ideas")]
+
+    DEC{"Veredicto"}
+    MAIN["Rechazada / No concluyente<br/>→ commit directo a main<br/>(reporte + bitácora)"]
+    PR["Aprobada<br/>→ PR que agrega a<br/>results/approved.json"]
+    APPROVED[("results/approved.json<br/>contrato de salida")]
+    BSW["📈 btc-signal-web<br/>paper → real<br/>(Fase 5, pendiente)"]
+
+    %% ── Flujo ───────────────────────────────────────────────
+    FELIPE -- "issue con etiqueta idea" --> A1
+    BRAIN -. "se consulta antes de cada paso" .-> A1
+    BRAIN -. "convenciones" .-> A2
+    A3 -- "spec pre-registrada + código" --> CI
+    CI -- "merge a main" --> EV
+    EV --> DEC
+    DEC -- "falla" --> MAIN
+    DEC -- "pasa desarrollo y holdout" --> PR
+    PR -- "Felipe revisa y hace merge" --> APPROVED
+    FELIPE -. "aprueba" .-> PR
+    APPROVED --> BSW
+    MAIN --> PAGES
+    APPROVED --> PAGES
+    PAGES -. "lo mira" .-> FELIPE
+    MAIN -. "se registra lo aprendido" .-> B2
+    APPROVED -. "se registra lo aprendido" .-> B2
+    VAL -. "protege la confianza<br/>en los números" .-> EV
+    AUD1 -. "vigila todo el proceso" .-> EV
+    AUD1 -- "informe" --> AUD2
+    AUD1 --> PAGES
+    AUD2 -- "propuestas de mejora (PR)" --> FELIPE
+    AUD2 -. "lee" .-> BRAIN
+    AUD2 -- "ideas de rechazadas<br/>(mecanismo nuevo)" --> IDEAS
+    FELIPE -- "ideas" --> IDEAS
+    IDEAS -- "próxima spec" --> A1
+    AUD2 -. "compara reglas y paper" .-> BSW
+
+    %% ── Estilos ─────────────────────────────────────────────
+    classDef humano fill:#fff4d6,stroke:#c98500,stroke-width:2px,color:#0b0b0b
+    classDef agente fill:#e3eefb,stroke:#2a78d6,stroke-width:1.5px,color:#0b0b0b
+    classDef codigo fill:#e6f5ee,stroke:#1baf7a,stroke-width:1.5px,color:#0b0b0b
+    classDef brain fill:#f3eefc,stroke:#6250d6,stroke-width:1.5px,color:#0b0b0b
+    classDef salida fill:#fdecec,stroke:#e34948,stroke-width:1.5px,color:#0b0b0b
+    classDef pendiente stroke-dasharray:6 4
+    class FELIPE humano
+    class A1,A2,A3 agente
+    class CI,VAL,EV,PAGES,DEC,MAIN,PR,AUD1 codigo
+    class AUD2 agente
+    class B1,B2,B3 brain
+    class APPROVED,BSW salida
+    class IDEAS brain
+    class A1,A2,A3,BSW pendiente

@@ -9,7 +9,7 @@ Una **factory de backtesting**: entra una idea de estrategia, sale un veredicto 
 aprobadas pasan a `results/approved.json`, que consume `fguzman01/btc-signal-web` para operarlas en
 paper y después en real. Objetivo de régimen: **una estrategia evaluada por día**.
 
-Diseño completo de la factory: `02-DOCS/factory.md`.
+Diseño completo de la factory: `02-DOCS/factory.md` (diagrama de agentes y flujo: `02-DOCS/diagrama-factory.mmd`).
 **Qué estrategias se buscan (horizonte, activos, prioridad): `02-DOCS/alcance.md`.** Resumen:
 cualquier tipo de estrategia que sea rentable, en cualquier activo operable en Binance, siempre
 de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada semanal ni de meses.
@@ -31,6 +31,8 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
    en la apertura de `t+1`. `bt.checks.chequear_lookahead` lo verifica; todo test de estrategia lo usa.
 6. **Determinismo.** La misma spec sobre los mismos datos da el mismo número. Si no, es un bug.
 7. **Lo que llega a dinero real lo aprueba Felipe.** Tocar `results/approved.json` siempre va por PR.
+8. **El auditor tiene la última palabra sobre el proceso.** Si `python -m bt.auditoria` da una
+   violación (❌), se arregla antes de seguir evaluando.
 
 ## Mapa
 
@@ -50,6 +52,9 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/evaluar.py` | Evalúa una spec: desarrollo → criterio → holdout una vez → reporte / approved.json |
 | `src/bt/nulo.py` | Control nulo: entradas al azar con la misma duración y riesgo |
 | `src/bt/sitio.py` | Dashboard estático para GitHub Pages |
+| `src/bt/auditoria.py` | Auditor determinista: ¿se cumple la metodología? (corre en el CI) |
+| `.claude/agents/auditor.md` | Agente auditor: proceso, metodología, rechazadas y paridad con el bot real; propone mejoras (semanal) |
+| `02-DOCS/ideas.md` | Cola de ideas: de acá sale la próxima spec. Las ideas de rechazadas exigen un mecanismo nuevo |
 | `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
 | `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
@@ -65,6 +70,7 @@ python -m bt.run donchian_breakout BTCUSDT 1d --nota "prueba"
 python -m bt.validacion --bajar                  # Fase 2: ¿reproduce btc-signal-web?
 python -m bt.evaluar specs/<id>.yaml --bajar     # evalúa un pre-registro
 python -m bt.sitio                               # genera _site/index.html
+python -m bt.auditoria                           # ¿se cumple la metodología?
 ```
 
 ## Proyecto hermano

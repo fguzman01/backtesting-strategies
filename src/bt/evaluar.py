@@ -32,6 +32,7 @@ from bt.spec import DURACION_MEDIANA_MAX_DIAS, Spec, SpecInvalida, cargar, lista
 from bt.splits import HOLDOUT_DESDE
 
 RESULTADOS = Path("results")
+DECISIONES = Path("02-DOCS") / "decisiones.md"
 APROBADAS = "APROBADA"
 RECHAZADA = "RECHAZADA"
 NO_CONCLUYENTE = "NO_CONCLUYENTE"
@@ -47,6 +48,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
     datos: dict = {}
     filas: list[dict] = []
     ventana: list[pd.Timestamp] = []
+    calidad: dict[str, dict] = {}
     for s in spec.simbolos:
         df = cargar_velas(s, spec.intervalo, spec.mercado)
         fund = cargar_funding(s) if spec.funding else None
@@ -60,6 +62,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         datos[s] = (df, fund)
         filas.append(r.fila)
         ventana += [pd.Timestamp(r.fila["desde"]), pd.Timestamp(r.fila["hasta"])]
+        calidad[s] = data.calidad(df, spec.minutos_por_vela, r.fila["desde"], r.fila["hasta"])
 
     todos = [t for ts in por_simbolo.values() for t in ts]
     inf = metrics.informe({"conservador": todos, "optimista": optimistas})
@@ -77,6 +80,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "nulo": nulo,
         "duracionMedianaDias": median(duraciones) if duraciones else None,
         "porSimbolo": {s: metrics.calcular(ts) | {"porMotivo": None} for s, ts in por_simbolo.items()},
+        "calidadDatos": calidad,
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }
@@ -244,6 +248,31 @@ def guardar(ev: dict, base: Path = RESULTADOS) -> None:
         ruta.write_text(json.dumps(actual, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
+def linea_decisiones(ev: dict) -> str:
+    """Una línea para la tabla «Medidas en este repo» de 02-DOCS/decisiones.md (regla 0)."""
+    s, g = ev["spec"], ev["desarrollo"]["global"]
+    pregunta = str(s.get("pregunta") or s.get("hipotesis", "")).strip().split(". ")[0].replace("|", "/")
+    if len(pregunta) > 160:
+        pregunta = pregunta[:157] + "..."
+    partes = [f"desarrollo n={g['n']} {g['avgRNeto']:+.3f} {_fmt_ic(g)}"]
+    if ev["holdout"]:
+        h = ev["holdout"]["global"]
+        partes.append(f"holdout n={h['n']} {h['avgRNeto']:+.3f}")
+    if ev["motivos"]:
+        partes.append("No pasa: " + "; ".join(m.split(": ", 1)[-1].removeprefix("falla ") for m in ev["motivos"]))
+    detalle = ". ".join(partes).replace("|", "/")
+    return (f"| {pregunta} (`{ev['id']}`) | **{ev['veredicto']}.** {detalle} | {ev['fecha'][:10]} | "
+            f"`results/reports/{ev['id']}.md` |")
+
+
+def anotar_en_decisiones(ev: dict, ruta: Path = DECISIONES) -> None:
+    texto = ruta.read_text(encoding="utf-8")
+    if f"`{ev['id']}`" in texto:
+        return
+    texto = texto.replace("| _(ninguna todavía)_ | | | |\n", "")
+    ruta.write_text(texto.rstrip("\n") + "\n" + linea_decisiones(ev) + "\n", encoding="utf-8")
+
+
 def evaluada(sid: str, base: Path = RESULTADOS) -> bool:
     return (base / "evaluaciones" / f"{sid}.json").exists()
 
@@ -258,10 +287,15 @@ def pendientes(directorio: Path = Path("specs"), base: Path = RESULTADOS) -> lis
 
 
 def bajar(spec: Spec) -> None:
-    for s in spec.simbolos:
-        data.descargar(s, spec.intervalo, "2020-01", spec.mercado)
-        if spec.funding:
-            data.descargar_funding(s, "2020-01")
+    """Velas (y funding) de todos los símbolos, en paralelo. Completa lo que ya haya en caché."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    tareas = [lambda s=s: data.descargar(s, spec.intervalo, "2020-01", spec.mercado) for s in spec.simbolos]
+    if spec.funding:
+        tareas += [lambda s=s: data.descargar_funding(s, "2020-01") for s in spec.simbolos]
+    with ThreadPoolExecutor(4) as ex:
+        for ruta in ex.map(lambda f: f(), tareas):
+            print(f"  {ruta}", flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -292,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.forzar:
             ev["motivos"].append("re-evaluada con --forzar: el holdout ya se había mirado")
         guardar(ev)
+        if DECISIONES.exists():
+            anotar_en_decisiones(ev)
         evaluaciones.append(ev)
         print(f"{spec.id}: {ev['veredicto']}" + (f" — {'; '.join(ev['motivos'])}" if ev["motivos"] else ""))
 
