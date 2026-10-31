@@ -26,14 +26,11 @@ def senales(
 
     direccion = np.where(sube, 1, np.where(baja & cortos, -1, 0))
     stop = np.where(direccion == 1, c - atr_mult * a, np.where(direccion == -1, c + atr_mult * a, np.nan))
-    # La salida por regla vale para la posición abierta, sea larga o corta: cierra si el precio
-    # cruza el canal corto en contra. El motor sólo la mira con una posición abierta.
-    sale_largo = c < minimo_previo(df["low"], salida)
-    sale_corto = c > maximo_previo(df["high"], salida)
-
     out = pd.DataFrame(index=df.index)
     out["direccion"] = direccion
     out["stop"] = stop
-    out["salida"] = (sale_largo | sale_corto) if cortos else sale_largo
+    # Cierra si el precio cruza el canal corto en contra de la posición abierta.
+    out["salida_largo"] = c < minimo_previo(df["low"], salida)
+    out["salida_corto"] = c > maximo_previo(df["high"], salida)
     out.loc[a.isna(), ["direccion"]] = 0
     return out

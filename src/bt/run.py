@@ -30,7 +30,7 @@ class Resultado:
 def correr(
     estrategia: str, df: pd.DataFrame, *, simbolo: str, intervalo: str, mercado: str = "futures",
     desde=None, hasta=None, holdout: bool = False, cfg: Config | None = None, params: dict | None = None,
-    nota: str | None = None,
+    nota: str | None = None, funding: pd.Series | None = None,
 ) -> Resultado:
     cfg = cfg or Config()
     params = params or {}
@@ -40,11 +40,13 @@ def correr(
     avisos = [v.aviso] if v.aviso else []
 
     # Velas posteriores a la ventana no existen para la corrida: una posición abierta al final queda
-    # SIN_RESOLVER en vez de resolverse con datos de afuera. Las anteriores sí se usan para calentar
-    # indicadores; las señales previas a `desde` se anulan.
+    # SIN_RESOLVER (o se cierra al último cierre si cfg.cerrar_al_final) en vez de resolverse con
+    # datos de afuera. Las anteriores sí se usan para calentar indicadores. La ventana se define
+    # por la vela de ENTRADA: se anulan las señales cuya entrada (vela siguiente) cae antes de `desde`.
     df_v = df[df.index < v.hasta]
     sen = strategies.cargar(estrategia)(df_v, **params)
-    sen.loc[sen.index < v.desde, "direccion"] = 0
+    entra_en = pd.Series(df_v.index, index=df_v.index).shift(-1)
+    sen.loc[(entra_en < v.desde).to_numpy(), "direccion"] = 0
 
     en_ventana = df_v.index[df_v.index >= v.desde]
     if len(en_ventana) == 0:
@@ -52,12 +54,15 @@ def correr(
     if en_ventana[0] - v.desde > pd.Timedelta(days=7):
         avisos.append(f"los datos empiezan el {en_ventana[0].date()}, después de la fecha pedida")
 
-    modelos = simular_ambos(df_v, sen, cfg)
+    if funding is not None and len(funding):
+        funding = funding[funding.index <= v.hasta]  # el cierre forzado ocurre justo en v.hasta
+    modelos = simular_ambos(df_v, sen, cfg, funding)
     inf = metrics.informe(modelos)
     f = bitacora.fila(
         strategy=estrategia, symbol=simbolo, interval=intervalo, mercado=mercado,
         desde=en_ventana[0].isoformat(), hasta=en_ventana[-1].isoformat(), tramo=v.tramo,
-        config={**cfg.como_dict(), "params": params}, informe=inf, avisos=avisos, nota=nota,
+        config={**cfg.como_dict(), "params": params, "funding": funding is not None and len(funding) > 0},
+        informe=inf, avisos=avisos, nota=nota,
     )
     return Resultado(f, inf, modelos)
 
@@ -101,6 +106,8 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--deslizamiento", type=float, default=0.0, help="fracción del precio, en contra")
     p.add_argument("--timeout", type=int, default=None, help="velas")
     p.add_argument("--objetivo-r", type=float, default=None)
+    p.add_argument("--cerrar-al-final", action="store_true", help="cerrar lo abierto al último cierre")
+    p.add_argument("--funding", action="store_true", help="cobrar funding (data/funding/<SIMBOLO>.csv)")
     p.add_argument("--nota")
     p.add_argument("--datos", type=Path, default=data.DIR_DATOS)
     p.add_argument("--no-registrar", action="store_true")
@@ -109,11 +116,12 @@ def main(argv: list[str] | None = None) -> None:
 
     params = dict(kv.split("=", 1) for kv in a.param)
     params = {k: _valor(v) for k, v in params.items()}
-    cfg = Config(a.fee, a.deslizamiento, a.timeout, a.objetivo_r)
+    cfg = Config(a.fee, a.deslizamiento, a.timeout, a.objetivo_r, a.cerrar_al_final)
     df = data.cargar(a.simbolo, a.intervalo, a.mercado, a.datos)
     r = correr(
         a.estrategia, df, simbolo=a.simbolo.upper(), intervalo=a.intervalo, mercado=a.mercado,
         desde=a.desde, hasta=a.hasta, holdout=a.holdout, cfg=cfg, params=params, nota=a.nota,
+        funding=data.cargar_funding(a.simbolo) if a.funding else None,
     )
     print(json.dumps(r.fila, ensure_ascii=False, indent=2) if a.json else resumen(r))
     if not a.no_registrar:
