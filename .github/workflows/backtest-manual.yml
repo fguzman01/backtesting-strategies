@@ -1,0 +1,62 @@
+# Corre una estrategia con datos reales de Binance desde la pestaña Actions.
+# No commitea nada: el resultado queda en el log y como artefacto. (La versión que registra en la
+# bitácora y abre PRs llega en la Fase 3.)
+name: backtest-manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      estrategia:
+        description: Módulo en src/bt/strategies
+        default: donchian_breakout
+      simbolo:
+        default: BTCUSDT
+      intervalo:
+        default: 1d
+      mercado:
+        type: choice
+        options: [futures, spot]
+        default: futures
+      desde:
+        description: Inicio de la ventana (AAAA-MM-DD)
+        default: "2020-01-01"
+      params:
+        description: "Parámetros, separados por espacio (ej: entrada=55 salida=20)"
+        default: ""
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Bajar velas
+        env:
+          SIMBOLO: ${{ inputs.simbolo }}
+          INTERVALO: ${{ inputs.intervalo }}
+          MERCADO: ${{ inputs.mercado }}
+          DESDE: ${{ inputs.desde }}
+        run: python -m bt.data "$SIMBOLO" "$INTERVALO" "$(echo "$DESDE" | cut -c1-7)" --mercado "$MERCADO"
+      - name: Correr
+        env:
+          ESTRATEGIA: ${{ inputs.estrategia }}
+          SIMBOLO: ${{ inputs.simbolo }}
+          INTERVALO: ${{ inputs.intervalo }}
+          MERCADO: ${{ inputs.mercado }}
+          DESDE: ${{ inputs.desde }}
+          PARAMS: ${{ inputs.params }}
+        run: |
+          args=()
+          for kv in $PARAMS; do args+=(-p "$kv"); done
+          python -m bt.run "$ESTRATEGIA" "$SIMBOLO" "$INTERVALO" --mercado "$MERCADO" \
+            --desde "$DESDE" "${args[@]}" --nota "backtest-manual" | tee resumen.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resultado
+          path: |
+            resumen.txt
+            results/mediciones.jsonl
