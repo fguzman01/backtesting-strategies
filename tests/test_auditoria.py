@@ -153,6 +153,7 @@ def test_linea_de_decisiones_y_no_duplica(repo):
     e = ev()
     linea = linea_decisiones(e)
     assert linea.startswith("| Algo persiste (`2026-11-01-x`) | **RECHAZADA.**")
+    assert "No pasa: «x» (y)" in linea and "falla" not in linea
     ruta = repo / "02-DOCS" / "decisiones.md"
     anotar_en_decisiones(e, ruta)
     anotar_en_decisiones(e, ruta)

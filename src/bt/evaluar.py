@@ -256,7 +256,7 @@ def linea_decisiones(ev: dict) -> str:
         h = ev["holdout"]["global"]
         partes.append(f"holdout n={h['n']} {h['avgRNeto']:+.3f}")
     if ev["motivos"]:
-        partes.append("falla: " + "; ".join(m.split(": ", 1)[-1] for m in ev["motivos"]))
+        partes.append("No pasa: " + "; ".join(m.split(": ", 1)[-1].removeprefix("falla ") for m in ev["motivos"]))
     detalle = ". ".join(partes).replace("|", "/")
     return (f"| {pregunta} (`{ev['id']}`) | **{ev['veredicto']}.** {detalle} | {ev['fecha'][:10]} | "
             f"`results/reports/{ev['id']}.md` |")
