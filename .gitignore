@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+# Las velas no van a git: se reconstruyen con `python -m bt.data`.
+data/

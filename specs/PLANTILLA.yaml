@@ -1,0 +1,41 @@
+# Pre-registro. Se escribe ANTES de correr y no se edita después de ver el número.
+# Nombre del archivo: specs/AAAA-MM-DD-<slug>.yaml   (el formato se valida desde la Fase 3)
+id: 2026-11-01-ejemplo
+estado: borrador            # borrador | pre-registrada | evaluada
+fuente: "de dónde salió la idea (issue, paper, repo, etc.)"
+
+hipotesis: >
+  Qué mecanismo de mercado debería producir el edge y por qué no se lo comería la comisión.
+
+ya_probado: >
+  Qué dice 02-DOCS/decisiones.md sobre algo parecido, y por qué esto es distinto.
+
+estrategia:
+  modulo: donchian_breakout   # src/bt/strategies/<modulo>.py
+  params: {entrada: 20, salida: 10, atr_mult: 2.0}
+
+horizonte:                  # ver 02-DOCS/alcance.md: señal 5m–1d, trades de días como mucho
+  tipo: diario              # scalp | swing | diario
+  duracion_mediana_esperada: "3 días"   # debe ser ≤ 7 días
+
+universo:
+  mercado: futures
+  simbolos: [BTCUSDT, ETHUSDT]
+  intervalo: 1d
+
+config:
+  fee_pct_por_lado: 0.0005
+  deslizamiento_pct: 0.0
+  timeout_velas: 14          # obligatorio; como máximo 14 días
+  objetivo_r: null
+
+ventana_desarrollo:
+  desde: "2020-01-01"         # termina en el holdout (2025-09-09) automáticamente
+
+criterio_aprobacion:          # todos deben cumplirse en desarrollo para mirar el holdout
+  n_minimo: 30
+  ic95_excluye_cero: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  holdout:                    # se mira UNA vez
+    avgRNeto_positivo: true
