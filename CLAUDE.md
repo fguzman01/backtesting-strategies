@@ -45,7 +45,9 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/checks.py` | Chequeos anti-sesgo |
 | `src/bt/bitacora.py` | Registro de corridas |
 | `src/bt/run.py` | CLI: corre una estrategia y registra |
-| `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)` |
+| `src/bt/validacion.py` | Casos conocidos de btc-signal-web que el motor debe reproducir (Fase 2) |
+| `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
+| `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
 
 ## Comandos
@@ -56,6 +58,7 @@ pytest
 ruff check .
 python -m bt.data BTCUSDT 1d 2020-01            # baja velas
 python -m bt.run donchian_breakout BTCUSDT 1d --nota "prueba"
+python -m bt.validacion --bajar                  # Fase 2: ¿reproduce btc-signal-web?
 ```
 
 ## Proyecto hermano

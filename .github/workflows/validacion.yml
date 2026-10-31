@@ -1,0 +1,55 @@
+# Fase 2: el motor reproduce los resultados ya medidos en btc-signal-web.
+# Corre a mano y cuando cambia el motor en main. Escribe la tabla en el resumen del job.
+name: validacion
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["src/bt/**", ".github/workflows/validacion.yml"]
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Caché de datos
+        uses: actions/cache@v4
+        with:
+          path: data
+          # Los casos sólo usan datos hasta 2026-10-19: no hace falta renovarla salvo que cambien.
+          key: datos-validacion-${{ hashFiles('src/bt/validacion.py') }}-v1
+      - name: Bajar velas y funding (en paralelo)
+        run: |
+          set -e
+          pids=()
+          for s in ADA AVAX BNB BTC DOGE DOT ETH LINK LTC NEAR SOL TRX UNI XRP; do
+            if [ ! -f "data/klines/futures-${s}USDT-1d.csv" ]; then
+              python -m bt.data "${s}USDT" 1d 2020-01 --funding & pids+=($!)
+            fi
+          done
+          if [ ! -f data/klines/spot-PAXGUSDT-1d.csv ]; then
+            python -m bt.data PAXGUSDT 1d 2020-01 --mercado spot & pids+=($!)
+          fi
+          for p in "${pids[@]}"; do wait "$p"; done
+      - name: Validar
+        run: |
+          set -o pipefail
+          python -m bt.validacion | tee tabla.md
+      - name: Resumen
+        if: always()
+        run: |
+          { echo "## Validación del motor contra btc-signal-web"; echo; cat tabla.md 2>/dev/null; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validacion
+          path: |
+            tabla.md
+            results/mediciones.jsonl

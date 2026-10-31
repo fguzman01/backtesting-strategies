@@ -6,6 +6,7 @@ curso, porque la API REST tarda horas para años de velas finas y los zips minut
 Uso:
     python -m bt.data BTCUSDT 1d 2020-01
     python -m bt.data PAXGUSDT 1d 2020-01 --mercado spot
+    python -m bt.data BTCUSDT 1d 2020-01 --funding      # también data/funding/BTCUSDT.csv
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ BASES = {
 }
 COLUMNAS = ["time", "open", "high", "low", "close", "volume"]
 DIR_DATOS = Path("data") / "klines"
+DIR_FUNDING = Path("data") / "funding"
 
 
 def ruta_local(simbolo: str, intervalo: str, mercado: str = "futures", base: Path = DIR_DATOS) -> Path:
@@ -106,6 +108,43 @@ def _mes_anterior(d: dt.date) -> tuple[int, int]:
     return (d.year - 1, 12) if d.month == 1 else (d.year, d.month - 1)
 
 
+def descargar_funding(simbolo: str, desde: str = "2020-01", base: Path = DIR_FUNDING) -> Path:
+    """Funding histórico de futuros USDⓈ-M → data/funding/<SIMBOLO>.csv (time,rate)."""
+    simbolo = simbolo.upper()
+    raiz = f"{BASES['futures']}/monthly/fundingRate/{simbolo}"
+    hoy = dt.datetime.now(dt.UTC).date()
+    filas: dict[int, str] = {}
+    for y, m in _meses(dt.datetime.strptime(desde, "%Y-%m").date(), hoy):
+        blob = _get(f"{raiz}/{simbolo}-fundingRate-{y}-{m:02d}.zip")
+        if not blob:
+            continue
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            for fila in csv.reader(io.StringIO(z.read(z.namelist()[0]).decode())):
+                if fila and fila[0].strip().isdigit():
+                    # Un pago por minuto: distintas fuentes traen el mismo instante con ms de diferencia.
+                    filas.setdefault(int(fila[0]) // 60_000 * 60_000, fila[2])
+    if not filas:
+        raise RuntimeError(f"sin funding para {simbolo} desde {desde}")
+    destino = base / f"{simbolo}.csv"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    with destino.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["time", "rate"])
+        for t in sorted(filas):
+            w.writerow([t, filas[t]])
+    return destino
+
+
+def cargar_funding(simbolo: str, base: Path = DIR_FUNDING) -> pd.Series:
+    """Serie de tasas indexada por instante de pago (UTC). Vacía si no hay archivo."""
+    ruta = base / f"{simbolo.upper()}.csv"
+    if not ruta.exists():
+        return pd.Series(dtype=float)
+    df = pd.read_csv(ruta)
+    indice = pd.to_datetime(df["time"], unit="ms", utc=True)
+    return pd.Series(df["rate"].astype(float).to_numpy(), index=indice)
+
+
 def cargar(simbolo: str, intervalo: str, mercado: str = "futures", base: Path = DIR_DATOS) -> pd.DataFrame:
     """DataFrame indexado por la apertura de la vela (UTC), columnas open/high/low/close/volume."""
     ruta = ruta_local(simbolo, intervalo, mercado, base)
@@ -127,7 +166,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("intervalo")
     p.add_argument("desde", nargs="?", default="2020-01", help="AAAA-MM")
     p.add_argument("--mercado", choices=sorted(BASES), default="futures")
+    p.add_argument("--funding", action="store_true", help="bajar también el funding (sólo futuros)")
     a = p.parse_args(argv)
+    if a.funding:
+        print(descargar_funding(a.simbolo, a.desde))
     ruta = descargar(a.simbolo, a.intervalo, a.desde, a.mercado)
     df = desde_csv(ruta)
     print(f"{ruta}: {len(df)} velas, {df.index[0]} → {df.index[-1]}")

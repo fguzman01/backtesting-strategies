@@ -40,7 +40,7 @@ tokens.
 |---|---|
 | 0. Brain y fundaciones | hecha |
 | 1. Motor determinista (datos, motor, métricas, holdout, bitácora, CLI) | hecha (versión mínima) |
-| 2. Validar contra resultados conocidos de btc-signal-web | pendiente |
+| 2. Validar contra resultados conocidos de btc-signal-web | en curso: paridad exacta con el script de TREND_1D hecha (tests); falta la corrida con datos reales (`validacion.yml`) |
 | 3. Spec YAML + veredicto + workflows + dashboard en Pages | pendiente |
 | 4. Rutina diaria | pendiente |
 | 5. Contrato `approved.json` con btc-signal-web | pendiente |

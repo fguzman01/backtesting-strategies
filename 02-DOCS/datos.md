@@ -23,4 +23,6 @@ python -m bt.data PAXGUSDT 1d 2020-01 --mercado spot
 - Los zips de spot desde 2025 traen timestamps en microsegundos; `bt.data` los normaliza a ms.
 - Un símbolo que empieza a listar después de la fecha pedida trunca la ventana: el reporte debe
   decir la ventana **efectiva**, no la pedida.
-- Funding (futuros) todavía no se modela; para estrategias de varios días puede importar.
+- Funding (futuros): `python -m bt.data <SIM> 1d 2020-01 --funding` lo baja a
+  `data/funding/<SIM>.csv` y `bt.run --funding` lo cobra. En estrategias de varios días importa:
+  en TREND_1D pesó −0.076R por operación en desarrollo.
