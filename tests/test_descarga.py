@@ -43,3 +43,11 @@ def test_descarga_incremental_y_completa(tmp_path, monkeypatch):
     segunda = len([u for u in pedidos if "/monthly/" in u])
     assert segunda <= 3 < primera  # sólo los últimos meses
     assert data.desde_csv(ruta).equals(df)
+
+
+def test_calidad_detecta_huecos_duplicados_y_saltos():
+    import pandas as pd
+    idx = pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-02", "2024-01-05"], utc=True)
+    df = pd.DataFrame({"close": [1.0, 1.1, 1.1, 2.0], "volume": [1, 0, 1, 1]}, index=idx)
+    c = data.calidad(df, 1440)
+    assert c["duplicadas"] == 1 and c["huecos"] == 2 and c["volumenCero"] == 1 and c["saltos"] == 1

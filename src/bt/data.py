@@ -188,6 +188,29 @@ def cargar_funding(simbolo: str, base: Path = DIR_FUNDING) -> pd.Series:
     return pd.Series(df["rate"].astype(float).to_numpy(), index=indice)
 
 
+def calidad(df: pd.DataFrame, minutos: int, desde=None, hasta=None) -> dict:
+    """Problemas de datos dentro de una ventana: lo que el auditor revisa antes de creerle a un número."""
+    if desde is not None:
+        df = df[df.index >= pd.Timestamp(desde)]
+    if hasta is not None:
+        df = df[df.index <= pd.Timestamp(hasta)]
+    if len(df) < 2:
+        return {"velas": len(df), "huecos": 0, "huecosPct": 0.0, "duplicadas": 0, "volumenCero": 0, "saltos": 0}
+    paso = pd.Timedelta(minutes=minutos)
+    esperadas = int((df.index[-1] - df.index[0]) / paso) + 1
+    unicas = df.index.nunique()
+    ret = df["close"].pct_change().abs()
+    return {
+        "velas": len(df),
+        "huecos": max(0, esperadas - unicas),
+        "huecosPct": round(100 * max(0, esperadas - unicas) / esperadas, 3),
+        "duplicadas": int(len(df) - unicas),
+        "volumenCero": int((df["volume"] <= 0).sum()) if "volume" in df else 0,
+        # Más de 50% en una vela: casi siempre un error de datos o un cambio de contrato.
+        "saltos": int((ret > 0.5).sum()),
+    }
+
+
 def cargar(simbolo: str, intervalo: str, mercado: str = "futures", base: Path = DIR_DATOS) -> pd.DataFrame:
     """DataFrame indexado por la apertura de la vela (UTC), columnas open/high/low/close/volume."""
     ruta = ruta_local(simbolo, intervalo, mercado, base)

@@ -171,3 +171,52 @@ def test_cli_sale_con_1_si_hay_violaciones(repo, capsys):
 def test_el_repo_real_cumple():
     assert all(c.estado != FALLA for c in auditoria.auditar(Path("."))), auditoria.informe_md(
         auditoria.auditar(Path(".")))
+
+
+def _con_dev(e, ventana, ic, tramos=(), calidad=None, nulo=None):
+    e["desarrollo"] = {"global": {"n": 50, "avgRNeto": 0.05, "ic95": ic}, "ventana": ventana,
+                       "porTramo": [{"n": n} for n in tramos], "nulo": {"p95": nulo}}
+    if calidad is not None:
+        e["desarrollo"]["calidadDatos"] = calidad
+    return e
+
+
+def test_ventana_corta_sin_bajista_y_poca_potencia(repo):
+    escribir_ev(repo, _con_dev(ev(), ["2023-01-01", "2025-09-01"], [-0.2, 0.3], tramos=(10, 40)))
+    c = por_nombre(auditoria.auditar(repo))["Ventana y potencia estadística"]
+    texto = " ".join(c.detalle)
+    assert c.estado == AVISO
+    assert "años" in texto and "2022" in texto and "comisión" in texto and "tramo(s)" in texto
+
+
+def test_ventana_buena_pasa(repo):
+    escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.15], tramos=(60, 60)))
+    assert por_nombre(auditoria.auditar(repo))["Ventana y potencia estadística"].estado == OK
+
+
+def test_calidad_de_datos(repo):
+    malo = {"AUSDT": {"duplicadas": 2, "saltos": 0, "huecosPct": 0}}
+    escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1], calidad=malo))
+    assert por_nombre(auditoria.auditar(repo))["Calidad de los datos usados"].estado == FALLA
+    huecos = {"AUSDT": {"duplicadas": 0, "saltos": 0, "huecosPct": 2.0, "huecos": 40}}
+    escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1], calidad=huecos))
+    assert por_nombre(auditoria.auditar(repo))["Calidad de los datos usados"].estado == AVISO
+
+
+def test_rechazo_al_borde(repo):
+    e = _con_dev(ev(), ["2020-01-01", "2025-09-08"], [-0.01, 0.2])
+    e["criterios"] = [{"criterio": "avgR neto > 0 y ±2 EE fuera del cero", "valor": "", "ok": False},
+                      {"criterio": "n ≥ 10", "valor": 50, "ok": True}]
+    escribir_ev(repo, e)
+    c = por_nombre(auditoria.auditar(repo))["Rechazos al borde (para revisión con criterio)"]
+    assert c.estado == AVISO and "0.010R" in c.detalle[0]
+    e["desarrollo"]["global"]["ic95"] = [-0.2, 0.2]  # lejos del borde
+    escribir_ev(repo, e)
+    assert por_nombre(auditoria.auditar(repo))["Rechazos al borde (para revisión con criterio)"].estado == OK
+
+
+def test_desgaste_del_holdout(repo):
+    for i in range(10):
+        escribir_ev(repo, ev(sid=f"2026-11-{i + 10}-h{i}", veredicto="APROBADA", holdout={"global": {}}, dev_ok=True))
+    c = por_nombre(auditoria.auditar(repo))["Desgaste del holdout"]
+    assert c.estado == AVISO and "renovación" in c.detalle[1]

@@ -48,6 +48,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
     datos: dict = {}
     filas: list[dict] = []
     ventana: list[pd.Timestamp] = []
+    calidad: dict[str, dict] = {}
     for s in spec.simbolos:
         df = cargar_velas(s, spec.intervalo, spec.mercado)
         fund = cargar_funding(s) if spec.funding else None
@@ -61,6 +62,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         datos[s] = (df, fund)
         filas.append(r.fila)
         ventana += [pd.Timestamp(r.fila["desde"]), pd.Timestamp(r.fila["hasta"])]
+        calidad[s] = data.calidad(df, spec.minutos_por_vela, r.fila["desde"], r.fila["hasta"])
 
     todos = [t for ts in por_simbolo.values() for t in ts]
     inf = metrics.informe({"conservador": todos, "optimista": optimistas})
@@ -78,6 +80,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "nulo": nulo,
         "duracionMedianaDias": median(duraciones) if duraciones else None,
         "porSimbolo": {s: metrics.calcular(ts) | {"porMotivo": None} for s, ts in por_simbolo.items()},
+        "calidadDatos": calidad,
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }

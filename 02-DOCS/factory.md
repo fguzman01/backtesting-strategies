@@ -19,8 +19,8 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Revisión de sesgos | Subagente con contexto limpio: overfitting, data snooping, supervivencia | Claude | comentario en el reporte |
 | Veredicto | Desarrollo contra el criterio; sólo si pasa se mira el holdout, una vez | código (`bt.verdict`) | `results/reports/`, `mediciones.jsonl` |
 | ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas → PR que toca `approved.json` | código + Felipe | PR |
-| Auditor determinista | ¿Se cumple la metodología? Pre-registro antes de evaluar, holdout una vez y sólo si pasa desarrollo, `approved.json` coherente, test de look-ahead por estrategia, Brain al día, bitácora determinista, conteo de pruebas (data snooping) | CI (`bt.auditoria`) | resumen del CI, dashboard |
-| Auditor con criterio | Lo que el código no juzga: hipótesis, criterios flojos, variantes repetidas, lectura de resultados. Propone ≤ 5 mejoras y sigue las anteriores | Claude, semanal (`.claude/agents/auditor.md`) | `02-DOCS/auditorias/`, PR |
+| Auditor determinista | 12 chequeos. Proceso: pre-registro antes de evaluar, holdout una vez y sólo si pasa desarrollo, `approved.json` coherente, test de look-ahead por estrategia, Brain al día, bitácora determinista, data snooping. Metodología: ventana y potencia estadística (años, 2022 bajista, ±2 EE vs comisión, n por tramo), calidad de datos, rechazos al borde, desgaste del holdout | CI (`bt.auditoria`) | resumen del CI, dashboard |
+| Auditor con criterio | Lo que el código no juzga: (1) proceso: hipótesis, criterios flojos, variantes repetidas; (2) metodología: ¿más o menos años?, supervivencia, costos realistas, robustez, nulo, renovación del holdout; (3) rechazadas: clasificarlas y proponer versiones con mecanismo nuevo (nunca re-evaluar); (4) paridad backtest ↔ bot real de btc-signal-web; (5) ≤ 5 mejoras | Claude, semanal (`.claude/agents/auditor.md`) | `02-DOCS/auditorias/`, `02-DOCS/ideas.md`, PR |
 
 ## Cómo corre (Fase 3)
 

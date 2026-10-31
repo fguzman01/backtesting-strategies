@@ -26,7 +26,8 @@ flowchart TD
         AUD1["ci.yml · Auditor determinista (bt.auditoria)<br/>pre-registro antes de evaluar · holdout una vez<br/>approved.json coherente · look-ahead por estrategia<br/>Brain al día · bitácora determinista · data snooping"]
     end
 
-    AUD2["🔍 Auditor con criterio · Claude, semanal<br/>· juzga hipótesis y criterios<br/>· detecta variantes repetidas<br/>· propone ≤ 5 mejoras<br/>→ 02-DOCS/auditorias/ + PR"]
+    AUD2["🔍 Auditor con criterio · Claude, semanal<br/>1. proceso: hipótesis, criterios, variantes<br/>2. metodología: ¿más o menos años?, costos,<br/>supervivencia, robustez, holdout<br/>3. rechazadas: ¿versión con mecanismo nuevo?<br/>4. paridad backtest ↔ bot real<br/>5. ≤ 5 mejoras → 02-DOCS/auditorias/ + PR"]
+    IDEAS[("02-DOCS/ideas.md<br/>cola de ideas")]
 
     DEC{"Veredicto"}
     MAIN["Rechazada / No concluyente<br/>→ commit directo a main<br/>(reporte + bitácora)"]
@@ -57,6 +58,10 @@ flowchart TD
     AUD1 --> PAGES
     AUD2 -- "propuestas de mejora (PR)" --> FELIPE
     AUD2 -. "lee" .-> BRAIN
+    AUD2 -- "ideas de rechazadas<br/>(mecanismo nuevo)" --> IDEAS
+    FELIPE -- "ideas" --> IDEAS
+    IDEAS -- "próxima spec" --> A1
+    AUD2 -. "compara reglas y paper" .-> BSW
 
     %% ── Estilos ─────────────────────────────────────────────
     classDef humano fill:#fff4d6,stroke:#c98500,stroke-width:2px,color:#0b0b0b
@@ -71,4 +76,5 @@ flowchart TD
     class AUD2 agente
     class B1,B2,B3 brain
     class APPROVED,BSW salida
+    class IDEAS brain
     class A1,A2,A3,BSW pendiente

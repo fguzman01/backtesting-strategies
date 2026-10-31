@@ -53,7 +53,8 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/nulo.py` | Control nulo: entradas al azar con la misma duración y riesgo |
 | `src/bt/sitio.py` | Dashboard estático para GitHub Pages |
 | `src/bt/auditoria.py` | Auditor determinista: ¿se cumple la metodología? (corre en el CI) |
-| `.claude/agents/auditor.md` | Agente auditor con criterio: revisa el proceso y propone mejoras (semanal) |
+| `.claude/agents/auditor.md` | Agente auditor: proceso, metodología, rechazadas y paridad con el bot real; propone mejoras (semanal) |
+| `02-DOCS/ideas.md` | Cola de ideas: de acá sale la próxima spec. Las ideas de rechazadas exigen un mecanismo nuevo |
 | `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
 | `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
