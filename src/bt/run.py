@@ -17,7 +17,7 @@ import pandas as pd
 
 from bt import bitacora, data, metrics, strategies
 from bt.engine import Config, Trade, simular_ambos
-from bt.splits import resolver_ventana
+from bt.splits import _ts, resolver_ventana
 
 
 @dataclass
@@ -34,8 +34,8 @@ def correr(
 ) -> Resultado:
     cfg = cfg or Config()
     params = params or {}
-    desde = pd.Timestamp(desde, tz="UTC") if desde is not None else df.index[0]
-    hasta = pd.Timestamp(hasta, tz="UTC") if hasta is not None else df.index[-1] + pd.Timedelta(1, "ns")
+    desde = _ts(desde) if desde is not None else df.index[0]
+    hasta = _ts(hasta) if hasta is not None else df.index[-1] + pd.Timedelta(1, "ns")
     v = resolver_ventana(desde, hasta, holdout)
     avisos = [v.aviso] if v.aviso else []
 

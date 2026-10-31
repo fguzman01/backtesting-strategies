@@ -1,7 +1,8 @@
 # Pre-registro. Se escribe ANTES de correr y no se edita después de ver el número.
-# Nombre del archivo: specs/AAAA-MM-DD-<slug>.yaml   (el formato se valida desde la Fase 3)
+# Archivo: specs/<id>.yaml, con id = AAAA-MM-DD-<slug>. Validación: bt.spec (corre en los tests).
+# Al pasar `estado` a `pre-registrada` y llegar a main, el workflow `evaluar` la corre sola.
 id: 2026-11-01-ejemplo
-estado: borrador            # borrador | pre-registrada | evaluada
+estado: borrador            # borrador | pre-registrada
 fuente: "de dónde salió la idea (issue, paper, repo, etc.)"
 
 hipotesis: >
@@ -10,32 +11,35 @@ hipotesis: >
 ya_probado: >
   Qué dice 02-DOCS/decisiones.md sobre algo parecido, y por qué esto es distinto.
 
+horizonte:                  # 02-DOCS/alcance.md: señal 5m–1d, trades de días como mucho
+  tipo: diario              # scalp | swing | diario
+  duracion_mediana_esperada: "3 días"   # se exige ≤ 7 días al evaluar
+
 estrategia:
   modulo: donchian_breakout   # src/bt/strategies/<modulo>.py
   params: {entrada: 20, salida: 10, atr_mult: 2.0}
 
-horizonte:                  # ver 02-DOCS/alcance.md: señal 5m–1d, trades de días como mucho
-  tipo: diario              # scalp | swing | diario
-  duracion_mediana_esperada: "3 días"   # debe ser ≤ 7 días
-
 universo:
-  mercado: futures
+  mercado: futures          # futures | spot
   simbolos: [BTCUSDT, ETHUSDT]
-  intervalo: 1d
+  intervalo: 1d             # 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d
+  funding: true             # cobrar funding (sólo futuros)
 
 config:
-  fee_pct_por_lado: 0.0005
+  fee_pct_por_lado: 0.0005  # comisión (+ deslizamiento, si se quiere modelar como costo)
   deslizamiento_pct: 0.0
-  timeout_velas: 14          # obligatorio; como máximo 14 días
+  timeout_velas: 7          # obligatorio; como máximo 14 días
   objetivo_r: null
+  cerrar_al_final: true     # lo abierto al final de la ventana se cierra y cuenta
 
 ventana_desarrollo:
-  desde: "2020-01-01"         # termina en el holdout (2025-09-09) automáticamente
+  desde: "2020-01-01"       # termina sola en el holdout (2025-09-09)
 
-criterio_aprobacion:          # todos deben cumplirse en desarrollo para mirar el holdout
-  n_minimo: 30
-  ic95_excluye_cero: true
-  concluyente: true
+criterio_aprobacion:        # todo en desarrollo; si pasa, se mira el holdout UNA vez
+  n_minimo: 100             # menos que esto → NO_CONCLUYENTE
+  ic95_excluye_cero: true   # avgR > 0 con ±2 EE fuera del cero
+  concluyente: true         # muestra, modelos de llenado y tramos coherentes (bt.metrics)
   tramos_positivos_minimo: 3
-  holdout:                    # se mira UNA vez
+  supera_nulo_p95: true     # le gana al percentil 95 de entradas al azar
+  holdout:
     avgRNeto_positivo: true

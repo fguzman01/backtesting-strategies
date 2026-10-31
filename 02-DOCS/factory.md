@@ -20,6 +20,19 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Veredicto | Desarrollo contra el criterio; sólo si pasa se mira el holdout, una vez | código (`bt.verdict`) | `results/reports/`, `mediciones.jsonl` |
 | ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas → PR que toca `approved.json` | código + Felipe | PR |
 
+## Cómo corre (Fase 3)
+
+1. Una spec llega a `main` con `estado: pre-registrada` (`specs/<id>.yaml`, validada por `bt.spec`).
+2. `evaluar.yml` corre `python -m bt.evaluar --pendientes --bajar`: baja velas y funding, corre
+   desarrollo, aplica el criterio (+ control nulo `bt.nulo` + alcance), y sólo si pasa mira el
+   holdout. Escribe `results/evaluaciones/<id>.json`, `results/reports/<id>.md` y la bitácora.
+3. Rechazada / no concluyente → commit directo a `main`. Aprobada → PR que agrega la estrategia a
+   `results/approved.json`; Felipe revisa y hace merge.
+4. `pages.yml` regenera el dashboard (`python -m bt.sitio`) en GitHub Pages.
+
+Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.json` lo impide
+(el holdout ya se miró). Para otra pregunta, otra spec con otro id.
+
 ## Qué se dejó afuera y por qué
 
 - **Revisores de UX/UI/seguridad del video**: no hay producto de usuario que revisar.
@@ -41,6 +54,6 @@ tokens.
 | 0. Brain y fundaciones | hecha |
 | 1. Motor determinista (datos, motor, métricas, holdout, bitácora, CLI) | hecha (versión mínima) |
 | 2. Validar contra resultados conocidos de btc-signal-web | hecha: reproduce TREND_1D (14 tokens dev y holdout, oro dev) con datos reales, 2026-10-31 |
-| 3. Spec YAML + veredicto + workflows + dashboard en Pages | pendiente |
+| 3. Spec YAML + veredicto + workflows + dashboard en Pages | hecha (2026-10-31); primera spec real: `2026-10-31-trend1d-tope-7d` |
 | 4. Rutina diaria | pendiente |
 | 5. Contrato `approved.json` con btc-signal-web | pendiente |
