@@ -28,6 +28,14 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -e .
+      - name: Caché de datos
+        uses: actions/cache@v4
+        with:
+          path: data
+          # Una llave nueva por corrida para guardar lo bajado; restaura la más reciente de cualquier
+          # workflow (validacion incluida) y `bt.data` completa sólo los meses que faltan.
+          key: datos-${{ github.run_id }}
+          restore-keys: datos-
       - name: Evaluar specs pendientes
         id: eval
         run: python -m bt.evaluar --pendientes --bajar --salida-github "$GITHUB_OUTPUT"

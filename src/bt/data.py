@@ -17,6 +17,7 @@ import datetime as dt
 import io
 import urllib.request
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pandas as pd
@@ -68,33 +69,67 @@ def _meses(desde: dt.date, hasta: dt.date):
         y, m = (y + 1, 1) if m == 12 else (y, m + 1)
 
 
+HILOS = 8
+
+
+def _desde_incremental(destino: Path, inicio: dt.date) -> tuple[dt.date, dict[int, list[str]]]:
+    """Si ya hay un CSV local, se conservan sus filas y se rebaja sólo desde el mes anterior a la última.
+
+    Rebajar el último mes (y el anterior) cubre el caso de un mes que la vez pasada vino por diarios
+    incompletos. Lo de antes no cambia: los zips mensuales de Binance son históricos fijos.
+    """
+    if not destino.exists():
+        return inicio, {}
+    with destino.open() as f:
+        filas = {int(r[0]): r for r in csv.reader(f) if r and r[0].isdigit()}
+    if not filas:
+        return inicio, {}
+    primera = dt.datetime.fromtimestamp(min(filas) / 1000, dt.UTC).date()
+    if primera > inicio.replace(day=1) + dt.timedelta(days=62):
+        # El archivo empieza mucho después de lo pedido: puede que antes no se pidiera tan atrás.
+        return inicio, filas
+    ultima = dt.datetime.fromtimestamp(max(filas) / 1000, dt.UTC).date()
+    y, m = _mes_anterior(ultima)
+    return max(inicio, dt.date(y, m, 1)), filas
+
+
+def _mes_klines(raiz: str, raiz_d: str, simbolo: str, intervalo: str, y: int, m: int, hoy: dt.date):
+    blob = _get(f"{raiz}/{simbolo}-{intervalo}-{y}-{m:02d}.zip")
+    if blob:
+        return parsear_zip(blob)
+    filas: dict[int, list[str]] = {}
+    if (y, m) >= (hoy.year, hoy.month) or (y, m) == _mes_anterior(hoy):
+        # El mensual del mes en curso (y a veces del anterior) aún no existe: ir por diarios.
+        d = dt.date(y, m, 1)
+        while d.month == m and d < hoy:
+            b = _get(f"{raiz_d}/{simbolo}-{intervalo}-{d.isoformat()}.zip")
+            if b:
+                filas.update(parsear_zip(b))
+            d += dt.timedelta(days=1)
+    return filas
+
+
 def descargar(
     simbolo: str, intervalo: str, desde: str = "2020-01", mercado: str = "futures", base: Path = DIR_DATOS
 ) -> Path:
-    """Baja todo desde `desde` (AAAA-MM) hasta ayer y sobrescribe el CSV local."""
+    """Baja desde `desde` (AAAA-MM) hasta ayer, en paralelo por mes, y completa el CSV local.
+
+    Si el CSV ya existe sólo se rebajan los últimos meses (ver `_desde_incremental`).
+    """
     simbolo = simbolo.upper()
     raiz = f"{BASES[mercado]}/monthly/klines/{simbolo}/{intervalo}"
     raiz_d = f"{BASES[mercado]}/daily/klines/{simbolo}/{intervalo}"
     hoy = dt.datetime.now(dt.UTC).date()
-    inicio = dt.datetime.strptime(desde, "%Y-%m").date()
-    filas: dict[int, list[str]] = {}
+    destino = ruta_local(simbolo, intervalo, mercado, base)
+    inicio, filas = _desde_incremental(destino, dt.datetime.strptime(desde, "%Y-%m").date())
 
-    for y, m in _meses(inicio, hoy):
-        blob = _get(f"{raiz}/{simbolo}-{intervalo}-{y}-{m:02d}.zip")
-        if blob:
-            filas.update(parsear_zip(blob))
-        elif (y, m) >= (hoy.year, hoy.month) or (y, m) == _mes_anterior(hoy):
-            # El mensual del mes en curso (y a veces del anterior) aún no existe: ir por diarios.
-            d = dt.date(y, m, 1)
-            while d.month == m and d < hoy:
-                b = _get(f"{raiz_d}/{simbolo}-{intervalo}-{d.isoformat()}.zip")
-                if b:
-                    filas.update(parsear_zip(b))
-                d += dt.timedelta(days=1)
+    with ThreadPoolExecutor(HILOS) as ex:
+        for parte in ex.map(lambda ym: _mes_klines(raiz, raiz_d, simbolo, intervalo, *ym, hoy),
+                            list(_meses(inicio, hoy))):
+            filas.update(parte)
 
     if not filas:
         raise RuntimeError(f"sin datos para {mercado} {simbolo} {intervalo} desde {desde}")
-    destino = ruta_local(simbolo, intervalo, mercado, base)
     destino.parent.mkdir(parents=True, exist_ok=True)
     with destino.open("w", newline="") as f:
         w = csv.writer(f)
@@ -113,19 +148,27 @@ def descargar_funding(simbolo: str, desde: str = "2020-01", base: Path = DIR_FUN
     simbolo = simbolo.upper()
     raiz = f"{BASES['futures']}/monthly/fundingRate/{simbolo}"
     hoy = dt.datetime.now(dt.UTC).date()
-    filas: dict[int, str] = {}
-    for y, m in _meses(dt.datetime.strptime(desde, "%Y-%m").date(), hoy):
-        blob = _get(f"{raiz}/{simbolo}-fundingRate-{y}-{m:02d}.zip")
+    destino = base / f"{simbolo}.csv"
+    inicio, previas = _desde_incremental(destino, dt.datetime.strptime(desde, "%Y-%m").date())
+    filas: dict[int, str] = {t: r[1] for t, r in previas.items()}
+
+    def mes(ym):
+        blob = _get(f"{raiz}/{simbolo}-fundingRate-{ym[0]}-{ym[1]:02d}.zip")
         if not blob:
-            continue
+            return {}
+        out = {}
         with zipfile.ZipFile(io.BytesIO(blob)) as z:
             for fila in csv.reader(io.StringIO(z.read(z.namelist()[0]).decode())):
                 if fila and fila[0].strip().isdigit():
                     # Un pago por minuto: distintas fuentes traen el mismo instante con ms de diferencia.
-                    filas.setdefault(int(fila[0]) // 60_000 * 60_000, fila[2])
+                    out.setdefault(int(fila[0]) // 60_000 * 60_000, fila[2])
+        return out
+
+    with ThreadPoolExecutor(HILOS) as ex:
+        for parte in ex.map(mes, list(_meses(inicio, hoy))):
+            filas.update(parte)
     if not filas:
         raise RuntimeError(f"sin funding para {simbolo} desde {desde}")
-    destino = base / f"{simbolo}.csv"
     destino.parent.mkdir(parents=True, exist_ok=True)
     with destino.open("w", newline="") as f:
         w = csv.writer(f)

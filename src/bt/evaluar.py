@@ -258,10 +258,15 @@ def pendientes(directorio: Path = Path("specs"), base: Path = RESULTADOS) -> lis
 
 
 def bajar(spec: Spec) -> None:
-    for s in spec.simbolos:
-        data.descargar(s, spec.intervalo, "2020-01", spec.mercado)
-        if spec.funding:
-            data.descargar_funding(s, "2020-01")
+    """Velas (y funding) de todos los símbolos, en paralelo. Completa lo que ya haya en caché."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    tareas = [lambda s=s: data.descargar(s, spec.intervalo, "2020-01", spec.mercado) for s in spec.simbolos]
+    if spec.funding:
+        tareas += [lambda s=s: data.descargar_funding(s, "2020-01") for s in spec.simbolos]
+    with ThreadPoolExecutor(4) as ex:
+        for ruta in ex.map(lambda f: f(), tareas):
+            print(f"  {ruta}", flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
