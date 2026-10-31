@@ -6,3 +6,4 @@ __pycache__/
 .venv/
 # Las velas no van a git: se reconstruyen con `python -m bt.data`.
 data/
+_site/

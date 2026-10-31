@@ -1,0 +1,50 @@
+id: 2026-10-31-trend1d-tope-7d
+estado: pre-registrada
+fuente: "TREND_1D de btc-signal-web (aprobada el 2026-10-20) adaptada a 02-DOCS/alcance.md"
+
+hipotesis: >
+  TREND_1D (Donchian 20/10, stop 2×ATR20, filtro EMA200, 14 tokens) tiene edge real: pasó
+  desarrollo, control nulo y holdout. Pero su duración media es de 22 días, fuera del alcance de
+  esta factory (mediana ≤ 7 días). Si buena parte del movimiento a favor ocurre en la primera
+  semana tras la ruptura, cortar a los 7 días conserva un edge positivo y distinguible del azar.
+
+ya_probado: >
+  En btc-signal-web: TREND_1D sin tope, desarrollo n=567 +0.545R, holdout n=107 +0.256R
+  (reproducido por este repo, Fase 2). Sin las 10 mejores operaciones cae a +0.024, o sea depende
+  de pocas tendencias largas: es justo lo que un tope de 7 días corta. Nunca se midió con tope de
+  tiempo. Abrir el techo en SCALP_1H no sirvió, pero aquí la pregunta es la inversa (cerrarlo).
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "5-7 días"
+
+estrategia:
+  modulo: tendencia_donchian
+  params: {entrada: 20, salida: 10, atr_n: 20, ema_n: 200, stop_atr: 2.0}
+
+universo:
+  mercado: futures
+  simbolos: [ADAUSDT, AVAXUSDT, BNBUSDT, BTCUSDT, DOGEUSDT, DOTUSDT, ETHUSDT, LINKUSDT, LTCUSDT,
+             NEARUSDT, SOLUSDT, TRXUSDT, UNIUSDT, XRPUSDT]
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # mismo costo que TREND_1D: comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 7
+  objetivo_r: null
+  cerrar_al_final: true
+
+ventana_desarrollo:
+  desde: "2020-01-01"
+
+# Mismo criterio que el pre-registro original de TREND_1D, más el mínimo de muestra.
+criterio_aprobacion:
+  n_minimo: 100
+  ic95_excluye_cero: true
+  concluyente: false
+  tramos_positivos_minimo: 0
+  supera_nulo_p95: true
+  holdout:
+    avgRNeto_positivo: true

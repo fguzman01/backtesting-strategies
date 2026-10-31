@@ -19,3 +19,11 @@ python -m bt.run donchian_breakout BTCUSDT 1d --desde 2020-01-01 --nota "prueba"
 ```
 
 O desde GitHub: **Actions → backtest-manual → Run workflow**.
+
+## Cómo se evalúa una estrategia
+
+1. Copiar `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD-slug>.yaml`, completar y poner
+   `estado: pre-registrada`.
+2. Al llegar a `main`, el workflow **evaluar** la corre. Rechazadas van directo a `main`;
+   aprobadas abren un PR que agrega la estrategia a `results/approved.json`.
+3. Resultados en `results/reports/` y en el dashboard de GitHub Pages.

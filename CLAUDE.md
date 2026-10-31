@@ -46,6 +46,10 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/bitacora.py` | Registro de corridas |
 | `src/bt/run.py` | CLI: corre una estrategia y registra |
 | `src/bt/validacion.py` | Casos conocidos de btc-signal-web que el motor debe reproducir (Fase 2) |
+| `src/bt/spec.py` | Carga y valida pre-registros (incluye el alcance: 5m–1d, timeout ≤ 14 días) |
+| `src/bt/evaluar.py` | Evalúa una spec: desarrollo → criterio → holdout una vez → reporte / approved.json |
+| `src/bt/nulo.py` | Control nulo: entradas al azar con la misma duración y riesgo |
+| `src/bt/sitio.py` | Dashboard estático para GitHub Pages |
 | `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
 | `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
@@ -59,6 +63,8 @@ ruff check .
 python -m bt.data BTCUSDT 1d 2020-01            # baja velas
 python -m bt.run donchian_breakout BTCUSDT 1d --nota "prueba"
 python -m bt.validacion --bajar                  # Fase 2: ¿reproduce btc-signal-web?
+python -m bt.evaluar specs/<id>.yaml --bajar     # evalúa un pre-registro
+python -m bt.sitio                               # genera _site/index.html
 ```
 
 ## Proyecto hermano
