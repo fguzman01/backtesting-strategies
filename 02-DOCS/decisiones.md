@@ -51,4 +51,4 @@ siendo la fuente con todos los números; si hay duda, leer la fila original.
 
 | Pregunta | Veredicto | Cuándo | Reporte |
 |---|---|---|---|
-| _(ninguna todavía)_ | | | |
+| ¿El motor de este repo reproduce los resultados de btc-signal-web? | **Sí, para TREND_1D.** 14 tokens desarrollo n=568 +0.541 (registrado n=567 +0.545); holdout n=107 +0.258 (107, +0.256); oro desarrollo n=37 +0.029 (37, +0.022). Paridad exacta operación por operación con el script original en datos sintéticos. Pendiente: estrategias de scalp/swing intradía (motor TS) | 2026-10-31 | `validacion.yml`, run 41233661837 |
