@@ -1,0 +1,43 @@
+# Fusiona solo los PRs de la rutina diaria ("[rutina]" en el título) cuando el CI pasó y el PR sólo
+# toca rutas seguras (scripts/rutas_automerge.py). Después dispara `evaluar`: un merge hecho con
+# GITHUB_TOKEN no dispara workflows por push, pero sí por workflow_dispatch.
+name: automerge
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  fusionar:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fusionar si es de la rutina y toca sólo rutas permitidas
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RAMA: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -e
+          pr=$(gh pr list --repo "$REPO" --head "$RAMA" --state open --json number,title \
+               --jq '[.[] | select(.title | startswith("[rutina]"))][0].number // empty')
+          if [ -z "$pr" ]; then echo "no es un PR abierto de la rutina"; exit 0; fi
+          if ! gh api "repos/$REPO/pulls/$pr/files" --paginate --jq '.[] | "\(.status) \(.filename)"' \
+               | python scripts/rutas_automerge.py; then
+            gh pr comment "$pr" --repo "$REPO" --body "Auto-merge: no se fusiona solo porque toca rutas fuera de lo permitido para la rutina (ver el log de automerge). Necesita revisión de Felipe."
+            exit 0
+          fi
+          gh pr merge "$pr" --repo "$REPO" --squash --delete-branch --match-head-commit "$SHA"
+          gh workflow run evaluar.yml --repo "$REPO" --ref main

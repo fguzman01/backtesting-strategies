@@ -32,6 +32,17 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
    `results/approved.json`; Felipe revisa y hace merge.
 4. `pages.yml` regenera el dashboard (`python -m bt.sitio`) en GitHub Pages.
 
+### La rutina diaria (Fase 4)
+
+- **Cuándo:** todos los días de madrugada, hora de Chile. El auditor, los domingos.
+- **Qué hace** (`.claude/agents/investigador.md`): toma la primera idea `en cola` de
+  `02-DOCS/ideas.md` → spec pre-registrada + estrategia + test (sin mirar datos reales) → PR
+  `[rutina] ...`. Si no hay nada en cola, investiga y deja UNA idea `propuesta`; Felipe la pasa a
+  `en cola` si le gusta.
+- **Auto-merge** (`automerge.yml`): si el CI pasa y el PR sólo agrega specs/estrategias/tests nuevos
+  o toca `ideas.md` (`scripts/rutas_automerge.py`), se fusiona solo y dispara `evaluar`. Cualquier
+  otra ruta queda para Felipe. Lo aprobado sigue yendo a `approved.json` por un PR manual.
+
 Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.json` lo impide
 (el holdout ya se miró). Para otra pregunta, otra spec con otro id.
 
@@ -58,5 +69,5 @@ tokens.
 | 2. Validar contra resultados conocidos de btc-signal-web | hecha: reproduce TREND_1D (14 tokens dev y holdout, oro dev) con datos reales, 2026-10-31 |
 | 3. Spec YAML + veredicto + workflows + dashboard en Pages | hecha (2026-10-31); primera spec real: `2026-10-31-trend1d-tope-7d` |
 | 3b. Auditor del proceso (determinista + agente con criterio) | hecho (2026-10-31); falta programar la rutina semanal del agente |
-| 4. Rutina diaria | pendiente |
+| 4. Rutina diaria + auditor semanal | código hecho (2026-10-31): agente `investigador`, auto-merge con rutas seguras. Falta crear las dos rutinas en la cuenta de Felipe |
 | 5. Contrato `approved.json` con btc-signal-web | pendiente |

@@ -39,8 +39,8 @@ flowchart TD
     FELIPE -- "issue con etiqueta idea" --> A1
     BRAIN -. "se consulta antes de cada paso" .-> A1
     BRAIN -. "convenciones" .-> A2
-    A3 -- "spec pre-registrada + código" --> CI
-    CI -- "merge a main" --> EV
+    A3 -- "spec pre-registrada + código<br/>(PR [rutina])" --> CI
+    CI -- "auto-merge si sólo toca<br/>specs/estrategias/tests nuevos" --> EV
     EV --> DEC
     DEC -- "falla" --> MAIN
     DEC -- "pasa desarrollo y holdout" --> PR

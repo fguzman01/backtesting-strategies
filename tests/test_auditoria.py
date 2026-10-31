@@ -220,3 +220,16 @@ def test_desgaste_del_holdout(repo):
         escribir_ev(repo, ev(sid=f"2026-11-{i + 10}-h{i}", veredicto="APROBADA", holdout={"global": {}}, dev_ok=True))
     c = por_nombre(auditoria.auditar(repo))["Desgaste del holdout"]
     assert c.estado == AVISO and "renovación" in c.detalle[1]
+
+
+def test_clon_superficial_no_inventa_violaciones(repo, tmp_path_factory):
+    escribir_spec(repo)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "spec")
+    escribir_ev(repo, ev())
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "evaluación")
+    clon = tmp_path_factory.mktemp("clon") / "r"
+    subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{repo}", str(clon)], check=True)
+    c = por_nombre(auditoria.auditar(clon))["Pre-registro antes de evaluar"]
+    assert c.estado == AVISO and "no se pudo verificar" in c.detalle[0]

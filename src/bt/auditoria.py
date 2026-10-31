@@ -81,6 +81,11 @@ def chequear_preregistro(raiz: Path, evs: dict[str, dict]) -> Chequeo:
     regla = "Regla 1: pre-registro primero; cambiar el criterio después de ver el número invalida"
     if not _hay_git(raiz):
         return Chequeo("Pre-registro antes de evaluar", regla, AVISO, ["sin historia de git: no se pudo verificar"])
+    if _git(raiz, "rev-parse", "--is-shallow-repository") == "true" and evs:
+        # Un clon superficial (p. ej. actions/checkout por defecto) no tiene los commits que agregaron las
+        # specs: concluir que "no estaban antes" sería una violación falsa.
+        return Chequeo("Pre-registro antes de evaluar", regla, AVISO,
+                       ["clon sin historia completa (fetch-depth: 0 para verificarlo): no se pudo verificar"])
     problemas = []
     for sid in evs:
         spec = f"specs/{sid}.yaml"
