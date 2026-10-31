@@ -14,6 +14,10 @@ estrategia:
   modulo: donchian_breakout   # src/bt/strategies/<modulo>.py
   params: {entrada: 20, salida: 10, atr_mult: 2.0}
 
+horizonte:                  # ver 02-DOCS/alcance.md: señal 5m–1d, trades de días como mucho
+  tipo: diario              # scalp | swing | diario
+  duracion_mediana_esperada: "3 días"   # debe ser ≤ 7 días
+
 universo:
   mercado: futures
   simbolos: [BTCUSDT, ETHUSDT]
@@ -22,7 +26,7 @@ universo:
 config:
   fee_pct_por_lado: 0.0005
   deslizamiento_pct: 0.0
-  timeout_velas: null
+  timeout_velas: 14          # obligatorio; como máximo 14 días
   objetivo_r: null
 
 ventana_desarrollo:

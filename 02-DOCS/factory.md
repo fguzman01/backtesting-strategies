@@ -12,7 +12,7 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Etapa | Qué hace | Quién | Rastro |
 |---|---|---|---|
 | Entrada | Cola de ideas: issues con etiqueta `idea`, o las que propone la rutina diaria | Felipe / rutina | issue |
-| Brain | Se consulta `decisiones.md` para no repetir; se descarta lo ya probado | rutina | — |
+| Brain | Se consulta `alcance.md` (horizonte permitido) y `decisiones.md` para no repetir; se descarta lo ya probado | rutina | — |
 | Spec | Hipótesis, reglas, universo, timeframe, ventana, **criterio de aprobación** | Claude | `specs/*.yaml` |
 | Builder | `src/bt/strategies/<slug>.py` + test (incluye chequeo de look-ahead) | Claude | commit en rama |
 | Revisión determinista | look-ahead, comisión aplicada, n mínimo, determinismo | CI (`bt.checks`) | log de Actions |

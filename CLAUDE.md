@@ -10,6 +10,9 @@ aprobadas pasan a `results/approved.json`, que consume `fguzman01/btc-signal-web
 paper y después en real. Objetivo de régimen: **una estrategia evaluada por día**.
 
 Diseño completo de la factory: `02-DOCS/factory.md`.
+**Qué estrategias se buscan (horizonte, activos, prioridad): `02-DOCS/alcance.md`.** Resumen:
+cualquier tipo de estrategia que sea rentable, en cualquier activo operable en Binance, siempre
+de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada semanal ni de meses.
 
 ## Reglas (no sugerencias)
 
