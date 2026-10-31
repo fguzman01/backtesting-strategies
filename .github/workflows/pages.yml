@@ -29,11 +29,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0   # el auditor verifica el pre-registro con la historia
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -e .
+      - name: Auditoría (no frena la publicación: el dashboard la muestra)
+        run: python -m bt.auditoria --json results/auditoria.json || true
       - run: python -m bt.sitio --salida _site
       - uses: actions/upload-pages-artifact@v3
         with:

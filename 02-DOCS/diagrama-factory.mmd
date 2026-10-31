@@ -23,7 +23,10 @@ flowchart TD
         VAL["validacion.yml · Auditor del motor<br/>¿sigue reproduciendo<br/>btc-signal-web?"]
         EV["evaluar.yml · Approver (bt.evaluar)<br/>1. baja velas y funding<br/>2. corre DESARROLLO<br/>3. criterio + control nulo + alcance<br/>4. sólo si pasa: HOLDOUT, una vez"]
         PAGES["pages.yml · Publicador<br/>dashboard en GitHub Pages"]
+        AUD1["ci.yml · Auditor determinista (bt.auditoria)<br/>pre-registro antes de evaluar · holdout una vez<br/>approved.json coherente · look-ahead por estrategia<br/>Brain al día · bitácora determinista · data snooping"]
     end
+
+    AUD2["🔍 Auditor con criterio · Claude, semanal<br/>· juzga hipótesis y criterios<br/>· detecta variantes repetidas<br/>· propone ≤ 5 mejoras<br/>→ 02-DOCS/auditorias/ + PR"]
 
     DEC{"Veredicto"}
     MAIN["Rechazada / No concluyente<br/>→ commit directo a main<br/>(reporte + bitácora)"]
@@ -49,6 +52,11 @@ flowchart TD
     MAIN -. "se registra lo aprendido" .-> B2
     APPROVED -. "se registra lo aprendido" .-> B2
     VAL -. "protege la confianza<br/>en los números" .-> EV
+    AUD1 -. "vigila todo el proceso" .-> EV
+    AUD1 -- "informe" --> AUD2
+    AUD1 --> PAGES
+    AUD2 -- "propuestas de mejora (PR)" --> FELIPE
+    AUD2 -. "lee" .-> BRAIN
 
     %% ── Estilos ─────────────────────────────────────────────
     classDef humano fill:#fff4d6,stroke:#c98500,stroke-width:2px,color:#0b0b0b
@@ -59,7 +67,8 @@ flowchart TD
     classDef pendiente stroke-dasharray:6 4
     class FELIPE humano
     class A1,A2,A3 agente
-    class CI,VAL,EV,PAGES,DEC,MAIN,PR codigo
+    class CI,VAL,EV,PAGES,DEC,MAIN,PR,AUD1 codigo
+    class AUD2 agente
     class B1,B2,B3 brain
     class APPROVED,BSW salida
     class A1,A2,A3,BSW pendiente

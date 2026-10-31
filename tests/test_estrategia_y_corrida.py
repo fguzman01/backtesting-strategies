@@ -7,12 +7,17 @@ import pytest
 from bt import bitacora, data, run
 from bt.checks import chequear_comision, chequear_determinismo, chequear_lookahead
 from bt.engine import Config
-from bt.strategies import cargar, donchian_breakout
+from bt.strategies import cargar, donchian_breakout, tendencia_donchian
 
 
 def test_donchian_sin_lookahead(paseo):
     assert chequear_lookahead(donchian_breakout.senales, paseo) == []
     assert chequear_lookahead(donchian_breakout.senales, paseo, cortos=True) == []
+
+
+def test_tendencia_donchian_sin_lookahead(paseo):
+    assert chequear_lookahead(tendencia_donchian.senales, paseo) == []
+    assert chequear_lookahead(tendencia_donchian.senales, paseo, entrada=55, salida=20) == []
 
 
 def test_el_chequeo_caza_una_estrategia_que_mira_el_futuro(paseo):

@@ -32,6 +32,7 @@ from bt.spec import DURACION_MEDIANA_MAX_DIAS, Spec, SpecInvalida, cargar, lista
 from bt.splits import HOLDOUT_DESDE
 
 RESULTADOS = Path("results")
+DECISIONES = Path("02-DOCS") / "decisiones.md"
 APROBADAS = "APROBADA"
 RECHAZADA = "RECHAZADA"
 NO_CONCLUYENTE = "NO_CONCLUYENTE"
@@ -244,6 +245,31 @@ def guardar(ev: dict, base: Path = RESULTADOS) -> None:
         ruta.write_text(json.dumps(actual, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
+def linea_decisiones(ev: dict) -> str:
+    """Una línea para la tabla «Medidas en este repo» de 02-DOCS/decisiones.md (regla 0)."""
+    s, g = ev["spec"], ev["desarrollo"]["global"]
+    pregunta = str(s.get("pregunta") or s.get("hipotesis", "")).strip().split(". ")[0].replace("|", "/")
+    if len(pregunta) > 160:
+        pregunta = pregunta[:157] + "..."
+    partes = [f"desarrollo n={g['n']} {g['avgRNeto']:+.3f} {_fmt_ic(g)}"]
+    if ev["holdout"]:
+        h = ev["holdout"]["global"]
+        partes.append(f"holdout n={h['n']} {h['avgRNeto']:+.3f}")
+    if ev["motivos"]:
+        partes.append("falla: " + "; ".join(m.split(": ", 1)[-1] for m in ev["motivos"]))
+    detalle = ". ".join(partes).replace("|", "/")
+    return (f"| {pregunta} (`{ev['id']}`) | **{ev['veredicto']}.** {detalle} | {ev['fecha'][:10]} | "
+            f"`results/reports/{ev['id']}.md` |")
+
+
+def anotar_en_decisiones(ev: dict, ruta: Path = DECISIONES) -> None:
+    texto = ruta.read_text(encoding="utf-8")
+    if f"`{ev['id']}`" in texto:
+        return
+    texto = texto.replace("| _(ninguna todavía)_ | | | |\n", "")
+    ruta.write_text(texto.rstrip("\n") + "\n" + linea_decisiones(ev) + "\n", encoding="utf-8")
+
+
 def evaluada(sid: str, base: Path = RESULTADOS) -> bool:
     return (base / "evaluaciones" / f"{sid}.json").exists()
 
@@ -297,6 +323,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.forzar:
             ev["motivos"].append("re-evaluada con --forzar: el holdout ya se había mirado")
         guardar(ev)
+        if DECISIONES.exists():
+            anotar_en_decisiones(ev)
         evaluaciones.append(ev)
         print(f"{spec.id}: {ev['veredicto']}" + (f" — {'; '.join(ev['motivos'])}" if ev["motivos"] else ""))
 
