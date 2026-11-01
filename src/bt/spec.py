@@ -55,6 +55,7 @@ class Spec:
     criterio: Criterio
     ruta: Path | None = None
     crudo: dict = field(default_factory=dict, repr=False)
+    historia_spot: bool = False
 
     @property
     def minutos_por_vela(self) -> int:
@@ -103,6 +104,9 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     funding = bool(uni.get("funding", mercado == "futures"))
     if funding and mercado != "futures":
         raise SpecInvalida("el funding sólo existe en futuros")
+    historia_spot = bool(uni.get("historia_spot", False))
+    if historia_spot and mercado != "futures":
+        raise SpecInvalida("historia_spot completa con spot la historia de los FUTUROS; con mercado spot no aplica")
 
     c = d.get("config") or {}
     timeout = c.get("timeout_velas")
@@ -120,7 +124,12 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
         timeout_velas=int(timeout),
         objetivo_r=c.get("objetivo_r"),
         cerrar_al_final=bool(c.get("cerrar_al_final", True)),
+        breakeven_r=float(c["breakeven_r"]) if c.get("breakeven_r") is not None else None,
+        tp1_r=float(c["tp1_r"]) if c.get("tp1_r") is not None else None,
+        tp1_cierre=float(c.get("tp1_cierre", 1.0)),
     )
+    if not 0 < cfg.tp1_cierre <= 1:
+        raise SpecInvalida("config.tp1_cierre tiene que estar entre 0 (excluido) y 1")
     if cfg.fee_pct_por_lado <= 0:
         raise SpecInvalida("config.fee_pct_por_lado tiene que ser positivo: sin comisión no hay resultado")
 
@@ -143,7 +152,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
-                str(desde) if desde else None, criterio, ruta, d)
+                str(desde) if desde else None, criterio, ruta, d, historia_spot)
 
 
 def cargar(ruta: Path | str) -> Spec:

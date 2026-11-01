@@ -231,6 +231,25 @@ def cargar(simbolo: str, intervalo: str, mercado: str = "futures", base: Path = 
     return desde_csv(ruta)
 
 
+def cargar_extendida(simbolo: str, intervalo: str, base: Path = DIR_DATOS) -> pd.DataFrame:
+    """Futuros, precedidos por spot en las fechas en que los futuros todavía no existían.
+
+    Los perpetuos USDⓈ-M empiezan en 2019-09 (BTC, ETH) o 2020 (alts); el spot de varios tokens viene
+    desde 2017-2018 y agrega el bajista de 2018 y el lateral de 2019 (mejora 5 de la auditoría del
+    2026-11-01). En el tramo de spot no hay funding: no existía. En la unión puede haber un salto
+    chico (la base entre spot y futuro). `df.attrs["inicio_futuros"]` dice dónde empiezan los futuros.
+    """
+    fut = cargar(simbolo, intervalo, "futures", base)
+    ruta_spot = ruta_local(simbolo, intervalo, "spot", base)
+    if not ruta_spot.exists():
+        fut.attrs["inicio_futuros"] = fut.index[0].isoformat()
+        return fut
+    spot = desde_csv(ruta_spot)
+    df = pd.concat([spot[spot.index < fut.index[0]], fut]).sort_index()
+    df.attrs["inicio_futuros"] = fut.index[0].isoformat()
+    return df
+
+
 def desde_csv(ruta: Path | str) -> pd.DataFrame:
     df = pd.read_csv(ruta)
     df.index = pd.to_datetime(df.pop("time"), unit="ms", utc=True)

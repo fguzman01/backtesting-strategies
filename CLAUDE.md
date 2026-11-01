@@ -41,7 +41,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `02-DOCS/` | Brain: decisiones, reglas de medición, datos, diseño de la factory |
 | `specs/` | Pre-registros (`AAAA-MM-DD-<slug>.yaml`) |
 | `src/bt/data.py` | Descarga velas de data.binance.vision → `data/klines/` (fuera de git) |
-| `src/bt/engine.py` | Simulador por barras, dos modelos de llenado (conservador / optimista) |
+| `src/bt/engine.py` | Simulador por barras, dos modelos de llenado; trailing desde la entrada, breakeven y TP1/TP2 parcial |
 | `src/bt/metrics.py` | avgR, ±2 EE, tramos, concluyente |
 | `src/bt/splits.py` | Holdout fijo |
 | `src/bt/checks.py` | Chequeos anti-sesgo |

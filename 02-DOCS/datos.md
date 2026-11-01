@@ -26,3 +26,13 @@ python -m bt.data PAXGUSDT 1d 2020-01 --mercado spot
 - Funding (futuros): `python -m bt.data <SIM> 1d 2020-01 --funding` lo baja a
   `data/funding/<SIM>.csv` y `bt.run --funding` lo cobra. En estrategias de varios días importa:
   en TREND_1D pesó −0.076R por operación en desarrollo.
+
+## Historia extendida con spot (desde 2026-11-01)
+Con `universo.historia_spot: true` en la spec, cada símbolo usa velas de **spot antes del primer día
+con futuros** y de futuros desde ahí (`bt.data.cargar_extendida`). Agrega 2017-2019 (bajista de 2018,
+lateral de 2019) donde el spot existe: BTC, ETH, BNB, LTC, XRP, TRX, ADA, LINK, DOGE. Los tokens
+listados en 2020 (SOL, AVAX, NEAR, UNI, DOT) no ganan historia. Cuidados:
+- En el tramo de spot no hay funding (los perpetuos no existían): es correcto, no un faltante.
+- En la unión spot→futuro puede haber un salto chico por la base entre ambos mercados.
+- Las specs evaluadas antes de esta opción no cambian (no se re-evalúan), y la validación contra
+  btc-signal-web sigue usando sólo futuros.

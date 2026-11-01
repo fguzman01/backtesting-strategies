@@ -256,3 +256,21 @@ def test_clon_superficial_no_inventa_violaciones(repo, tmp_path_factory):
     subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{repo}", str(clon)], check=True)
     c = por_nombre(auditoria.auditar(clon))["Pre-registro antes de evaluar"]
     assert c.estado == AVISO and "no se pudo verificar" in c.detalle[0]
+
+
+def test_robustez_avisa_si_depende_de_pocas_operaciones(repo):
+    e = _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.02, 0.2])
+    e["desarrollo"]["robustez"] = {"costosX": 1.5, "costos": {"avgRNeto": -0.01, "ic95": None},
+                                   "sinMejores": 10, "sinTop": {"avgRNeto": 0.01, "ic95": [-0.05, 0.07]}}
+    escribir_ev(repo, e)
+    c = por_nombre(auditoria.auditar(repo))["Robustez: costos más altos y sin las mejores operaciones"]
+    assert c.estado == AVISO and len(c.detalle) == 2
+
+
+def test_robustez_de_metrics():
+    from bt.engine import Trade
+    from bt.metrics import robustez
+    ts = [Trade(1, "d", "d", "d", 100, 95, None, None, "TP", r, 0.1, r - 0.1, 0, 1) for r in [5.0] + [0.1] * 20]
+    rob = robustez(ts, sacar_mejores=1)
+    assert rob["sinTop"]["n"] == 20 and rob["sinTop"]["avgRNeto"] == pytest.approx(0.0)
+    assert rob["costos"]["avgRNeto"] == pytest.approx((5.0 + 0.1 * 20) / 21 - 0.15)

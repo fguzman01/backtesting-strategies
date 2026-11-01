@@ -25,6 +25,7 @@ universo:
   simbolos: [BTCUSDT, ETHUSDT]
   intervalo: 1d             # 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d
   funding: true             # cobrar funding (sólo futuros)
+  historia_spot: true       # antes de que existan los futuros, usar spot (2017-2019: incluye el bajista de 2018)
 
 config:
   fee_pct_por_lado: 0.0005  # comisión (+ deslizamiento, si se quiere modelar como costo)
@@ -32,9 +33,14 @@ config:
   timeout_velas: 7          # obligatorio; como máximo 14 días
   objetivo_r: null
   cerrar_al_final: true     # lo abierto al final de la ventana se cierra y cuenta
+  # Gestión de la posición (opcional, como el bot real). Trailing: la estrategia devuelve la columna
+  # `trailing` (distancia en precio). Ver el docstring de bt.engine.
+  breakeven_r: null         # p. ej. 1.0: al avanzar 1R el stop pasa a la entrada
+  tp1_r: null               # p. ej. 1.0: TP1 a 1R...
+  tp1_cierre: 1.0           # ...cerrando esta fracción (1.0 = TP1 es el objetivo; 0.5 = parcial + breakeven)
 
 ventana_desarrollo:
-  desde: "2020-01-01"       # termina sola en el holdout (2025-09-09)
+  desde: "2017-01-01"       # termina sola en el holdout (2025-09-09); sin historia_spot, los futuros empiezan ~2019-2020
 
 criterio_aprobacion:        # todo en desarrollo; si pasa, se mira el holdout UNA vez
   n_minimo: 100             # menos que esto → NO_CONCLUYENTE

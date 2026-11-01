@@ -194,3 +194,18 @@ def test_workflows_son_yaml_valido():
     from pathlib import Path
     for ruta in Path(".github/workflows").glob("*.yml"):
         yaml.safe_load(ruta.read_text())
+
+
+def test_spec_con_gestion_de_posicion():
+    d = con(config__tp1_r=1.0, config__tp1_cierre=0.5, config__breakeven_r=0.8)
+    s = desde_dict(d)
+    assert s.cfg.tp1_r == 1.0 and s.cfg.tp1_cierre == 0.5 and s.cfg.breakeven_r == 0.8
+    with pytest.raises(SpecInvalida, match="tp1_cierre"):
+        desde_dict(con(config__tp1_cierre=1.5))
+
+
+def test_spec_historia_spot():
+    assert desde_dict(con(universo__historia_spot=True)).historia_spot
+    assert not desde_dict(BASE).historia_spot
+    with pytest.raises(SpecInvalida, match="historia_spot"):
+        desde_dict(con(universo__historia_spot=True, universo__mercado="spot", universo__funding=False))

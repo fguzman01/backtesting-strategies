@@ -50,7 +50,10 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
     ventana: list[pd.Timestamp] = []
     calidad: dict[str, dict] = {}
     for s in spec.simbolos:
-        df = cargar_velas(s, spec.intervalo, spec.mercado)
+        if spec.historia_spot and cargar_velas is data.cargar:
+            df = data.cargar_extendida(s, spec.intervalo)
+        else:
+            df = cargar_velas(s, spec.intervalo, spec.mercado)
         fund = cargar_funding(s) if spec.funding else None
         r = run.correr(
             spec.modulo, df, simbolo=s, intervalo=spec.intervalo, mercado=spec.mercado, desde=desde,
@@ -81,6 +84,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "duracionMedianaDias": median(duraciones) if duraciones else None,
         "porSimbolo": {s: metrics.calcular(ts) | {"porMotivo": None} for s, ts in por_simbolo.items()},
         "calidadDatos": calidad,
+        "robustez": metrics.robustez(todos),
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }
@@ -198,8 +202,14 @@ def reporte_md(ev: dict) -> str:
             "",
             f"Control nulo: media {nulo['media']:+.3f}, p95 {nulo['p95']:+.3f}"
             if nulo["media"] is not None else "Control nulo: sin datos",
-            "", "| Tramo | n | avgR neto |", "|---|---|---|",
         ]
+        rob = t.get("robustez")
+        if rob:
+            lineas += ["", "**Robustez** (informativa, no decide): "
+                       f"costos ×{rob['costosX']} → {rob['costos']['avgRNeto']:+.3f} {_fmt_ic(rob['costos'])} · "
+                       f"sin las {rob['sinMejores']} mejores → "
+                       f"{rob['sinTop']['avgRNeto']:+.3f} {_fmt_ic(rob['sinTop'])}"]
+        lineas += ["", "| Tramo | n | avgR neto |", "|---|---|---|"]
         lineas += [f"| {x['desde']} → {x['hasta']} | {x['n']} | {x['avgRNeto']:+.3f} |" for x in t["porTramo"]]
         lineas += ["", "| Símbolo | n | avgR neto | ±2 EE |", "|---|---|---|---|"]
         lineas += [f"| {k} | {m['n']} | {m['avgRNeto']:+.3f} | {_fmt_ic(m)} |" for k, m in t["porSimbolo"].items()]
@@ -286,6 +296,13 @@ def pendientes(directorio: Path = Path("specs"), base: Path = RESULTADOS) -> lis
     return out
 
 
+def _spot_si_existe(simbolo: str, intervalo: str) -> str:
+    try:
+        return str(data.descargar(simbolo, intervalo, "2017-01", "spot"))
+    except RuntimeError:
+        return f"{simbolo}: sin spot en data.binance.vision (se usa sólo futuros)"
+
+
 def bajar(spec: Spec) -> None:
     """Velas (y funding) de todos los símbolos, en paralelo. Completa lo que ya haya en caché."""
     from concurrent.futures import ThreadPoolExecutor
@@ -293,6 +310,8 @@ def bajar(spec: Spec) -> None:
     tareas = [lambda s=s: data.descargar(s, spec.intervalo, "2020-01", spec.mercado) for s in spec.simbolos]
     if spec.funding:
         tareas += [lambda s=s: data.descargar_funding(s, "2020-01") for s in spec.simbolos]
+    if spec.historia_spot:
+        tareas += [lambda s=s: _spot_si_existe(s, spec.intervalo) for s in spec.simbolos]
     with ThreadPoolExecutor(4) as ex:
         for ruta in ex.map(lambda f: f(), tareas):
             print(f"  {ruta}", flush=True)

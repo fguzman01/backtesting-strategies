@@ -42,3 +42,16 @@ y el resultado se puede usar enseguida:
 
 Después se abre a otros tipos y activos. La rutina diaria alterna entre "mejorar o extender lo
 conocido" (otros símbolos, otras temporalidades dentro del rango) e "idea nueva".
+
+## Decisiones de alcance (Felipe)
+
+- **2026-11-01 · Familia de tendencia diaria (TREND_1D y variantes).** El edge crece con la
+  duración (+0.087 con tope de 7 días → +0.148 con 14 → +0.545 sin tope, ~22 días de media), así que
+  con este alcance no pasa. **Se mantiene el alcance, sin excepción.** Se espera el resultado de
+  TREND_4H con tope de 7 días (idea #2); si falla, **se cierra la familia de tendencia en la
+  factory** y se buscan otros tipos de estrategia. TREND_1D sin tope sigue corriendo en paper en
+  btc-signal-web, fuera de la factory.
+- **2026-11-01 · Motor y datos.** Se aprueban (a) que el motor conozca la posición abierta para
+  simular trailing desde la entrada, breakeven y salidas parciales TP1/TP2, como el bot real; y
+  (b) más historia (spot 2017–2019 donde no hay futuros) y robustez automática en cada reporte
+  (costos +50% y sin las 10 mejores operaciones).

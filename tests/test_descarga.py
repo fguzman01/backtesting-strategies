@@ -60,3 +60,24 @@ def test_velas_imposibles():
     df = pd.DataFrame({"open": [1, 1, 1], "high": [1.2, 0.9, 1.1], "low": [0.9, 0.8, 1.05],
                        "close": [1.1, 1, 1.0], "volume": 1.0}, index=idx)
     assert data.calidad(df, 1440)["inconsistentes"] == 2  # máximo bajo la apertura; mínimo sobre el cierre
+
+
+def test_cargar_extendida_antepone_spot(tmp_path):
+    import pandas as pd
+
+    def escribir(mercado, desde, n, precio):
+        idx = pd.date_range(desde, periods=n, freq="1D", tz="UTC")
+        df = pd.DataFrame({"time": idx.as_unit("ms").asi8, "open": precio, "high": precio + 1,
+                           "low": precio - 1, "close": precio, "volume": 1.0})
+        ruta = data.ruta_local("XUSDT", "1d", mercado, tmp_path)
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(ruta, index=False)
+
+    escribir("futures", "2019-09-10", 10, 200.0)
+    assert data.cargar_extendida("XUSDT", "1d", tmp_path).index[0] == pd.Timestamp("2019-09-10", tz="UTC")
+    escribir("spot", "2019-09-01", 15, 100.0)  # se solapa con los futuros: manda futuros
+    df = data.cargar_extendida("XUSDT", "1d", tmp_path)
+    assert df.index[0] == pd.Timestamp("2019-09-01", tz="UTC") and len(df) == 19
+    assert not df.index.has_duplicates
+    assert float(df.loc["2019-09-09", "close"]) == 100 and float(df.loc["2019-09-10", "close"]) == 200
+    assert df.attrs["inicio_futuros"].startswith("2019-09-10")

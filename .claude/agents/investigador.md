@@ -65,11 +65,12 @@ decida sobre el alcance.
 ### 4. Construir (TDD)
 - Reusá una estrategia existente si la idea es la misma regla con otros parámetros: entonces no hay
   módulo nuevo, sólo la spec.
-- **Limitación del motor:** las señales se calculan sin saber si hay una posición abierta ni dónde
-  entró. Una salida que dependa del trade (trailing desde el máximo DESDE LA ENTRADA, stop a
-  breakeven, objetivo móvil) **no se puede escribir bien hoy**: un "trailing" con máximo móvil de
-  N velas no es lo mismo y casi nunca dispara (pasó con el chandelier). Si la idea lo necesita,
-  no la implementes a medias: anotá en `ideas.md` que espera el cambio del motor.
+- **Salidas que dependen de la posición** (desde 2026-11-01 el motor las soporta, ver el docstring de
+  `bt.engine`): para un trailing desde la entrada, la estrategia devuelve la columna `trailing`
+  (distancia en precio, p. ej. `3 * atr`) y el motor mueve el stop detrás del mejor precio DESDE LA
+  ENTRADA. Breakeven y salida parcial TP1/TP2 van en la spec (`config.breakeven_r`, `tp1_r`,
+  `tp1_cierre`). **No** escribas un "trailing" como máximo móvil de N velas en las señales: no es lo
+  mismo y casi nunca dispara (pasó con el chandelier de `2026-11-01-trend1d-chandelier-14d`).
 - Si hace falta una regla nueva: primero el test en `tests/test_estrategia_<modulo>.py`, después
   `src/bt/strategies/<modulo>.py` con `senales(df, **params)` siguiendo el contrato de
   `bt.engine` (docstring del módulo). El test, como mínimo:
