@@ -194,6 +194,29 @@ def test_ventana_buena_pasa(repo):
     assert por_nombre(auditoria.auditar(repo))["Ventana y potencia estadística"].estado == OK
 
 
+def test_saltos_grandes_no_son_error(repo):
+    rally = {"AUSDT": {"duplicadas": 0, "saltos": 3, "inconsistentes": 0, "huecosPct": 0}}
+    escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1], calidad=rally))
+    assert por_nombre(auditoria.auditar(repo))["Calidad de los datos usados"].estado == OK
+
+
+def test_velas_imposibles_son_error(repo):
+    malo = {"AUSDT": {"duplicadas": 0, "saltos": 0, "inconsistentes": 1, "huecosPct": 0}}
+    escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1], calidad=malo))
+    assert por_nombre(auditoria.auditar(repo))["Calidad de los datos usados"].estado == FALLA
+
+
+def test_casi_todo_por_timeout_avisa(repo):
+    e = _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1])
+    e["desarrollo"]["global"]["porMotivo"] = {"TIMEOUT": 30, "SL": 20}
+    escribir_ev(repo, e)
+    c = por_nombre(auditoria.auditar(repo))["La regla de salida actúa (no todo es timeout)"]
+    assert c.estado == AVISO and "60%" in c.detalle[0]
+    e["desarrollo"]["global"]["porMotivo"] = {"TIMEOUT": 10, "SL": 40}
+    escribir_ev(repo, e)
+    assert por_nombre(auditoria.auditar(repo))["La regla de salida actúa (no todo es timeout)"].estado == OK
+
+
 def test_calidad_de_datos(repo):
     malo = {"AUSDT": {"duplicadas": 2, "saltos": 0, "huecosPct": 0}}
     escribir_ev(repo, _con_dev(ev(), ["2020-01-01", "2025-09-08"], [0.01, 0.1], calidad=malo))

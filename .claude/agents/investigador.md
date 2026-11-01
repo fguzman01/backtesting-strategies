@@ -54,9 +54,22 @@ Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) 
 Si la idea nace de una rechazada, nombrá a la madre en `ya_probado` y no copies sus parámetros
 afinados: la versión nueva tiene que diferir en el mecanismo.
 
+**Antes de pre-registrar, chequeá que la idea pueda pasar el alcance** (lección de
+`2026-11-01-trend1d-chandelier-14d`, que falló por diseño): la evaluación exige duración mediana
+≤ 7 días. Si la estrategia no tiene objetivo y sus salidas por regla son lentas, las operaciones
+van a terminar en el timeout: con `timeout_velas` de 14 días la mediana queda en 14 y se rechaza
+sola. Usá la duración de la madre en `results/evaluaciones/` como referencia, y si la idea sólo
+tiene sentido con operaciones más largas, no la fuerces: anotalo en `ideas.md` para que Felipe
+decida sobre el alcance.
+
 ### 4. Construir (TDD)
 - Reusá una estrategia existente si la idea es la misma regla con otros parámetros: entonces no hay
   módulo nuevo, sólo la spec.
+- **Limitación del motor:** las señales se calculan sin saber si hay una posición abierta ni dónde
+  entró. Una salida que dependa del trade (trailing desde el máximo DESDE LA ENTRADA, stop a
+  breakeven, objetivo móvil) **no se puede escribir bien hoy**: un "trailing" con máximo móvil de
+  N velas no es lo mismo y casi nunca dispara (pasó con el chandelier). Si la idea lo necesita,
+  no la implementes a medias: anotá en `ideas.md` que espera el cambio del motor.
 - Si hace falta una regla nueva: primero el test en `tests/test_estrategia_<modulo>.py`, después
   `src/bt/strategies/<modulo>.py` con `senales(df, **params)` siguiendo el contrato de
   `bt.engine` (docstring del módulo). El test, como mínimo:
