@@ -55,6 +55,7 @@ class Spec:
     criterio: Criterio
     ruta: Path | None = None
     crudo: dict = field(default_factory=dict, repr=False)
+    historia_spot: bool = False
 
     @property
     def minutos_por_vela(self) -> int:
@@ -103,6 +104,9 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     funding = bool(uni.get("funding", mercado == "futures"))
     if funding and mercado != "futures":
         raise SpecInvalida("el funding sólo existe en futuros")
+    historia_spot = bool(uni.get("historia_spot", False))
+    if historia_spot and mercado != "futures":
+        raise SpecInvalida("historia_spot completa con spot la historia de los FUTUROS; con mercado spot no aplica")
 
     c = d.get("config") or {}
     timeout = c.get("timeout_velas")
@@ -148,7 +152,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
-                str(desde) if desde else None, criterio, ruta, d)
+                str(desde) if desde else None, criterio, ruta, d, historia_spot)
 
 
 def cargar(ruta: Path | str) -> Spec:
