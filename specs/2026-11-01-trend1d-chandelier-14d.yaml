@@ -1,0 +1,54 @@
+id: 2026-11-01-trend1d-chandelier-14d
+estado: pre-registrada
+fuente: "Idea #1 de 02-DOCS/ideas.md (Felipe, 2026-10-31), nacida de la auditoría de 2026-10-31-trend1d-tope-7d"
+pregunta: "¿TREND_1D con salida por trailing en ATR (chandelier) y tope de 14 días conserva el edge dentro del alcance?"
+
+hipotesis: >
+  El edge de TREND_1D vive en pocas tendencias largas, que el tope fijo de 7 días cortaba. Un
+  trailing chandelier (máximo de 22 velas − 3 ATR) saca las operaciones que pierden momentum pronto
+  pero deja correr las que siguen dando máximos, hasta el tope de 14 días permitido por el alcance.
+  La entrada y el stop inicial son los de TREND_1D, así que la diferencia es sólo la salida: si
+  el edge sobrevive, es porque capturar el tramo 7–14 días de las buenas tendencias compensa la
+  comisión (0.1% por lado ≈ 0.05R con stop de 2 ATR de ~4%). Se elige UNA configuración
+  (22 / 3.0) antes de correr; no se barren parámetros. Criterio exigente por defecto.
+
+ya_probado: >
+  decisiones.md: `2026-10-31-trend1d-tope-7d` (madre) rechazada por poco: +0.087 [−0.001, +0.175],
+  n=952, 3/4 tramos; sin tope era +0.545. Familia TREND_1D: 1 variante evaluada en este repo (esta
+  sería la 2.ª). "Abrir el techo o trailing" fue plano en SCALP_1H (2026-10-11), pero era otra
+  familia y otra temporalidad; aquí el trailing reemplaza al canal de 10 velas y el tope sube a 14d.
+  Holdout de la madre no se miró, y esta spec lo mira una sola vez si pasa desarrollo.
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "6-7 días (la mayoría sale por stop o trailing; sólo las buenas llegan a 14)"
+
+estrategia:
+  modulo: tendencia_chandelier
+  params: {entrada: 20, salida_n: 22, salida_atr: 3.0, atr_n: 20, ema_n: 200, stop_atr: 2.0}
+
+universo:
+  mercado: futures
+  simbolos: [ADAUSDT, AVAXUSDT, BNBUSDT, BTCUSDT, DOGEUSDT, DOTUSDT, ETHUSDT, LINKUSDT, LTCUSDT,
+             NEARUSDT, SOLUSDT, TRXUSDT, UNIUSDT, XRPUSDT]
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%, igual que TREND_1D y la madre
+  deslizamiento_pct: 0.0
+  timeout_velas: 14
+  objetivo_r: null
+  cerrar_al_final: true
+
+ventana_desarrollo:
+  desde: "2020-01-01"
+
+criterio_aprobacion:
+  n_minimo: 100
+  ic95_excluye_cero: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  holdout:
+    avgRNeto_positivo: true
