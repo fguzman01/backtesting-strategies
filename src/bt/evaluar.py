@@ -81,6 +81,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "duracionMedianaDias": median(duraciones) if duraciones else None,
         "porSimbolo": {s: metrics.calcular(ts) | {"porMotivo": None} for s, ts in por_simbolo.items()},
         "calidadDatos": calidad,
+        "robustez": metrics.robustez(todos),
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }
@@ -198,8 +199,14 @@ def reporte_md(ev: dict) -> str:
             "",
             f"Control nulo: media {nulo['media']:+.3f}, p95 {nulo['p95']:+.3f}"
             if nulo["media"] is not None else "Control nulo: sin datos",
-            "", "| Tramo | n | avgR neto |", "|---|---|---|",
         ]
+        rob = t.get("robustez")
+        if rob:
+            lineas += ["", "**Robustez** (informativa, no decide): "
+                       f"costos ×{rob['costosX']} → {rob['costos']['avgRNeto']:+.3f} {_fmt_ic(rob['costos'])} · "
+                       f"sin las {rob['sinMejores']} mejores → "
+                       f"{rob['sinTop']['avgRNeto']:+.3f} {_fmt_ic(rob['sinTop'])}"]
+        lineas += ["", "| Tramo | n | avgR neto |", "|---|---|---|"]
         lineas += [f"| {x['desde']} → {x['hasta']} | {x['n']} | {x['avgRNeto']:+.3f} |" for x in t["porTramo"]]
         lineas += ["", "| Símbolo | n | avgR neto | ±2 EE |", "|---|---|---|---|"]
         lineas += [f"| {k} | {m['n']} | {m['avgRNeto']:+.3f} | {_fmt_ic(m)} |" for k, m in t["porSimbolo"].items()]

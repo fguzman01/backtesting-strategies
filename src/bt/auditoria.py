@@ -279,6 +279,25 @@ def chequear_salidas(evs: dict[str, dict]) -> Chequeo:
                    avisos)
 
 
+def chequear_robustez(evs: dict[str, dict]) -> Chequeo:
+    """Para lo que parecía distinguible de cero: ¿aguanta costos más altos y sin sus mejores operaciones?"""
+    avisos = []
+    for sid, ev in evs.items():
+        dev = ev.get("desarrollo") or {}
+        rob, g = dev.get("robustez"), dev.get("global") or {}
+        if not rob or not (g.get("ic95") and g["ic95"][0] > 0):
+            continue
+        if rob["costos"]["avgRNeto"] <= 0:
+            avisos.append(f"{sid}: con costos ×{rob['costosX']} el avgR pasa a {rob['costos']['avgRNeto']:+.3f}: "
+                          "el edge no aguanta un costo un poco peor")
+        ic = rob["sinTop"]["ic95"]
+        if ic and ic[0] <= 0:
+            avisos.append(f"{sid}: sin las {rob['sinMejores']} mejores operaciones el intervalo toca el cero "
+                          f"({rob['sinTop']['avgRNeto']:+.3f} [{ic[0]:+.3f}, {ic[1]:+.3f}]): depende de pocas colas")
+    return Chequeo("Robustez: costos más altos y sin las mejores operaciones", "auditor.md: robustez",
+                   AVISO if avisos else OK, avisos)
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -306,6 +325,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_calidad_datos(evs),
         chequear_rechazos_al_borde(evs),
         chequear_salidas(evs),
+        chequear_robustez(evs),
         chequear_desgaste_holdout(evs),
     ]
 

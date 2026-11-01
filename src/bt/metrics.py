@@ -58,6 +58,26 @@ def calcular(trades: list[Trade]) -> dict:
     }
 
 
+def robustez(trades: list[Trade], factor_costos: float = 1.5, sacar_mejores: int = 10) -> dict:
+    """Dos pruebas de fragilidad que no deciden, informan (las pidió la auditoría del 2026-11-01).
+
+    - costos × `factor_costos`: ¿el resultado sobrevive a una comisión/deslizamiento peor que lo asumido?
+    - sin las `sacar_mejores` mejores operaciones: ¿el edge depende de unas pocas colas grandes?
+    """
+    res = [t for t in trades if t.resuelto]
+    caros = [t.r_bruto - factor_costos * t.fee_r - t.funding_r for t in res]
+    netos = sorted((t.r_neto for t in res), reverse=True)
+    sin_top = netos[sacar_mejores:]
+    return {
+        "costosX": factor_costos,
+        "costos": {"n": len(caros), "avgRNeto": sum(caros) / len(caros) if caros else 0.0,
+                   "ic95": intervalo(caros)},
+        "sinMejores": sacar_mejores,
+        "sinTop": {"n": len(sin_top), "avgRNeto": sum(sin_top) / len(sin_top) if sin_top else 0.0,
+                   "ic95": intervalo(sin_top)},
+    }
+
+
 def cuantos_tramos(n: int) -> int:
     return max(2, min(4, n // MIN_PARA_SIGNO))
 
