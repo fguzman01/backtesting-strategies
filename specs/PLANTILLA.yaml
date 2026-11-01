@@ -32,6 +32,11 @@ config:
   timeout_velas: 7          # obligatorio; como máximo 14 días
   objetivo_r: null
   cerrar_al_final: true     # lo abierto al final de la ventana se cierra y cuenta
+  # Gestión de la posición (opcional, como el bot real). Trailing: la estrategia devuelve la columna
+  # `trailing` (distancia en precio). Ver el docstring de bt.engine.
+  breakeven_r: null         # p. ej. 1.0: al avanzar 1R el stop pasa a la entrada
+  tp1_r: null               # p. ej. 1.0: TP1 a 1R...
+  tp1_cierre: 1.0           # ...cerrando esta fracción (1.0 = TP1 es el objetivo; 0.5 = parcial + breakeven)
 
 ventana_desarrollo:
   desde: "2020-01-01"       # termina sola en el holdout (2025-09-09)

@@ -120,7 +120,12 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
         timeout_velas=int(timeout),
         objetivo_r=c.get("objetivo_r"),
         cerrar_al_final=bool(c.get("cerrar_al_final", True)),
+        breakeven_r=float(c["breakeven_r"]) if c.get("breakeven_r") is not None else None,
+        tp1_r=float(c["tp1_r"]) if c.get("tp1_r") is not None else None,
+        tp1_cierre=float(c.get("tp1_cierre", 1.0)),
     )
+    if not 0 < cfg.tp1_cierre <= 1:
+        raise SpecInvalida("config.tp1_cierre tiene que estar entre 0 (excluido) y 1")
     if cfg.fee_pct_por_lado <= 0:
         raise SpecInvalida("config.fee_pct_por_lado tiene que ser positivo: sin comisión no hay resultado")
 

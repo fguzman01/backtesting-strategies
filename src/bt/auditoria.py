@@ -272,8 +272,9 @@ def chequear_salidas(evs: dict[str, dict]) -> Chequeo:
     for sid, ev in evs.items():
         g = (ev.get("desarrollo") or {}).get("global") or {}
         n, motivos = g.get("n") or 0, g.get("porMotivo") or {}
-        if n and motivos.get("TIMEOUT", 0) / n > MAX_TIMEOUT_PCT:
-            avisos.append(f"{sid}: {100 * motivos['TIMEOUT'] / n:.0f}% de las operaciones sale por timeout: la "
+        por_timeout = sum(v for m, v in motivos.items() if m.split("+")[-1] == "TIMEOUT")
+        if n and por_timeout / n > MAX_TIMEOUT_PCT:
+            avisos.append(f"{sid}: {100 * por_timeout / n:.0f}% de las operaciones sale por timeout: la "
                           "regla de salida casi no actúa y lo medido es el tope de tiempo")
     return Chequeo("La regla de salida actúa (no todo es timeout)", "auditor.md: robustez", AVISO if avisos else OK,
                    avisos)
