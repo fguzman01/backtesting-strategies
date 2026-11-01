@@ -51,3 +51,12 @@ def test_calidad_detecta_huecos_duplicados_y_saltos():
     df = pd.DataFrame({"close": [1.0, 1.1, 1.1, 2.0], "volume": [1, 0, 1, 1]}, index=idx)
     c = data.calidad(df, 1440)
     assert c["duplicadas"] == 1 and c["huecos"] == 2 and c["volumenCero"] == 1 and c["saltos"] == 1
+    assert c["inconsistentes"] == 0  # sin OHLC no se puede juzgar
+
+
+def test_velas_imposibles():
+    import pandas as pd
+    idx = pd.date_range("2024-01-01", periods=3, freq="1D", tz="UTC")
+    df = pd.DataFrame({"open": [1, 1, 1], "high": [1.2, 0.9, 1.1], "low": [0.9, 0.8, 1.05],
+                       "close": [1.1, 1, 1.0], "volume": 1.0}, index=idx)
+    assert data.calidad(df, 1440)["inconsistentes"] == 2  # máximo bajo la apertura; mínimo sobre el cierre

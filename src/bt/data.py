@@ -195,7 +195,8 @@ def calidad(df: pd.DataFrame, minutos: int, desde=None, hasta=None) -> dict:
     if hasta is not None:
         df = df[df.index <= pd.Timestamp(hasta)]
     if len(df) < 2:
-        return {"velas": len(df), "huecos": 0, "huecosPct": 0.0, "duplicadas": 0, "volumenCero": 0, "saltos": 0}
+        return {"velas": len(df), "huecos": 0, "huecosPct": 0.0, "duplicadas": 0, "volumenCero": 0, "saltos": 0,
+                "inconsistentes": 0}
     paso = pd.Timedelta(minutes=minutos)
     esperadas = int((df.index[-1] - df.index[0]) / paso) + 1
     unicas = df.index.nunique()
@@ -206,9 +207,20 @@ def calidad(df: pd.DataFrame, minutos: int, desde=None, hasta=None) -> dict:
         "huecosPct": round(100 * max(0, esperadas - unicas) / esperadas, 3),
         "duplicadas": int(len(df) - unicas),
         "volumenCero": int((df["volume"] <= 0).sum()) if "volume" in df else 0,
-        # Más de 50% en una vela: casi siempre un error de datos o un cambio de contrato.
+        # Más de 50% en una vela. En cripto diario pasa de verdad (DOGE, SOL, XRP en 2021): es un dato
+        # para mirar, NO un error. Los errores de dato son las inconsistencias de abajo.
         "saltos": int((ret > 0.5).sum()),
+        "inconsistentes": _inconsistentes(df),
     }
+
+
+def _inconsistentes(df: pd.DataFrame) -> int:
+    """Velas imposibles: máximo por debajo de la apertura/cierre, mínimo por encima, o precios ≤ 0."""
+    if not {"open", "high", "low", "close"} <= set(df.columns):
+        return 0
+    o, h, lo, c = df["open"], df["high"], df["low"], df["close"]
+    malas = (h < o.combine(c, max)) | (lo > o.combine(c, min)) | (df[["open", "high", "low", "close"]] <= 0).any(axis=1)
+    return int(malas.sum())
 
 
 def cargar(simbolo: str, intervalo: str, mercado: str = "futures", base: Path = DIR_DATOS) -> pd.DataFrame:

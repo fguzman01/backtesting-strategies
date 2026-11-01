@@ -36,6 +36,7 @@ BAJISTA = ("2022-01-01", "2022-12-31")  # el único año bajista completo de la 
 HUECOS_MAX_PCT = 0.5
 EVALUACIONES_CON_HOLDOUT_MAX = 10
 MARGEN_AL_BORDE_R = 0.03
+MAX_TIMEOUT_PCT = 0.5
 
 
 @dataclass
@@ -221,11 +222,12 @@ def chequear_calidad_datos(evs: dict[str, dict]) -> Chequeo:
     problemas, avisos = [], []
     for sid, ev in evs.items():
         for s, c in ((ev.get("desarrollo") or {}).get("calidadDatos") or {}).items():
-            if c.get("duplicadas") or c.get("saltos"):
-                problemas.append(f"{sid} {s}: {c.get('duplicadas', 0)} velas duplicadas, {c.get('saltos', 0)} "
-                                 "saltos > 50% en una vela")
+            if c.get("duplicadas") or c.get("inconsistentes"):
+                problemas.append(f"{sid} {s}: {c.get('duplicadas', 0)} velas duplicadas, "
+                                 f"{c.get('inconsistentes', 0)} velas imposibles (máximo/mínimo incoherentes)")
             elif c.get("huecosPct", 0) > HUECOS_MAX_PCT:
                 avisos.append(f"{sid} {s}: {c['huecosPct']}% de velas faltantes ({c['huecos']})")
+            # Los saltos > 50% en una vela no son errores en cripto (rallies reales); no cambian el estado.
     sin_dato = [sid for sid, ev in evs.items() if "calidadDatos" not in (ev.get("desarrollo") or {})]
     if sin_dato:
         avisos.append(f"sin registro de calidad de datos (evaluadas antes de que existiera): {', '.join(sin_dato)}")
@@ -260,6 +262,23 @@ def chequear_rechazos_al_borde(evs: dict[str, dict]) -> Chequeo:
                    AVISO if borde else OK, borde)
 
 
+def chequear_salidas(evs: dict[str, dict]) -> Chequeo:
+    """Si la mayoría de las operaciones sale por timeout, la regla de salida no está actuando.
+
+    Propuesto por la auditoría del 2026-11-01: el chandelier de 2026-11-01-trend1d-chandelier-14d tuvo
+    mediana de duración igual al tope (14 días), o sea que lo medido fue el timeout, no el trailing.
+    """
+    avisos = []
+    for sid, ev in evs.items():
+        g = (ev.get("desarrollo") or {}).get("global") or {}
+        n, motivos = g.get("n") or 0, g.get("porMotivo") or {}
+        if n and motivos.get("TIMEOUT", 0) / n > MAX_TIMEOUT_PCT:
+            avisos.append(f"{sid}: {100 * motivos['TIMEOUT'] / n:.0f}% de las operaciones sale por timeout: la "
+                          "regla de salida casi no actúa y lo medido es el tope de tiempo")
+    return Chequeo("La regla de salida actúa (no todo es timeout)", "auditor.md: robustez", AVISO if avisos else OK,
+                   avisos)
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -286,6 +305,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_ventana(evs),
         chequear_calidad_datos(evs),
         chequear_rechazos_al_borde(evs),
+        chequear_salidas(evs),
         chequear_desgaste_holdout(evs),
     ]
 
