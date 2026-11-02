@@ -18,6 +18,8 @@ jobs:
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
+      - name: Contrato de approved.json con btc-signal-web
+        run: python -m bt.contrato
 
   # Auditor determinista del proceso: falla si se viola una regla de la metodología (CLAUDE.md).
   auditoria:
