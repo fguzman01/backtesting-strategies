@@ -3,7 +3,8 @@
 **Antes de proponer evaluar una estrategia, parámetro o activo, buscá acá.** Indexado por la
 pregunta. Una línea por pregunta; el detalle va en el commit o en el reporte.
 
-Origen: resumen de `fguzman01/btc-signal-web/DECISIONES.md` al 2026-10-31. Ese archivo sigue
+Origen: resumen de `fguzman01/btc-signal-web/DECISIONES.md` al 2026-10-31, completado el 2026-11-02
+(la primera migración había dejado afuera funding, estacionalidad, pares, miedo extremo y otras). Ese archivo sigue
 siendo la fuente con todos los números; si hay duda, leer la fila original.
 
 > ⚠️ Los avgR de btc-signal-web medidos **antes del 2026-10-11** son optimistas (compuerta y
@@ -26,6 +27,16 @@ siendo la fuente con todos los números; si hay duda, leer la fila original.
 | ¿SCALP_15M en qué símbolos? | 8 de 14 pasan (UNI, ADA, DOGE, NEAR, AVAX, XRP, LINK, ETH). No: BTC, SOL, BNB, TRX, DOT, LTC | 2026-09-30 |
 | ¿Por qué SCALP_15M rinde peor en vivo que en backtest? | **Abierta.** Vivo −0.389 ±0.313 (n=30) vs backtest +0.151. Deslizamiento explica sólo parte | 2026-10-11 |
 | ¿Exigir más tendencia (ADX 4h ≥ 25) en SCALP_1H? | **No.** Ni el puntaje más alto muestra edge | 2026-10-18 |
+| ¿Ir CONTRA el funding extremo (corto tras funding muy alto, largo tras muy bajo)? | **No, al revés.** Corto tras funding en su percentil ≥95 de 90 días: −4.78% a 7 días (n=1587, pierde en los 14 tokens). El funding alto anuncia continuación, no giro. Exploración, sólo desarrollo | 2026-10-20 |
+| ¿Comprar después de un funding extremadamente alto gana más que comprar cualquier día? (FUNDING_ALTO) | **No.** Rechazado contra criterio pre-registrado: +4.02% a 7 días, pero comprar al azar en el MISMO mes rinde más (p50 +6.80%): lo que se veía era el mes alcista, no el funding. Holdout no mirado | 2026-10-20 |
+| ¿Carry de funding (largo spot + corto perp)? | Real pero chico y achicándose; además es una posición cubierta de dos activos y de semanas (fuera del alcance y del motor) | 2026-10-20 |
+| ¿Hay estacionalidad aprovechable (hora del día, bloque de 4 h, día de la semana)? | **No.** Ninguna hora (1h, desde 2023-09) ni bloque de 4h paga la comisión de 0.2% ida y vuelta (mejor bloque 04-08 UTC: +0.114% bruto → −0.086% neto). Los mejores días (miércoles, sábado) quedan dentro del ruido frente al día promedio alcista | 2026-10-20 |
+| ¿Sirve operar pares (stat-arb: spread entre dos tokens que vuelve a la media)? | **No.** Exploración, sólo desarrollo: nada que pre-registrar | 2026-10-20 |
+| ¿Comprar BTC en diario con miedo extremo (índice < 25), solo o con funding bajo? | **No.** Rechazado contra criterio pre-registrado: sólo miedo es peor que el azar; con funding bajo no pasa el nulo y el holdout da −3.23% | 2026-10-18 |
+| ¿SWING_1D (ruptura diaria a favor del régimen semanal) en las altcoins? | **No.** Rechazado: desarrollo n=138, −0.034 [−0.185, +0.117], depende del régimen y casi no opera (~25 por año en 14 tokens) | 2026-10-20 |
+| ¿El backtest por cierres de vela sirve para aprobar un scalp? ¿SCALP_1H / SCALP_30M tienen edge? | **No sirve, y con el modelo fiel no tienen edge.** Por cierres sabe una vela antes qué rupturas se sostienen. Con el modelo fiel (vela en formación, puertas, tope de deslizamiento 0.6R): SCALP_1H 14 tokens +0.160 → **−0.099** (0/14 positivos); SCALP_30M SOL +0.157 → −0.123. **Un scalp de ruptura sólo se puede evaluar con un motor intra-vela** | 2026-10-13 |
+| ¿Las perdedoras de SCALP_1H comparten un patrón visible al abrir? ¿Tendencia vs lateral? | **No:** ninguna de 12 variables las separa, y tampoco tendencia vs lateral | 2026-10-28 |
+| ¿Cómo limitar la tendencia diaria? ¿Limitar posiciones corta las ganadoras? | **Máx. 5 por dirección**, y limitar mejora el resultado ajustado por riesgo (los primeros en romper capturan el movimiento; los siguientes son la misma apuesta) | 2026-10-20 |
 
 ## Parámetros (medidos en btc-signal-web)
 
@@ -38,6 +49,9 @@ siendo la fuente con todos los números; si hay duda, leer la fila original.
 | ¿Cooldowns tras SL cambian el backtest? | **No.** −0.0001R de delta medio | 2026-10-11 |
 | ¿Guarda de R:R mínimo? | **No.** Empeora la muestra | 2026-09-22 |
 | ¿Relajar o acelerar la compuerta de tendencia 4h (EMA200→EMA100/50)? | **No** en ambos sentidos | 2026-09-17 / 10-08 |
+| ¿Cerrar 50% o 75% en TP1 y dejar el resto a TP2 con stop a la entrada, en SCALP_1H? | **No:** las cuatro variantes quedan levemente peor que cerrar 100% en TP1 (TP2 queda muy cerca de TP1) | 2026-10-17 |
+| ¿Mover el stop a la entrada ANTES de TP1, cuando ya va ganando? | **No: empeora o no cambia.** Salir en cero cuesta la comisión (~0.1R) y muchas operaciones vuelven a la entrada antes de seguir al TP | 2026-10-17 |
+| ¿Acercar el TP1 porque muchas quedan cerca sin tocarlo? | **No:** pasa en 6-8% de las operaciones, pero acercar el TP1 empeora; alejarlo mejora apenas. El problema grande son las entradas | 2026-10-17 |
 
 ## Aprendizajes estructurales
 
