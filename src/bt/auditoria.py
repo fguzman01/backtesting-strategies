@@ -315,6 +315,19 @@ def chequear_ficha(raiz: Path) -> Chequeo:
     return Chequeo("Ficha de cada aprobada completa", "btc-signal-web (2026-11-02)", AVISO if avisos else OK, avisos)
 
 
+def chequear_paper(raiz: Path) -> Chequeo:
+    """Lo que vuelve del bot: ¿alguna aprobada rinde en paper peor de lo que predijo el backtest?"""
+    from bt.puente import alertas_vigentes
+
+    ruta = raiz / "02-DOCS" / "retroalimentacion.md"
+    if not ruta.exists():
+        return Chequeo("Paper del bot vs backtest", "retroalimentacion.md", OK, ["todavía no hay informes del bot"])
+    alertas = alertas_vigentes(ruta)
+    detalle = [f"{a}: en paper rinde por debajo del intervalo que predijo el holdout (ver retroalimentacion.md)"
+               for a in alertas] or ["el último informe no trae alertas"]
+    return Chequeo("Paper del bot vs backtest", "retroalimentacion.md", AVISO if alertas else OK, detalle)
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -345,6 +358,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_robustez(evs),
         chequear_desgaste_holdout(evs),
         chequear_ficha(raiz),
+        chequear_paper(raiz),
     ]
 
 
