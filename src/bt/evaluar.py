@@ -7,10 +7,11 @@ Escribe:
 - `results/evaluaciones/<id>.json`: todo lo medido. Su existencia marca la spec como evaluada:
   el holdout se mira UNA vez, así que no se vuelve a correr (salvo `--forzar`, que queda anotado).
 - `results/reports/<id>.md`: el reporte legible.
-- `results/approved.json`: se agrega la estrategia si sale APROBADA (va por PR, lo aprueba Felipe).
+- `results/approved.json`: se agrega si sale APROBADA u OBSERVACION, con su `nivel` (va por PR, lo
+  aprueba Felipe). `observacion` = sólo paper.
 - una fila por símbolo y tramo en `results/mediciones.jsonl`.
 
-Veredictos: APROBADA, RECHAZADA, NO_CONCLUYENTE (muestra menor que `n_minimo`: no hay con qué decidir).
+Veredictos: APROBADA, OBSERVACION, RECHAZADA, NO_CONCLUYENTE (muestra menor que `n_minimo`).
 """
 
 from __future__ import annotations
@@ -36,6 +37,10 @@ DECISIONES = Path("02-DOCS") / "decisiones.md"
 APROBADAS = "APROBADA"
 RECHAZADA = "RECHAZADA"
 NO_CONCLUYENTE = "NO_CONCLUYENTE"
+# Desarrollo sólido pero holdout no concluyente o contaminado (retroalimentación de btc-signal-web,
+# 2026-11-02): entra a approved.json con nivel «observacion» → sólo paper, para observar.
+OBSERVACION = "OBSERVACION"
+NIVEL = {APROBADAS: "aprobada", OBSERVACION: "observacion"}
 
 CargarVelas = Callable[[str, str, str], pd.DataFrame]
 CargarFunding = Callable[[str], pd.Series]
@@ -44,7 +49,7 @@ CargarFunding = Callable[[str], pd.Series]
 def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding, holdout: bool) -> dict:
     desde, hasta = (HOLDOUT_DESDE, None) if holdout else (spec.desde, None)
     por_simbolo: dict[str, list[Trade]] = {}
-    optimistas: list[Trade] = []
+    opt_por_simbolo: dict[str, list[Trade]] = {}
     datos: dict = {}
     filas: list[dict] = []
     ventana: list[pd.Timestamp] = []
@@ -61,13 +66,16 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
             nota=f"evaluacion {spec.id} ({'holdout' if holdout else 'desarrollo'})",
         )
         por_simbolo[s] = r.trades["conservador"]
-        optimistas += r.trades["optimista"]
+        opt_por_simbolo[s] = r.trades["optimista"]
         datos[s] = (df, fund)
         filas.append(r.fila)
         ventana += [pd.Timestamp(r.fila["desde"]), pd.Timestamp(r.fila["hasta"])]
         calidad[s] = data.calidad(df, spec.minutos_por_vela, r.fila["desde"], r.fila["hasta"])
 
+    por_simbolo = aplicar_cupo(por_simbolo, spec.max_por_direccion)
+    opt_por_simbolo = aplicar_cupo(opt_por_simbolo, spec.max_por_direccion)
     todos = [t for ts in por_simbolo.values() for t in ts]
+    optimistas = [t for ts in opt_por_simbolo.values() for t in ts]
     inf = metrics.informe({"conservador": todos, "optimista": optimistas})
     v_desde, v_hasta = min(ventana), max(ventana)
     nulo = control_nulo(por_simbolo, datos, v_desde, v_hasta + pd.Timedelta(1, "ns"), spec.cfg)
@@ -85,9 +93,101 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "porSimbolo": {s: metrics.calcular(ts) | {"porMotivo": None} for s, ts in por_simbolo.items()},
         "calidadDatos": calidad,
         "robustez": metrics.robustez(todos),
+        "maxDrawdownR": peor_caida(todos),
+        "maxPorDireccion": spec.max_por_direccion,
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }
+
+
+def aplicar_cupo(por_simbolo: dict[str, list[Trade]], cupo: int | None) -> dict[str, list[Trade]]:
+    """Cupo de cartera como el bot: como mucho `cupo` posiciones abiertas por dirección entre todos los
+    símbolos. Se recorren las entradas en orden de tiempo (y de símbolo, alfabético, como el bot) y se
+    descartan las que encuentran el cupo lleno.
+
+    Aproximación conocida: cada símbolo se simuló por separado, así que una señal que llegó mientras
+    ese símbolo tenía una operación que el cupo descartó no se reconsidera. Sin cupo, no cambia nada.
+    """
+    if not cupo:
+        return por_simbolo
+    candidatos = sorted(((t.abierto_en, s, t) for s, ts in por_simbolo.items() for t in ts if t.resuelto),
+                        key=lambda x: (x[0], x[1]))
+    abiertas: dict[int, list[str]] = {1: [], -1: []}
+    out: dict[str, list[Trade]] = {s: [] for s in por_simbolo}
+    for abierto, s, t in candidatos:
+        lista = abiertas[t.direccion]
+        lista[:] = [c for c in lista if c > abierto]  # las que cerraron antes de esta entrada liberan cupo
+        if len(lista) < cupo:
+            lista.append(t.cerrado_en or "9999")
+            out[s].append(t)
+    return out
+
+
+def peor_caida(trades: list[Trade]) -> float:
+    """Peor caída del R acumulado (en R), ordenando las operaciones por su cierre."""
+    acum = pico = caida = 0.0
+    for t in sorted((t for t in trades if t.resuelto), key=lambda t: t.cerrado_en or ""):
+        acum += t.r_neto
+        pico = max(pico, acum)
+        caida = min(caida, acum - pico)
+    return round(caida, 4)
+
+
+def antecedentes(spec: Spec, base: Path = RESULTADOS) -> list[dict]:
+    """Evaluaciones previas de la misma familia: cuántas variantes se probaron antes que esta."""
+    out = []
+    for p in sorted((base / "evaluaciones").glob("*.json")):
+        try:
+            ev = json.loads(p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if ev.get("id") == spec.id:
+            continue
+        s = ev.get("spec") or {}
+        familia = s.get("familia") or (s.get("estrategia") or {}).get("modulo")
+        if familia != spec.familia:
+            continue
+        g = (ev.get("desarrollo") or {}).get("global") or {}
+        out.append({"id": ev.get("id"), "veredicto": ev.get("veredicto"), "avgRNetoDesarrollo": g.get("avgRNeto"),
+                    "holdoutMirado": ev.get("holdout") is not None})
+    return out
+
+
+def preregistro(spec: Spec) -> dict | None:
+    """Commit y fecha en que la spec entró al repo: verificable contra la fecha de la evaluación."""
+    if spec.ruta is None:
+        return None
+    import subprocess
+
+    r = subprocess.run(["git", "log", "--diff-filter=A", "--format=%h|%cI", "--", str(spec.ruta)],
+                       capture_output=True, text=True)
+    lineas = [x for x in r.stdout.strip().splitlines() if "|" in x]
+    if r.returncode != 0 or not lineas:
+        return None
+    commit, fecha = lineas[-1].split("|", 1)
+    return {"commit": commit, "fecha": fecha}
+
+
+def _spec_madre(spec: Spec) -> Spec:
+    import dataclasses
+
+    m = spec.madre or {}
+    campos = {f.name for f in dataclasses.fields(spec.cfg)}
+    cfg = dataclasses.replace(spec.cfg, **{k: v for k, v in (m.get("config") or {}).items() if k in campos})
+    return dataclasses.replace(spec, modulo=m.get("modulo", spec.modulo), params=m.get("params", spec.params),
+                               cfg=cfg, madre=None, id=f"{spec.id}-madre", max_por_direccion=spec.max_por_direccion)
+
+
+def comparar_con_madre(hija: dict, madre: dict, nombre: str) -> dict:
+    """Diferencia de avgR hija − madre con ±2 EE. Las muestras se solapan (correlación positiva), así que
+    sumar varianzas da un intervalo más ancho que el real: es conservador."""
+    gh, gm = hija["global"], madre["global"]
+    ee = lambda g: (g["ic95"][1] - g["ic95"][0]) / 4 if g.get("ic95") else 0.0  # noqa: E731
+    dif = gh["avgRNeto"] - gm["avgRNeto"]
+    e = (ee(gh) ** 2 + ee(gm) ** 2) ** 0.5
+    return {"madre": nombre, "nMadre": gm["n"], "avgRNetoMadre": gm["avgRNeto"], "nHija": gh["n"],
+            "avgRNetoHija": gh["avgRNeto"], "diferencia": dif, "ic95": [dif - 2 * e, dif + 2 * e],
+            "peorCaidaHija": hija.get("maxDrawdownR"), "peorCaidaMadre": madre.get("maxDrawdownR")}
 
 
 def _criterios_desarrollo(spec: Spec, d: dict) -> list[dict]:
@@ -146,8 +246,18 @@ def evaluar(
     spec: Spec,
     cargar_velas: CargarVelas = data.cargar,
     cargar_funding: CargarFunding = data.cargar_funding,
+    base: Path = RESULTADOS,
 ) -> dict:
-    """Evalúa sin escribir nada. Devuelve el dict que se guarda en results/evaluaciones/<id>.json."""
+    """Evalúa sin escribir nada. Devuelve el dict que se guarda en results/evaluaciones/<id>.json.
+
+    Dos niveles cuando pasa desarrollo (retroalimentación de btc-signal-web, 2026-11-02):
+    - APROBADA: el holdout cumple TODOS los criterios y nadie de la familia lo había mirado antes.
+    - OBSERVACION: holdout positivo pero débil (falla algún criterio estricto) o contaminado. Va a
+      approved.json con `nivel: observacion`: sólo paper, para observar; no es candidata a real.
+    - RECHAZADA: holdout sin operaciones o con avgR neto ≤ 0.
+    """
+    previas = antecedentes(spec, base)
+    contaminado = spec.holdout_contaminado or any(a["holdoutMirado"] for a in previas)
     dev = _tramo(spec, cargar_velas, cargar_funding, holdout=False)
     criterios = _criterios_desarrollo(spec, dev)
     motivos = [f"desarrollo: falla «{c['criterio']}» ({c['valor']})" for c in criterios if not c["ok"]]
@@ -162,16 +272,42 @@ def evaluar(
         nuevos = _criterios_holdout(spec, dev, holdout)
         criterios += nuevos
         fallan = [c for c in nuevos if not c["ok"]]
-        veredicto = RECHAZADA if fallan else APROBADAS
+        g = holdout["global"]
+        if g["n"] == 0 or g["avgRNeto"] <= 0:
+            veredicto = RECHAZADA
+        elif fallan or contaminado:
+            veredicto = OBSERVACION
+        else:
+            veredicto = APROBADAS
         motivos += [f"{c['criterio']} ({c['valor']})" for c in fallan]
+        if contaminado and veredicto == OBSERVACION:
+            motivos.append("holdout contaminado: ese período ya se miró con una estrategia emparentada")
+    madre = None
+    if spec.madre:
+        # La madre en el mismo período, tokens y cupo: ¿la variante agrega algo o sólo es la madre?
+        sm = _spec_madre(spec)
+        madre = {"filas": []}
+        for nombre, t in (("desarrollo", dev), ("holdout", holdout)):
+            if t is not None:
+                tm = _tramo(sm, cargar_velas, cargar_funding, holdout=nombre == "holdout")
+                madre[nombre] = comparar_con_madre(t, tm, spec.madre["nombre"])
+                madre["filas"] += tm["filas"]
     return {
         "id": spec.id,
         "fecha": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         "commit": bitacora.commit_actual(),
         "veredicto": veredicto,
+        "nivel": NIVEL.get(veredicto),
         "motivos": motivos,
         "criterios": criterios,
         "spec": spec.crudo,
+        "familia": spec.familia,
+        "nPruebas": len(previas) + 1,
+        "variantes": previas,
+        "holdoutContaminado": contaminado,
+        "preregistro": preregistro(spec),
+        "maxPorDireccion": spec.max_por_direccion,
+        "comparacionMadre": madre,
         "desarrollo": dev,
         "holdout": holdout,
     }
@@ -207,6 +343,10 @@ def reporte_md(ev: dict) -> str:
     lineas += [f"| {c['criterio']} | {c['valor']} | {'✅' if c['ok'] else '❌'} |" for c in ev["criterios"]]
     if ev["motivos"]:
         lineas += ["", "**Motivos:** " + "; ".join(ev["motivos"])]
+    rec = ev.get("reclasificacion")
+    if rec:
+        lineas += ["", f"**Reclasificada {rec['fecha']}: {rec['de']} → {rec['a']}.** {rec['motivo']}"]
+    lineas += ["", "## Ficha", ""] + ficha_md(ev)
     for nombre, t in (("Desarrollo", dev), ("Holdout", ho)):
         if t is None:
             if nombre == "Holdout":
@@ -236,6 +376,38 @@ def reporte_md(ev: dict) -> str:
     return "\n".join(lineas) + "\n"
 
 
+def ficha_md(ev: dict) -> list[str]:
+    """Lo que btc-signal-web pidió ver junto al veredicto: cuántas pruebas, contaminación, pre-registro,
+    madre y cupo."""
+    pre = ev.get("preregistro")
+    out = [
+        f"- **Nivel:** {ev.get('nivel') or '—'}",
+        f"- **Pruebas en la familia `{ev.get('familia', '—')}`:** {ev.get('nPruebas', 1)} (esta incluida)",
+    ]
+    out += [f"  - `{v['id']}`: {v['veredicto']}, desarrollo "
+            + (f"{v['avgRNetoDesarrollo']:+.3f}" if v.get("avgRNetoDesarrollo") is not None else "—")
+            + (", holdout mirado" if v.get("holdoutMirado") else "") for v in ev.get("variantes") or []]
+    out.append(f"- **Holdout contaminado:** {'sí' if ev.get('holdoutContaminado') else 'no'}")
+    out.append(f"- **Pre-registro:** commit `{pre['commit']}` del {pre['fecha']}" if pre
+               else "- **Pre-registro:** no verificable (sin historia de git)")
+    cupo = ev.get("maxPorDireccion")
+    out.append(f"- **Cupo de cartera:** máx {cupo} por dirección" if cupo else "- **Cupo de cartera:** sin cupo")
+    for nombre in ("desarrollo", "holdout"):
+        t = ev.get(nombre)
+        if t and t.get("maxDrawdownR") is not None:
+            out.append(f"- **Peor caída ({nombre}):** {t['maxDrawdownR']:+.2f} R")
+    m = ev.get("comparacionMadre") or {}
+    for nombre in ("desarrollo", "holdout"):
+        c = m.get(nombre)
+        if c:
+            out.append(f"- **Contra la madre `{c['madre']}` ({nombre}):** "
+                       f"hija {c['avgRNetoHija']:+.3f} (n={c['nHija']}) "
+                       f"vs madre {c['avgRNetoMadre']:+.3f} (n={c['nMadre']}) → diferencia {c['diferencia']:+.3f} "
+                       f"[{c['ic95'][0]:+.3f}, {c['ic95'][1]:+.3f}]; peor caída {c['peorCaidaHija']:+.2f} vs "
+                       f"{c['peorCaidaMadre']:+.2f} R")
+    return out
+
+
 def _entrada_aprobada(ev: dict) -> dict:
     s = ev["spec"]
     resumen = lambda t: {"ventana": t["ventana"], "n": t["global"]["n"],  # noqa: E731
@@ -253,6 +425,14 @@ def _entrada_aprobada(ev: dict) -> dict:
         "aprobada_en": ev["fecha"],
         "commit": ev["commit"],
         "reporte": f"results/reports/{ev['id']}.md",
+        "nivel": ev.get("nivel") or "aprobada",
+        "n_pruebas": ev.get("nPruebas", 1),
+        "variantes": [v["id"] for v in ev.get("variantes") or []],
+        "holdout_contaminado": bool(ev.get("holdoutContaminado")),
+        "preregistro": ev.get("preregistro"),
+        "max_por_direccion": ev.get("maxPorDireccion"),
+        "max_drawdown_r": {k: ev[k].get("maxDrawdownR") for k in ("desarrollo", "holdout") if ev.get(k)},
+        "comparacion_madre": {k: v for k, v in (ev.get("comparacionMadre") or {}).items() if k != "filas"} or None,
     }
 
 
@@ -260,16 +440,17 @@ def guardar(ev: dict, base: Path = RESULTADOS) -> None:
     (base / "evaluaciones").mkdir(parents=True, exist_ok=True)
     (base / "reports").mkdir(parents=True, exist_ok=True)
     filas = [f for t in (ev["desarrollo"], ev["holdout"]) if t for f in t["filas"]]
+    filas += (ev.get("comparacionMadre") or {}).get("filas", [])
     for f in filas:
         bitacora.registrar(f, base / "mediciones.jsonl")
     sin_filas = json.loads(json.dumps(ev, default=str))
-    for t in (sin_filas["desarrollo"], sin_filas["holdout"]):
+    for t in (sin_filas["desarrollo"], sin_filas["holdout"], sin_filas.get("comparacionMadre")):
         if t:
             t.pop("filas", None)
     (base / "evaluaciones" / f"{ev['id']}.json").write_text(
         json.dumps(sin_filas, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (base / "reports" / f"{ev['id']}.md").write_text(reporte_md(ev), encoding="utf-8")
-    if ev["veredicto"] == APROBADAS:
+    if ev["veredicto"] in NIVEL:
         ruta = base / "approved.json"
         actual = json.loads(ruta.read_text()) if ruta.exists() else {"estrategias": []}
         actual["estrategias"] = [e for e in actual["estrategias"] if e["id"] != ev["id"]]
@@ -361,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         if a.bajar:
             bajar(spec)
-        ev = evaluar(spec)
+        ev = evaluar(spec, base=RESULTADOS)
         if a.forzar:
             ev["motivos"].append("re-evaluada con --forzar: el holdout ya se había mirado")
         guardar(ev)
@@ -371,7 +552,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{spec.id}: {ev['veredicto']}" + (f" — {'; '.join(ev['motivos'])}" if ev["motivos"] else ""))
 
     if a.salida_github:
-        aprobadas = [e["id"] for e in evaluaciones if e["veredicto"] == APROBADAS]
+        aprobadas = [e["id"] for e in evaluaciones if e["veredicto"] in NIVEL]  # aprobadas u observación
         with a.salida_github.open("a") as f:
             f.write(f"evaluadas={len(evaluaciones)}\n")
             f.write(f"aprobadas={len(aprobadas)}\n")

@@ -61,8 +61,26 @@
    },
    "aprobada_en": "2026-11-02T06:42:42+00:00",
    "commit": "95e24ef",
-   "reporte": "results/reports/2026-11-02-trend4h-tope-7d.md"
+   "reporte": "results/reports/2026-11-02-trend4h-tope-7d.md",
+   "nivel": "observacion",
+   "n_pruebas": 3,
+   "variantes": [
+    "2026-10-31-trend1d-tope-7d",
+    "2026-11-01-trend1d-chandelier-14d"
+   ],
+   "holdout_contaminado": true,
+   "preregistro": {
+    "commit": "95e24ef",
+    "fecha": "2026-11-02T06:41:08+00:00"
+   },
+   "max_por_direccion": null,
+   "max_drawdown_r": {
+    "desarrollo": -73.24,
+    "holdout": -122.78
+   },
+   "comparacion_madre": null,
+   "notas": "Reclasificada el 2026-11-02 por la retroalimentación de btc-signal-web, antes de existir los dos niveles: el holdout es positivo pero débil (+0.036, IC [−0.094, +0.166]; sin las 10 mejores −0.095; con costos ×1.5 +0.004; conserva 15% del avgR de desarrollo, el mínimo nuevo es 33%) y está contaminado (btc-signal-web ya había mirado ese período con TREND_4H sin tope). El veredicto registrado no se cambia; cambia el nivel. Peor caída aproximada (ordenada por apertura, sin cupo, 14 tokens). La evaluación fue sin cupo de cartera; el bot usa 3 por dirección. La comparación con TREND_4H sin tope la hace btc-signal-web en vivo (paper)."
   }
  ],
- "actualizado": "2026-11-02T06:42:42+00:00"
+ "actualizado": "2026-11-02T12:00:00+00:00"
 }

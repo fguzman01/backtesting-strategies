@@ -18,7 +18,7 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Revisión determinista | look-ahead, comisión aplicada, n mínimo, determinismo | CI (`bt.checks`) | log de Actions |
 | Revisión de sesgos | Subagente con contexto limpio: overfitting, data snooping, supervivencia | Claude | comentario en el reporte |
 | Veredicto | Desarrollo contra el criterio; sólo si pasa se mira el holdout, una vez | código (`bt.verdict`) | `results/reports/`, `mediciones.jsonl` |
-| ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas → PR que toca `approved.json` | código + Felipe | PR |
+| ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas y en observación → PR que toca `approved.json`, con su `nivel` y su ficha | código + Felipe | PR |
 | Auditor determinista | 12 chequeos. Proceso: pre-registro antes de evaluar, holdout una vez y sólo si pasa desarrollo, `approved.json` coherente, test de look-ahead por estrategia, Brain al día, bitácora determinista, data snooping. Metodología: ventana y potencia estadística (años, 2022 bajista, ±2 EE vs comisión, n por tramo), calidad de datos, rechazos al borde, desgaste del holdout | CI (`bt.auditoria`) | resumen del CI, dashboard |
 | Explorador | Investiga estrategias conocidas (papers, research cripto, repos, competencias, rankings), las documenta con su evidencia (A–D) y deja 5–7 por semana en la cola; las A/B dentro del alcance entran solas a `en cola` | Claude, semanal (`.claude/agents/explorador.md`) | `02-DOCS/catalogo.md`, `02-DOCS/ideas.md`, PR `[rutina]` |
 | Auditor con criterio | Lo que el código no juzga: (1) proceso: hipótesis, criterios flojos, variantes repetidas; (2) metodología: ¿más o menos años?, supervivencia, costos realistas, robustez, nulo, renovación del holdout; (3) rechazadas: clasificarlas y proponer versiones con mecanismo nuevo (nunca re-evaluar); (4) paridad backtest ↔ bot real de btc-signal-web; (5) ≤ 5 mejoras | Claude, semanal (`.claude/agents/auditor.md`) | `02-DOCS/auditorias/`, `02-DOCS/ideas.md`, PR |
@@ -49,7 +49,7 @@ Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.
 
 ### Fase 5: de la factory al bot (btc-signal-web)
 
-1. Una spec sale **APROBADA** → PR en este repo que la agrega a `results/approved.json` (Felipe lo
+1. Una spec sale **APROBADA** u **OBSERVACION** (ver `reglas-de-medicion.md`: dos niveles) → PR en este repo que la agrega a `results/approved.json` (Felipe lo
    fusiona). El formato está fijado por `bt.contrato` y se valida en el CI.
 2. **Copia en el bot, por PR**: `btc-signal-web/src/config/factoryApproved.json` se actualiza con un
    PR a la rama `dev` de btc-signal-web. Una aprobada nueva nunca aparece en el bot sin revisión.
@@ -59,9 +59,11 @@ Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.
    `paperOnly` y **apagada**; se enciende en dev y en prod con su toggle.
 4. `GET /api/factory/aprobadas` (ANALYSIS_KEY) lista cada aprobada y si está implementada, si es
    paper-only y si está encendida en ese ambiente.
-5. **Pasar a real es otra decisión de Felipe**, después de ver el paper.
+5. **Pasar a real es otra decisión de Felipe**, después de ver el paper, y sólo para `nivel: aprobada`.
+   Las de `nivel: observacion` quedan en paper.
 
-Primera: `2026-11-02-trend4h-tope-7d` → `TREND_4H_T7` (fguzman01/btc-signal-web#2).
+Primera: `2026-11-02-trend4h-tope-7d` → `TREND_4H_T7` (fguzman01/btc-signal-web#2), reclasificada a
+`observacion` el mismo día (holdout débil y contaminado).
 
 ## Qué se dejó afuera y por qué
 

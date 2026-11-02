@@ -126,7 +126,7 @@ def test_control_nulo_determinista_y_coherente(mundo):
 
 def test_evaluacion_aprobada_mira_el_holdout_y_escribe_todo(mundo, tmp_path):
     cv, cf, _ = mundo
-    ev = ev_mod.evaluar(desde_dict(BASE), cv, cf)
+    ev = ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path)
     assert ev["veredicto"] == "APROBADA", ev["motivos"]
     assert ev["holdout"] is not None and ev["holdout"]["global"]["n"] > 0
     assert ev["holdout"]["ventana"][0] >= "2025-09-09"
@@ -149,7 +149,7 @@ def test_si_falla_desarrollo_el_holdout_no_se_mira(mundo, tmp_path):
     cv, cf, _ = mundo
     d = con(criterio_aprobacion__supera_nulo_p95=True, criterio_aprobacion__n_minimo=10)
     d["criterio_aprobacion"]["tramos_positivos_minimo"] = 5  # imposible: hay como mucho 4 tramos
-    ev = ev_mod.evaluar(desde_dict(d), cv, cf)
+    ev = ev_mod.evaluar(desde_dict(d), cv, cf, base=tmp_path)
     assert ev["veredicto"] == "RECHAZADA" and ev["holdout"] is None
     assert any("tramos positivos" in m for m in ev["motivos"])
     ev_mod.guardar(ev, tmp_path)
@@ -157,9 +157,9 @@ def test_si_falla_desarrollo_el_holdout_no_se_mira(mundo, tmp_path):
     assert "No se miró" in (tmp_path / "reports" / f"{d['id']}.md").read_text()
 
 
-def test_muestra_chica_es_no_concluyente(mundo):
+def test_muestra_chica_es_no_concluyente(mundo, tmp_path):
     cv, cf, _ = mundo
-    ev = ev_mod.evaluar(desde_dict(con(criterio_aprobacion__n_minimo=100000)), cv, cf)
+    ev = ev_mod.evaluar(desde_dict(con(criterio_aprobacion__n_minimo=100000)), cv, cf, base=tmp_path)
     assert ev["veredicto"] == "NO_CONCLUYENTE" and ev["holdout"] is None
 
 
@@ -184,7 +184,7 @@ def test_sitio_con_y_sin_evaluaciones(mundo, tmp_path):
     vacio = sitio.generar(tmp_path)
     assert "Todavía no hay evaluaciones" in vacio
     cv, cf, _ = mundo
-    ev = ev_mod.evaluar(desde_dict(BASE), cv, cf)
+    ev = ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path)
     ev["spec"]["hipotesis"] = "<script>alert(1)</script>"
     ev_mod.guardar(ev, tmp_path)
     pagina = sitio.generar(tmp_path)
@@ -238,3 +238,62 @@ def test_holdout_sano_pasa_el_criterio_estricto():
     ho = {"global": {"n": 300, "avgRNeto": 0.12},
           "robustez": {"costosX": 1.5, "costos": {"avgRNeto": 0.09}, "sinMejores": 10, "sinTop": {"avgRNeto": 0.05}}}
     assert all(c["ok"] for c in _criterios_holdout(s, dev, ho))
+
+
+# ── Retroalimentación de btc-signal-web (2026-11-02) ─────────────────────────
+
+def test_holdout_contaminado_baja_a_observacion_y_entra_con_su_nivel(mundo, tmp_path):
+    cv, cf, _ = mundo
+    ev = ev_mod.evaluar(desde_dict(con(holdout_contaminado=True)), cv, cf, base=tmp_path)
+    assert ev["veredicto"] == "OBSERVACION" and ev["nivel"] == "observacion" and ev["holdoutContaminado"]
+    assert any("contaminado" in m for m in ev["motivos"])
+    ev_mod.guardar(ev, tmp_path)
+    e = json.loads((tmp_path / "approved.json").read_text())["estrategias"][0]
+    assert e["nivel"] == "observacion" and e["holdout_contaminado"] and e["n_pruebas"] == 1
+    from bt.contrato import validar
+    assert validar({"estrategias": [e]}) == []
+
+
+def test_antecedentes_cuentan_pruebas_y_contaminan_el_holdout(mundo, tmp_path):
+    cv, cf, _ = mundo
+    primera = ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path)
+    ev_mod.guardar(primera, tmp_path)
+    ev = ev_mod.evaluar(desde_dict(con(id="2026-11-02-variante")), cv, cf, base=tmp_path)
+    assert ev["nPruebas"] == 2 and [v["id"] for v in ev["variantes"]] == [BASE["id"]]
+    assert ev["holdoutContaminado"] and ev["veredicto"] == "OBSERVACION"
+    otra = ev_mod.evaluar(desde_dict(con(id="2026-11-02-otra", familia="otra")), cv, cf, base=tmp_path)
+    assert otra["nPruebas"] == 1 and otra["veredicto"] == "APROBADA"
+
+
+def test_comparacion_con_la_madre(mundo, tmp_path):
+    cv, cf, _ = mundo
+    d = con(madre={"nombre": "sin tope", "config": {"timeout_velas": 14}})
+    ev = ev_mod.evaluar(desde_dict(d), cv, cf, base=tmp_path)
+    c = ev["comparacionMadre"]["desarrollo"]
+    assert c["madre"] == "sin tope" and c["nHija"] == ev["desarrollo"]["global"]["n"]
+    assert c["ic95"][0] <= c["diferencia"] <= c["ic95"][1]
+    assert "holdout" in ev["comparacionMadre"]
+    ev_mod.guardar(ev, tmp_path)
+    assert len((tmp_path / "mediciones.jsonl").read_text().splitlines()) == 8  # hija y madre, 2 tramos × 2
+    assert "Contra la madre" in (tmp_path / "reports" / f"{d['id']}.md").read_text()
+
+
+def _t(abre, cierra, direccion=1, r=1.0):
+    from bt.engine import Trade
+    return Trade(direccion=direccion, senal_en=abre, abierto_en=abre, cerrado_en=cierra, entrada=1, stop=0.9,
+                 objetivo=None, salida=1, motivo="SL", r_bruto=r, fee_r=0, r_neto=r, mae_r=0, velas=1)
+
+
+def test_cupo_por_direccion():
+    por = {"A": [_t("2020-01-01", "2020-01-05")], "B": [_t("2020-01-02", "2020-01-03")],
+           "C": [_t("2020-01-02", "2020-01-04"), _t("2020-01-06", "2020-01-07")],
+           "D": [_t("2020-01-02", "2020-01-03", direccion=-1)]}
+    out = ev_mod.aplicar_cupo(por, 2)
+    assert len(out["A"]) == 1 and len(out["B"]) == 1 and len(out["D"]) == 1
+    assert [t.abierto_en for t in out["C"]] == ["2020-01-06"]  # la del 2 encontró el cupo lleno
+    assert ev_mod.aplicar_cupo(por, None) is por
+
+
+def test_peor_caida():
+    ts = [_t("1", "1", r=1), _t("2", "2", r=-1), _t("3", "3", r=-2), _t("4", "4", r=3)]
+    assert ev_mod.peor_caida(ts) == -3.0

@@ -136,9 +136,11 @@ def chequear_holdout(raiz: Path, evs: dict[str, dict], bitacora: list[dict]) -> 
 def chequear_aprobadas(raiz: Path, evs: dict[str, dict]) -> Chequeo:
     ruta = raiz / "results" / "approved.json"
     en_archivo = {e["id"] for e in json.loads(ruta.read_text())["estrategias"]} if ruta.exists() else set()
-    aprobadas = {sid for sid, ev in evs.items() if ev.get("veredicto") == "APROBADA"}
-    problemas = [f"{s}: está en approved.json sin evaluación APROBADA" for s in sorted(en_archivo - aprobadas)]
-    avisos = [f"{s}: APROBADA pero no está en approved.json (¿PR pendiente?)" for s in sorted(aprobadas - en_archivo)]
+    aprobadas = {sid for sid, ev in evs.items() if ev.get("veredicto") in ("APROBADA", "OBSERVACION")}
+    problemas = [f"{s}: está en approved.json sin evaluación APROBADA u OBSERVACION"
+                 for s in sorted(en_archivo - aprobadas)]
+    avisos = [f"{s}: aprobada/observación pero no está en approved.json (¿PR pendiente?)"
+              for s in sorted(aprobadas - en_archivo)]
     estado = FALLA if problemas else AVISO if avisos else OK
     return Chequeo("approved.json coincide con las evaluaciones", "Regla 7", estado, problemas + avisos)
 
@@ -181,7 +183,7 @@ def chequear_snooping(evs: dict[str, dict]) -> Chequeo:
     por_modulo: dict[str, list[str]] = defaultdict(list)
     for sid, ev in evs.items():
         por_modulo[ev.get("spec", {}).get("estrategia", {}).get("modulo", "?")].append(sid)
-    aprobadas = sum(1 for ev in evs.values() if ev.get("veredicto") == "APROBADA")
+    aprobadas = sum(1 for ev in evs.values() if ev.get("veredicto") in ("APROBADA", "OBSERVACION"))
     detalle = [f"{n} evaluaciones en total; por azar se esperan ~{n * FALSOS_POSITIVOS_POR_PRUEBA:.1f} que pasen "
                f"desarrollo sin tener edge (hay {aprobadas} aprobadas, que además pasaron holdout)"]
     estado = OK
@@ -299,6 +301,20 @@ def chequear_robustez(evs: dict[str, dict]) -> Chequeo:
                    AVISO if avisos else OK, avisos)
 
 
+FICHA = ("nivel", "n_pruebas", "holdout_contaminado", "preregistro", "max_drawdown_r")
+
+
+def chequear_ficha(raiz: Path) -> Chequeo:
+    """Lo que btc-signal-web necesita para saber cuánto confiar en una aprobada (pedido del 2026-11-02)."""
+    ruta = raiz / "results" / "approved.json"
+    entradas = json.loads(ruta.read_text())["estrategias"] if ruta.exists() else []
+    avisos = [f"{e.get('id')}: a la ficha le falta {', '.join(c for c in FICHA if e.get(c) is None)}"
+              for e in entradas if any(e.get(c) is None for c in FICHA)]
+    avisos += [f"{e.get('id')}: es variante (n_pruebas={e['n_pruebas']}) y no trae comparación con la madre"
+               for e in entradas if (e.get("n_pruebas") or 1) > 1 and not e.get("comparacion_madre")]
+    return Chequeo("Ficha de cada aprobada completa", "btc-signal-web (2026-11-02)", AVISO if avisos else OK, avisos)
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -328,6 +344,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_salidas(evs),
         chequear_robustez(evs),
         chequear_desgaste_holdout(evs),
+        chequear_ficha(raiz),
     ]
 
 
