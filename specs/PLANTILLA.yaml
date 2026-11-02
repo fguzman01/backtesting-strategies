@@ -48,5 +48,8 @@ criterio_aprobacion:        # todo en desarrollo; si pasa, se mira el holdout UN
   concluyente: true         # muestra, modelos de llenado y tramos coherentes (bt.metrics)
   tramos_positivos_minimo: 3
   supera_nulo_p95: true     # le gana al percentil 95 de entradas al azar
-  holdout:
+  holdout:                  # se mira UNA vez; endurecido el 2026-11-02 (ver reglas-de-medicion.md)
     avgRNeto_positivo: true
+    aguanta_costos: true          # con costos ×1.5 sigue > 0
+    sin_mejores_no_negativo: true # sin las 10 mejores operaciones, ≥ 0
+    fraccion_desarrollo_minima: 0.33  # conserva al menos 1/3 del avgR de desarrollo

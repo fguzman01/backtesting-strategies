@@ -120,6 +120,28 @@ def _criterios_desarrollo(spec: Spec, d: dict) -> list[dict]:
     return out
 
 
+def _criterios_holdout(spec: Spec, dev: dict, ho: dict) -> list[dict]:
+    c, g, n = spec.criterio, ho["global"], ho["global"]["n"]
+    avg = g["avgRNeto"]
+    out = [{"criterio": "holdout: hay operaciones", "valor": f"n={n}", "ok": n > 0}]
+    if c.holdout_avg_positivo:
+        out.append({"criterio": "holdout: avgR neto > 0", "valor": f"{avg:+.3f} (n={n})", "ok": avg > 0})
+    rob = ho.get("robustez") or {}
+    if c.holdout_aguanta_costos and rob:
+        v = rob["costos"]["avgRNeto"]
+        out.append({"criterio": f"holdout: con costos ×{rob['costosX']} avgR > 0", "valor": f"{v:+.3f}", "ok": v > 0})
+    if c.holdout_sin_mejores_no_negativo and rob:
+        v = rob["sinTop"]["avgRNeto"]
+        out.append({"criterio": f"holdout: sin las {rob['sinMejores']} mejores avgR ≥ 0", "valor": f"{v:+.3f}",
+                    "ok": v >= 0})
+    if c.holdout_fraccion_desarrollo:
+        base = dev["global"]["avgRNeto"]
+        minimo = c.holdout_fraccion_desarrollo * base
+        out.append({"criterio": f"holdout: conserva ≥ {c.holdout_fraccion_desarrollo:.0%} del avgR de desarrollo",
+                    "valor": f"{avg:+.3f} vs mínimo {minimo:+.3f}", "ok": avg >= minimo})
+    return out
+
+
 def evaluar(
     spec: Spec,
     cargar_velas: CargarVelas = data.cargar,
@@ -137,13 +159,11 @@ def evaluar(
     else:
         # Pasó desarrollo: recién ahora, y una sola vez, el holdout.
         holdout = _tramo(spec, cargar_velas, cargar_funding, holdout=True)
-        avg = holdout["global"]["avgRNeto"]
-        ok = holdout["global"]["n"] > 0 and (avg > 0 or not spec.criterio.holdout_avg_positivo)
-        criterios.append({"criterio": "holdout: avgR neto > 0", "valor": f"{avg:+.3f} (n={holdout['global']['n']})",
-                          "ok": ok})
-        veredicto = APROBADAS if ok else RECHAZADA
-        if not ok:
-            motivos.append(f"holdout: avgR neto {avg:+.3f}")
+        nuevos = _criterios_holdout(spec, dev, holdout)
+        criterios += nuevos
+        fallan = [c for c in nuevos if not c["ok"]]
+        veredicto = RECHAZADA if fallan else APROBADAS
+        motivos += [f"{c['criterio']} ({c['valor']})" for c in fallan]
     return {
         "id": spec.id,
         "fecha": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),

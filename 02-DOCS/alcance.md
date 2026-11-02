@@ -51,6 +51,10 @@ conocido" (otros símbolos, otras temporalidades dentro del rango) e "idea nueva
   TREND_4H con tope de 7 días (idea #2); si falla, **se cierra la familia de tendencia en la
   factory** y se buscan otros tipos de estrategia. TREND_1D sin tope sigue corriendo en paper en
   btc-signal-web, fuera de la factory.
+- **2026-11-02 · Resultado de TREND_4H.** `2026-11-02-trend4h-tope-7d` salió **APROBADA** (desarrollo
+  +0.245 [+0.178, +0.312], holdout +0.036): la condición de cierre no se cumplió y **la familia de
+  tendencia sigue abierta en 4h**. Pero el holdout es débil (ver `reglas-de-medicion.md`): con el
+  criterio endurecido ese mismo día no habría pasado. Recomendación: sólo paper.
 - **2026-11-01 · Motor y datos.** Se aprueban (a) que el motor conozca la posición abierta para
   simular trailing desde la entrada, breakeven y salidas parciales TP1/TP2, como el bot real; y
   (b) más historia (spot 2017–2019 donde no hay futuros) y robustez automática en cada reporte

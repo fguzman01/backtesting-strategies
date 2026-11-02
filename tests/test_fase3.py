@@ -22,8 +22,10 @@ BASE = {
     "universo": {"mercado": "futures", "simbolos": ["AAAUSDT", "BBBUSDT"], "intervalo": "1d", "funding": True},
     "config": {"fee_pct_por_lado": 0.001, "timeout_velas": 7},
     "ventana_desarrollo": {"desde": "2020-01-01"},
+    # Criterio laxo a propósito: estos tests ejercitan el flujo, no la exigencia (que se prueba aparte).
     "criterio_aprobacion": {"n_minimo": 10, "ic95_excluye_cero": False, "concluyente": False,
-                            "supera_nulo_p95": False, "holdout": {"avgRNeto_positivo": True}},
+                            "supera_nulo_p95": False,
+                            "holdout": {"avgRNeto_positivo": True, "sin_mejores_no_negativo": False}},
 }
 
 
@@ -209,3 +211,30 @@ def test_spec_historia_spot():
     assert not desde_dict(BASE).historia_spot
     with pytest.raises(SpecInvalida, match="historia_spot"):
         desde_dict(con(universo__historia_spot=True, universo__mercado="spot", universo__funding=False))
+
+
+def test_holdout_endurecido_habria_rechazado_a_trend4h():
+    """Números reales de 2026-11-02-trend4h-tope-7d: con el criterio nuevo (por defecto) no pasa."""
+    from bt.evaluar import _criterios_holdout
+    d = copy.deepcopy(BASE)
+    d["criterio_aprobacion"]["holdout"] = {"avgRNeto_positivo": True}  # el resto toma los defaults estrictos
+    s = desde_dict(d)
+    assert s.criterio.holdout_aguanta_costos and s.criterio.holdout_sin_mejores_no_negativo
+    assert s.criterio.holdout_fraccion_desarrollo == pytest.approx(0.33)
+    dev = {"global": {"avgRNeto": 0.245}}
+    ho = {"global": {"n": 916, "avgRNeto": 0.036},
+          "robustez": {"costosX": 1.5, "costos": {"avgRNeto": 0.004}, "sinMejores": 10, "sinTop": {"avgRNeto": -0.095}}}
+    cr = {c["criterio"]: c["ok"] for c in _criterios_holdout(s, dev, ho)}
+    assert cr["holdout: avgR neto > 0"]                         # el criterio viejo lo dejaba pasar
+    assert cr["holdout: con costos ×1.5 avgR > 0"]              # +0.004: pasa por poco
+    assert not cr["holdout: sin las 10 mejores avgR ≥ 0"]       # −0.095
+    assert not cr["holdout: conserva ≥ 33% del avgR de desarrollo"]  # 0.036 < 0.081
+
+
+def test_holdout_sano_pasa_el_criterio_estricto():
+    from bt.evaluar import _criterios_holdout
+    s = desde_dict(con(criterio_aprobacion__holdout={}))
+    dev = {"global": {"avgRNeto": 0.20}}
+    ho = {"global": {"n": 300, "avgRNeto": 0.12},
+          "robustez": {"costosX": 1.5, "costos": {"avgRNeto": 0.09}, "sinMejores": 10, "sinTop": {"avgRNeto": 0.05}}}
+    assert all(c["ok"] for c in _criterios_holdout(s, dev, ho))
