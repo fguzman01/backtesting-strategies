@@ -36,6 +36,12 @@ class Criterio:
     tramos_positivos_minimo: int = 0
     supera_nulo_p95: bool = True
     holdout_avg_positivo: bool = True
+    # Endurecido el 2026-11-02 (Felipe), tras 2026-11-02-trend4h-tope-7d: su holdout dio +0.036 con el
+    # intervalo en el cero y negativo sin sus 10 mejores, y aun así pasaba «avgR > 0». Por defecto
+    # estrictos; las evaluaciones ya hechas no se re-evalúan, así que no cambian.
+    holdout_aguanta_costos: bool = True  # con costos ×1.5 el avgR del holdout sigue > 0
+    holdout_sin_mejores_no_negativo: bool = True  # sin las 10 mejores operaciones, avgR ≥ 0
+    holdout_fraccion_desarrollo: float = 0.33  # el avgR del holdout conserva al menos 1/3 del de desarrollo
 
 
 @dataclass(frozen=True)
@@ -148,6 +154,9 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
         tramos_positivos_minimo=int(cr.get("tramos_positivos_minimo", 0)),
         supera_nulo_p95=bool(cr.get("supera_nulo_p95", True)),
         holdout_avg_positivo=bool(ho.get("avgRNeto_positivo", True)),
+        holdout_aguanta_costos=bool(ho.get("aguanta_costos", True)),
+        holdout_sin_mejores_no_negativo=bool(ho.get("sin_mejores_no_negativo", True)),
+        holdout_fraccion_desarrollo=float(ho.get("fraccion_desarrollo_minima", 0.33)),
     )
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha

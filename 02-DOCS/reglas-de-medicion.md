@@ -45,6 +45,18 @@ Un resultado **no** es concluyente si pasa cualquiera de estas:
 Y aun siendo concluyente, sólo se aprueba si el **intervalo ±2 EE excluye el cero** y se cumple
 el criterio pre-registrado.
 
+## Criterio de holdout (endurecido el 2026-11-02)
+Pasar el holdout con «avgR > 0» resultó demasiado fácil: `2026-11-02-trend4h-tope-7d` se aprobó con
++0.036 en holdout, el intervalo en el cero, negativo sin sus 10 mejores operaciones y conservando
+sólo el 15% del avgR de desarrollo. Desde ahora, por defecto, el holdout además tiene que:
+- **aguantar costos ×1.5** (avgR > 0);
+- **no depender de pocas operaciones** (sin las 10 mejores, avgR ≥ 0);
+- **conservar al menos 1/3 del avgR de desarrollo** (si se degrada más, era sobreajuste o un
+  régimen que ya pasó).
+
+Las specs pueden aflojar alguno sólo justificándolo en la hipótesis. Las evaluaciones ya hechas no
+se re-evalúan.
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).
