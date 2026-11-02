@@ -56,6 +56,8 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `.claude/agents/auditor.md` | Agente auditor: proceso, metodología, rechazadas y paridad con el bot real; propone mejoras (semanal) |
 | `02-DOCS/ideas.md` | Cola de ideas: de acá sale la próxima spec. Las ideas de rechazadas exigen un mecanismo nuevo |
 | `.claude/agents/investigador.md` | Rutina diaria: idea en cola → spec + estrategia + test → PR con auto-merge |
+| `.claude/agents/explorador.md` | Rutina semanal: investiga estrategias conocidas → `02-DOCS/catalogo.md` → cola de ideas |
+| `02-DOCS/catalogo.md` | Catálogo de estrategias conocidas con su evidencia (A–D), mantenido por el explorador |
 | `scripts/rutas_automerge.py` | Qué rutas puede fusionar sola la rutina (usado por `automerge.yml`) |
 | `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
 | `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |

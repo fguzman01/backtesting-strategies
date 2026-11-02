@@ -30,7 +30,10 @@ Leé `CLAUDE.md`, `02-DOCS/alcance.md`, `02-DOCS/decisiones.md`, `02-DOCS/ideas.
 ### 2. Elegir
 Tomá la primera idea con estado `en cola` en `02-DOCS/ideas.md`.
 
-**Si no hay ninguna → modo propuesta:**
+Las ideas `en cola` vienen de Felipe, del auditor o del **explorador** semanal (con su evidencia en
+`02-DOCS/catalogo.md`: leé la fila de la estrategia antes de escribir la hipótesis).
+
+**Si no hay ninguna → modo propuesta** (respaldo: lo normal es que el explorador mantenga la cola):
 - Buscá en la web (papers, blogs serios, repos) UNA idea que entre en el alcance (señal 5m–1d,
   trades de horas a pocos días, activos operables en Binance) y que NO esté en `decisiones.md`.
 - Preferí mecanismos con una razón económica (por qué alguien pierde plata del otro lado) y que

@@ -20,6 +20,7 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Veredicto | Desarrollo contra el criterio; sólo si pasa se mira el holdout, una vez | código (`bt.verdict`) | `results/reports/`, `mediciones.jsonl` |
 | ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas → PR que toca `approved.json` | código + Felipe | PR |
 | Auditor determinista | 12 chequeos. Proceso: pre-registro antes de evaluar, holdout una vez y sólo si pasa desarrollo, `approved.json` coherente, test de look-ahead por estrategia, Brain al día, bitácora determinista, data snooping. Metodología: ventana y potencia estadística (años, 2022 bajista, ±2 EE vs comisión, n por tramo), calidad de datos, rechazos al borde, desgaste del holdout | CI (`bt.auditoria`) | resumen del CI, dashboard |
+| Explorador | Investiga estrategias conocidas (papers, research cripto, repos, competencias, rankings), las documenta con su evidencia (A–D) y deja 5–7 por semana en la cola; las A/B dentro del alcance entran solas a `en cola` | Claude, semanal (`.claude/agents/explorador.md`) | `02-DOCS/catalogo.md`, `02-DOCS/ideas.md`, PR `[rutina]` |
 | Auditor con criterio | Lo que el código no juzga: (1) proceso: hipótesis, criterios flojos, variantes repetidas; (2) metodología: ¿más o menos años?, supervivencia, costos realistas, robustez, nulo, renovación del holdout; (3) rechazadas: clasificarlas y proponer versiones con mecanismo nuevo (nunca re-evaluar); (4) paridad backtest ↔ bot real de btc-signal-web; (5) ≤ 5 mejoras | Claude, semanal (`.claude/agents/auditor.md`) | `02-DOCS/auditorias/`, `02-DOCS/ideas.md`, PR |
 
 ## Cómo corre (Fase 3)
@@ -70,4 +71,5 @@ tokens.
 | 3. Spec YAML + veredicto + workflows + dashboard en Pages | hecha (2026-10-31); primera spec real: `2026-10-31-trend1d-tope-7d` |
 | 3b. Auditor del proceso (determinista + agente con criterio) | hecho (2026-10-31); falta programar la rutina semanal del agente |
 | 4. Rutina diaria + auditor semanal | código hecho (2026-10-31): agente `investigador`, auto-merge con rutas seguras. Falta crear las dos rutinas en la cuenta de Felipe |
+| 4b. Explorador semanal (catálogo de estrategias conocidas → cola) | código hecho (2026-11-02); falta que Felipe agregue el repo a su rutina |
 | 5. Contrato `approved.json` con btc-signal-web | pendiente |

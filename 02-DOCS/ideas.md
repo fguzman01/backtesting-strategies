@@ -1,13 +1,19 @@
 # Cola de ideas
 
 De acá toma la rutina diaria la próxima estrategia a pre-registrar (Fase 4). Las ideas las
-agregan Felipe, la rutina al investigar, o el auditor al revisar rechazadas.
+agregan Felipe, el **explorador** cada semana (desde su catálogo `02-DOCS/catalogo.md`), el
+investigador cuando la cola se vacía, o el auditor al revisar rechazadas.
 
 Una idea **no es una spec**: no tiene criterio todavía. Antes de convertirla, la rutina revisa
 `decisiones.md` (que no esté medida) y `alcance.md` (que entre en el horizonte).
 
 **Estados:** `propuesta` (falta el visto bueno de Felipe) · `en cola` (lista para pre-registrar) ·
 `pre-registrada` (ya tiene spec) · `descartada` (con el motivo).
+
+**Entrada automática a la cola** (Felipe, 2026-11-02): el explorador pasa solas a `en cola` las ideas
+con evidencia A o B, dentro del alcance, de familias no cerradas, no medidas antes e implementables
+con el motor actual; como mucho 2 por familia y 5 por semana. El resto entra como `propuesta`.
+Felipe puede descartar o reordenar cualquiera.
 
 **Ideas que nacen de una rechazada:** tienen que nombrar a la madre, explicar el mecanismo nuevo
 (no un parámetro afinado) y contar cuántas variantes de esa familia se evaluaron. La rechazada no
