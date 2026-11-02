@@ -23,6 +23,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # el pre-registro (commit y fecha de la spec) sale de la historia de git
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -53,16 +55,17 @@ jobs:
           if [ "$APROBADAS" != "0" ]; then
             rama="evaluacion/${GITHUB_RUN_ID}"
             git checkout -b "$rama"
-            git commit -m "Evaluación con estrategia aprobada: $IDS"
+            git commit -m "Evaluación con estrategia aprobada o en observación: $IDS"
             git push origin "$rama"
             {
-              echo "La factory aprobó: \`$IDS\`."
+              echo "La factory aprobó (o dejó en observación): \`$IDS\`."
               echo
-              echo "Este PR agrega la estrategia a \`results/approved.json\`, que consume btc-signal-web."
+              echo "Este PR agrega la estrategia a \`results/approved.json\` con su \`nivel\`, que consume btc-signal-web."
+              echo "\`observacion\` = sólo paper. Mirá la ficha (pruebas, contaminación, madre, cupo) en cada reporte."
               echo "Revisá los reportes en \`results/reports/\` antes de hacer merge."
               for id in $IDS; do echo; echo "---"; echo; cat "results/reports/$id.md"; done
             } > cuerpo.md
-            gh pr create --base main --head "$rama" --title "Estrategia aprobada: $IDS" --body-file cuerpo.md
+            gh pr create --base main --head "$rama" --title "Estrategia aprobada u observación: $IDS" --body-file cuerpo.md
           else
             git commit -m "Evaluación: $IDS"
             git push origin HEAD:main

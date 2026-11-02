@@ -52,6 +52,11 @@ Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) 
 - `criterio_aprobacion`: **exigente por defecto** — `n_minimo` acorde a la frecuencia (≥ 100 si la
   estrategia opera seguido), `ic95_excluye_cero: true`, `supera_nulo_p95: true`,
   `tramos_positivos_minimo: 3`, holdout positivo. Si aflojás algo, justificalo en la hipótesis.
+- `familia`: la de la idea (p. ej. `tendencia`, `reversion`, `estacionalidad`). Si es variante de
+  una estrategia ya medida (acá o en btc-signal-web), poné `madre` (módulo, params, config) para que
+  se corra al lado, y `holdout_contaminado: true` si ese período ya se miró con la madre.
+- `config.max_por_direccion`: el cupo con que la operaría el bot (si hay uno parecido en
+  btc-signal-web, el mismo; si no, 3). Sin cupo, el backtest abre más de lo que el bot abriría.
 - `estado: pre-registrada`.
 
 Si la idea nace de una rechazada, nombrá a la madre en `ya_probado` y no copies sus parámetros

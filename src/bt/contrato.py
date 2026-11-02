@@ -17,7 +17,10 @@ RUTA = Path("results") / "approved.json"
 CAMPOS = {
     "id": str, "estrategia": str, "params": dict, "mercado": str, "intervalo": str, "simbolos": list,
     "config": dict, "desarrollo": dict, "holdout": dict, "aprobada_en": str, "commit": str, "reporte": str,
+    # Desde 2026-11-02 (retroalimentación de btc-signal-web): la ficha dice cuánto confiar.
+    "nivel": str, "n_pruebas": int, "holdout_contaminado": bool,
 }
+NIVELES = {"aprobada", "observacion"}  # observacion = sólo paper, para observar
 METRICAS = {"n": int, "avgRNeto": (int, float), "ic95": (list, type(None))}
 
 
@@ -34,6 +37,11 @@ def validar(datos: dict) -> list[str]:
         for campo, tipo in CAMPOS.items():
             if not isinstance(e.get(campo), tipo):
                 errores.append(f"{donde}.{campo}: falta o no es {tipo.__name__}")
+        if isinstance(e.get("nivel"), str) and e["nivel"] not in NIVELES:
+            errores.append(f"{donde}.nivel: `{e['nivel']}` no es uno de {sorted(NIVELES)}")
+        cupo = e.get("max_por_direccion")
+        if cupo is not None and not (isinstance(cupo, int) and cupo >= 1):
+            errores.append(f"{donde}.max_por_direccion: tiene que ser un entero ≥ 1 o null")
         if e.get("id") in ids:
             errores.append(f"{donde}.id: repetido ({e.get('id')})")
         ids.add(e.get("id"))

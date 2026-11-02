@@ -5,8 +5,9 @@ Punto de entrada para cualquier agente que trabaje en este repo. Leelo completo 
 ## Qué es
 
 Una **factory de backtesting**: entra una idea de estrategia, sale un veredicto auditable
-(APROBADA / RECHAZADA / NO CONCLUYENTE) contra un criterio escrito **antes** de correr. Las
-aprobadas pasan a `results/approved.json`, que consume `fguzman01/btc-signal-web` para operarlas en
+(APROBADA / OBSERVACION / RECHAZADA / NO CONCLUYENTE) contra un criterio escrito **antes** de correr.
+Las aprobadas y en observación pasan a `results/approved.json` con su `nivel` (observación = sólo
+paper), que consume `fguzman01/btc-signal-web` para operarlas en
 paper y después en real. Objetivo de régimen: **una estrategia evaluada por día**.
 
 Diseño completo de la factory: `02-DOCS/factory.md` (diagrama de agentes y flujo: `02-DOCS/diagrama-factory.mmd`).

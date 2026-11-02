@@ -20,6 +20,20 @@ Las rupturas de canal con filtro de tendencia capturan la incorporación lenta d
 | alcance: duración mediana ≤ 7 días | 3.0 días | ✅ |
 | holdout: avgR neto > 0 | +0.036 (n=916) | ✅ |
 
+**Reclasificada 2026-11-02: aprobada → observacion.** Reclasificada el 2026-11-02 por la retroalimentación de btc-signal-web, antes de existir los dos niveles: el holdout es positivo pero débil (+0.036, IC [−0.094, +0.166]; sin las 10 mejores −0.095; con costos ×1.5 +0.004; conserva 15% del avgR de desarrollo, el mínimo nuevo es 33%) y está contaminado (btc-signal-web ya había mirado ese período con TREND_4H sin tope). El veredicto registrado no se cambia; cambia el nivel.
+
+## Ficha
+
+- **Nivel:** observacion
+- **Pruebas en la familia `tendencia`:** 3 (esta incluida)
+  - `2026-10-31-trend1d-tope-7d`: RECHAZADA, desarrollo +0.087
+  - `2026-11-01-trend1d-chandelier-14d`: RECHAZADA, desarrollo +0.148
+- **Holdout contaminado:** sí
+- **Pre-registro:** commit `95e24ef` del 2026-11-02T06:41:08+00:00
+- **Cupo de cartera:** sin cupo
+- **Peor caída (desarrollo):** -73.24 R
+- **Peor caída (holdout):** -122.78 R
+
 ## Desarrollo
 
 Ventana 2017-08-17 → 2025-09-08 · n=4631 · avgR neto +0.245 [+0.178, +0.312] · bruto +0.310 · acierto 35% · duración mediana 3.0 días

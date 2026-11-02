@@ -57,6 +57,30 @@ sólo el 15% del avgR de desarrollo. Desde ahora, por defecto, el holdout ademá
 Las specs pueden aflojar alguno sólo justificándolo en la hipótesis. Las evaluaciones ya hechas no
 se re-evalúan.
 
+## Dos niveles: aprobada y observación (desde 2026-11-02)
+
+Pedido de btc-signal-web sobre la primera aprobada. Si pasa desarrollo:
+- **APROBADA** (`nivel: aprobada`): el holdout cumple todos los criterios estrictos **y** no está
+  contaminado. Es la única candidata a real (decisión de Felipe, después del paper).
+- **OBSERVACION** (`nivel: observacion`): holdout positivo pero falla algún criterio estricto, o
+  contaminado. Entra a `approved.json` sólo para paper: se observa, no se concluye.
+- **RECHAZADA**: holdout sin operaciones o con avgR neto ≤ 0.
+
+**Holdout contaminado:** la spec lo declara (`holdout_contaminado: true`) o la evaluación lo deduce
+(otra de la misma `familia` ya miró el holdout). Una variante de algo ya mirado necesita otra
+evidencia: nunca pasa de observación con ese holdout.
+
+**La ficha** que acompaña cada aprobada u observación (reporte y `approved.json`): `n_pruebas` y
+`variantes` de la familia, `holdout_contaminado`, `preregistro` (commit y fecha en que la spec entró
+al repo, verificable contra la fecha de la evaluación), peor caída en R por tramo, el cupo
+(`max_por_direccion`) y, si tiene `madre`, la comparación en el mismo período y tokens (diferencia de
+avgR con ±2 EE —conservador: suma varianzas aunque las muestras se solapan— y la peor caída de cada
+una). El auditor avisa si falta algo.
+
+**Cupo de cartera:** `config.max_por_direccion` simula el tope del bot (posiciones abiertas por
+dirección entre todos los símbolos, en orden de tiempo y de símbolo). Aproximación: cada símbolo se
+simula por separado, así que una señal descartada por el cupo no libera ese símbolo para otra.
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).

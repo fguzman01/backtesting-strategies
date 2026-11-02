@@ -14,6 +14,7 @@ from pathlib import Path
 
 ESTADO = {
     "APROBADA": ("good", "✓", "Aprobada"),
+    "OBSERVACION": ("warning", "◐", "En observación"),
     "RECHAZADA": ("critical", "✕", "Rechazada"),
     "NO_CONCLUYENTE": ("warning", "?", "No concluyente"),
 }
@@ -184,6 +185,9 @@ def _seccion_auditoria(ruta: Path) -> str:
 def generar(base: Path = Path("results")) -> str:
     evs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted((base / "evaluaciones").glob("*.json"))]
     evs.sort(key=lambda e: e["fecha"], reverse=True)
+    for e in evs:  # una aprobada reclasificada a observación se muestra como tal
+        if e.get("nivel") == "observacion":
+            e["veredicto"] = "OBSERVACION"
     cuenta = {k: sum(1 for e in evs if e["veredicto"] == k) for k in ESTADO}
     filas = []
     for e in evs:
@@ -213,7 +217,8 @@ def generar(base: Path = Path("results")) -> str:
             f"<tbody>{crit}</tbody></table></section>"
         )
     auditoria = _seccion_auditoria(base / "auditoria.json")
-    tiles = [("Evaluadas", len(evs)), ("Aprobadas", cuenta["APROBADA"]), ("Rechazadas", cuenta["RECHAZADA"]),
+    tiles = [("Evaluadas", len(evs)), ("Aprobadas", cuenta["APROBADA"]), ("En observación", cuenta["OBSERVACION"]),
+             ("Rechazadas", cuenta["RECHAZADA"]),
              ("No concluyentes", cuenta["NO_CONCLUYENTE"])]
     cuerpo_tabla = "".join(filas) or '<tr><td colspan="9">Todavía no hay evaluaciones.</td></tr>'
     return f"""<!DOCTYPE html>

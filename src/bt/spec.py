@@ -62,6 +62,11 @@ class Spec:
     ruta: Path | None = None
     crudo: dict = field(default_factory=dict, repr=False)
     historia_spot: bool = False
+    # Retroalimentación de btc-signal-web sobre la primera aprobada (2026-11-02):
+    familia: str = ""  # para contar cuántas variantes se probaron (n_pruebas)
+    holdout_contaminado: bool = False  # el período ya se miró con algo emparentado (p. ej. btc-signal-web)
+    madre: dict | None = None  # estrategia de la que es variante: se corre al lado en el mismo período y tokens
+    max_por_direccion: int | None = None  # cupo de cartera como en el bot (posiciones abiertas por dirección)
 
     @property
     def minutos_por_vela(self) -> int:
@@ -160,8 +165,23 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     )
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha
+    familia = str(d.get("familia") or modulo)
+    madre = d.get("madre")
+    if madre is not None:
+        if not isinstance(madre, dict):
+            raise SpecInvalida("`madre` tiene que ser un diccionario (modulo, params, config)")
+        m_mod = str(madre.get("modulo", modulo))
+        if not m_mod.isidentifier():
+            raise SpecInvalida(f"madre.modulo `{m_mod}` no es un nombre de módulo válido")
+        madre = {"modulo": m_mod, "params": madre.get("params", params) or {},
+                 "config": madre.get("config") or {}, "nombre": str(madre.get("nombre") or m_mod)}
+    cupo = c.get("max_por_direccion")
+    if cupo is not None and (not isinstance(cupo, int) or cupo < 1):
+        raise SpecInvalida("config.max_por_direccion tiene que ser un entero ≥ 1 (o no ponerlo)")
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
-                str(desde) if desde else None, criterio, ruta, d, historia_spot)
+                str(desde) if desde else None, criterio, ruta, d, historia_spot,
+                familia=familia, holdout_contaminado=bool(d.get("holdout_contaminado", False)),
+                madre=madre, max_por_direccion=cupo)
 
 
 def cargar(ruta: Path | str) -> Spec:
