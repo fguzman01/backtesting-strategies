@@ -1,6 +1,7 @@
 """¿Puede fusionarse solo este PR de la rutina? Lee `<estado> <ruta>` por línea en stdin.
 
-Permitido: specs, estrategias y tests NUEVOS, y cambios a 02-DOCS/ideas.md. Cualquier otra cosa
+Permitido: specs, estrategias y tests NUEVOS, y cambios a 02-DOCS/ideas.md y 02-DOCS/catalogo.md
+(el explorador). Cualquier otra cosa
 (results/, approved.json, el motor, workflows, el Brain, specs o estrategias existentes) exige que
 Felipe lo revise. Sale con 0 si se puede fusionar, 1 si no (e imprime por qué).
 """
@@ -10,7 +11,7 @@ import sys
 
 NUEVOS = [r"specs/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.yaml", r"src/bt/strategies/[a-z0-9_]+\.py",
           r"tests/test_estrategia_[a-z0-9_]+\.py"]
-EDITABLES = [r"02-DOCS/ideas\.md"]
+EDITABLES = [r"02-DOCS/ideas\.md", r"02-DOCS/catalogo\.md"]
 
 
 def motivo(estado: str, ruta: str) -> str | None:

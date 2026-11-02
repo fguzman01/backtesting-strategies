@@ -28,6 +28,9 @@ flowchart TD
 
     AUD2["🔍 Auditor con criterio · Claude, semanal<br/>1. proceso: hipótesis, criterios, variantes<br/>2. metodología: ¿más o menos años?, costos,<br/>supervivencia, robustez, holdout<br/>3. rechazadas: ¿versión con mecanismo nuevo?<br/>4. paridad backtest ↔ bot real<br/>5. ≤ 5 mejoras → 02-DOCS/auditorias/ + PR"]
     IDEAS[("02-DOCS/ideas.md<br/>cola de ideas")]
+    EXPL["🌐 Explorador · Claude, semanal<br/>· papers, research cripto, repos,<br/>competencias, rankings<br/>· califica la evidencia (A–D)<br/>→ 02-DOCS/catalogo.md<br/>· 5–7 ideas/semana; A/B entran solas"]
+    EXPL -- "mejores ideas<br/>(A/B → en cola)" --> IDEAS
+    EXPL -. "consulta lo ya probado" .-> BRAIN
 
     DEC{"Veredicto"}
     MAIN["Rechazada / No concluyente<br/>→ commit directo a main<br/>(reporte + bitácora)"]
@@ -73,7 +76,7 @@ flowchart TD
     class FELIPE humano
     class A1,A2,A3 agente
     class CI,VAL,EV,PAGES,DEC,MAIN,PR,AUD1 codigo
-    class AUD2 agente
+    class AUD2,EXPL agente
     class B1,B2,B3 brain
     class APPROVED,BSW salida
     class IDEAS brain
