@@ -47,6 +47,22 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.json` lo impide
 (el holdout ya se miró). Para otra pregunta, otra spec con otro id.
 
+### Fase 5: de la factory al bot (btc-signal-web)
+
+1. Una spec sale **APROBADA** → PR en este repo que la agrega a `results/approved.json` (Felipe lo
+   fusiona). El formato está fijado por `bt.contrato` y se valida en el CI.
+2. **Copia en el bot, por PR**: `btc-signal-web/src/config/factoryApproved.json` se actualiza con un
+   PR a la rama `dev` de btc-signal-web. Una aprobada nueva nunca aparece en el bot sin revisión.
+3. **Implementación**: las estrategias de la factory son Python; el bot es TypeScript. Cada aprobada
+   se implementa en el bot (o se reutiliza un motor existente con parámetros), con un **test de
+   paridad** contra el motor de la factory, y se mapea en `src/config/factory.ts`. Nace
+   `paperOnly` y **apagada**; se enciende en dev y en prod con su toggle.
+4. `GET /api/factory/aprobadas` (ANALYSIS_KEY) lista cada aprobada y si está implementada, si es
+   paper-only y si está encendida en ese ambiente.
+5. **Pasar a real es otra decisión de Felipe**, después de ver el paper.
+
+Primera: `2026-11-02-trend4h-tope-7d` → `TREND_4H_T7` (fguzman01/btc-signal-web#2).
+
 ## Qué se dejó afuera y por qué
 
 - **Revisores de UX/UI/seguridad del video**: no hay producto de usuario que revisar.
@@ -72,4 +88,4 @@ tokens.
 | 3b. Auditor del proceso (determinista + agente con criterio) | hecho (2026-10-31); falta programar la rutina semanal del agente |
 | 4. Rutina diaria + auditor semanal | código hecho (2026-10-31): agente `investigador`, auto-merge con rutas seguras. Falta crear las dos rutinas en la cuenta de Felipe |
 | 4b. Explorador semanal (catálogo de estrategias conocidas → cola) | código hecho (2026-11-02); falta que Felipe agregue el repo a su rutina |
-| 5. Contrato `approved.json` con btc-signal-web | pendiente |
+| 5. Contrato `approved.json` con btc-signal-web | en curso (2026-11-02): contrato validado (`bt.contrato`) y TREND_4H_T7 en paper en btc-signal-web (PR a `dev`) |
