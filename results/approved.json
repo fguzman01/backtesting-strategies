@@ -1,0 +1,68 @@
+{
+ "estrategias": [
+  {
+   "id": "2026-11-02-trend4h-tope-7d",
+   "estrategia": "tendencia_donchian",
+   "params": {
+    "entrada": 20,
+    "salida": 10,
+    "atr_n": 20,
+    "ema_n": 200,
+    "stop_atr": 2.0
+   },
+   "mercado": "futures",
+   "intervalo": "4h",
+   "simbolos": [
+    "ADAUSDT",
+    "AVAXUSDT",
+    "BNBUSDT",
+    "BTCUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "ETHUSDT",
+    "LINKUSDT",
+    "LTCUSDT",
+    "NEARUSDT",
+    "SOLUSDT",
+    "TRXUSDT",
+    "UNIUSDT",
+    "XRPUSDT"
+   ],
+   "config": {
+    "fee_pct_por_lado": 0.001,
+    "deslizamiento_pct": 0.0,
+    "timeout_velas": 42,
+    "objetivo_r": null,
+    "cerrar_al_final": true
+   },
+   "desarrollo": {
+    "ventana": [
+     "2017-08-17T04:00:00+00:00",
+     "2025-09-08T20:00:00+00:00"
+    ],
+    "n": 4631,
+    "avgRNeto": 0.24476554862349081,
+    "ic95": [
+     0.17796923580296914,
+     0.3115618614440125
+    ]
+   },
+   "holdout": {
+    "ventana": [
+     "2025-09-09T00:00:00+00:00",
+     "2026-10-31T20:00:00+00:00"
+    ],
+    "n": 916,
+    "avgRNeto": 0.03594134733076261,
+    "ic95": [
+     -0.09375838424512868,
+     0.16564107890665392
+    ]
+   },
+   "aprobada_en": "2026-11-02T06:42:42+00:00",
+   "commit": "95e24ef",
+   "reporte": "results/reports/2026-11-02-trend4h-tope-7d.md"
+  }
+ ],
+ "actualizado": "2026-11-02T06:42:42+00:00"
+}
