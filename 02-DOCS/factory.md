@@ -52,7 +52,8 @@ Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.
 1. Una spec sale **APROBADA** u **OBSERVACION** (ver `reglas-de-medicion.md`: dos niveles) → PR en este repo que la agrega a `results/approved.json` (Felipe lo
    fusiona). El formato está fijado por `bt.contrato` y se valida en el CI.
 2. **Copia en el bot, por PR**: `btc-signal-web/src/config/factoryApproved.json` se actualiza con un
-   PR a la rama `dev` de btc-signal-web. Una aprobada nueva nunca aparece en el bot sin revisión.
+   PR a la rama `dev` de btc-signal-web, que abre solo `sincronizar-bot.yml` (secreto `BOT_REPO_TOKEN`).
+   Una aprobada nueva nunca aparece en el bot sin revisión: Felipe fusiona.
 3. **Implementación**: las estrategias de la factory son Python; el bot es TypeScript. Cada aprobada
    se implementa en el bot (o se reutiliza un motor existente con parámetros), con un **test de
    paridad** contra el motor de la factory, y se mapea en `src/config/factory.ts`. Nace
@@ -64,6 +65,16 @@ Una spec evaluada no se re-evalúa: la existencia de `results/evaluaciones/<id>.
 
 Primera: `2026-11-02-trend4h-tope-7d` → `TREND_4H_T7` (fguzman01/btc-signal-web#2), reclasificada a
 `observacion` el mismo día (holdout débil y contaminado).
+
+### Fase 6: la vuelta (retroalimentación automática)
+
+1. **El bot informa**: producción publica una vez por día `factory-paper.json` en la rama
+   `factory-paper` de btc-signal-web (ningún ambiente la sigue): R del paper con ±2 EE por aprobada,
+   el backtest y la madre que corre al lado en la misma ventana.
+2. **El puente lo trae** (`.claude/agents/puente.md`, semanal, antes del auditor): `bt.puente` lo
+   anota en `02-DOCS/retroalimentacion.md` junto con los issues `retro`. El auditor determinista
+   avisa si una aprobada rinde en paper por debajo de lo que predijo su holdout.
+3. Nada de esto cambia veredictos ni `approved.json`: son señales para el auditor y para Felipe.
 
 ## Qué se dejó afuera y por qué
 
@@ -90,4 +101,5 @@ tokens.
 | 3b. Auditor del proceso (determinista + agente con criterio) | hecho (2026-10-31); falta programar la rutina semanal del agente |
 | 4. Rutina diaria + auditor semanal | código hecho (2026-10-31): agente `investigador`, auto-merge con rutas seguras. Falta crear las dos rutinas en la cuenta de Felipe |
 | 4b. Explorador semanal (catálogo de estrategias conocidas → cola) | código hecho (2026-11-02); falta que Felipe agregue el repo a su rutina |
-| 5. Contrato `approved.json` con btc-signal-web | en curso (2026-11-02): contrato validado (`bt.contrato`) y TREND_4H_T7 en paper en btc-signal-web (PR a `dev`) |
+| 5. Contrato `approved.json` con btc-signal-web | hecha (2026-11-02): contrato validado (`bt.contrato`), ficha con `nivel`, TREND_4H_T7 en paper (observación) |
+| 6. Retroalimentación automática | código hecho (2026-11-02): PR automático al bot, informe diario del paper, agente puente. Falta el secreto `BOT_REPO_TOKEN` y sumar el puente a la rutina semanal |

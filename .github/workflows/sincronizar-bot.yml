@@ -1,0 +1,59 @@
+# Ida de la retroalimentación: cuando cambia results/approved.json en main, copia el archivo a
+# fguzman01/btc-signal-web (src/config/factoryApproved.json) y abre un PR a `dev`. Felipe lo fusiona;
+# nada aparece en el bot sin revisión. Necesita el secreto BOT_REPO_TOKEN: token de grano fino de
+# btc-signal-web con Contents y Pull requests en lectura/escritura. Sin el secreto, avisa y no hace nada.
+name: sincronizar-bot
+
+on:
+  push:
+    branches: [main]
+    paths: ["results/approved.json"]
+  workflow_dispatch:
+
+concurrency:
+  group: sincronizar-bot
+  cancel-in-progress: false
+
+jobs:
+  pr-al-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Copiar approved.json y abrir PR en btc-signal-web"
+        env:
+          TOKEN: ${{ secrets.BOT_REPO_TOKEN }}
+          GH_TOKEN: ${{ secrets.BOT_REPO_TOKEN }}
+          BOT: fguzman01/btc-signal-web
+        run: |
+          set -e
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::falta el secreto BOT_REPO_TOKEN: no se abre el PR en el bot (copiar a mano)"
+            exit 0
+          fi
+          python -m json.tool results/approved.json > /dev/null
+          git clone --depth 1 --branch dev "https://x-access-token:${TOKEN}@github.com/${BOT}.git" bot
+          cp results/approved.json bot/src/config/factoryApproved.json
+          cd bot
+          if git diff --quiet; then
+            echo "la copia del bot ya está al día"
+            exit 0
+          fi
+          ids=$(python3 -c "import json;print(' '.join(e['id']+'('+e.get('nivel','?')+')' for e in json.load(open('src/config/factoryApproved.json'))['estrategias']))")
+          rama="factory/approved-${GITHUB_SHA::7}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$rama"
+          git commit -am "Factory: copia de approved.json (${GITHUB_SHA::7})"
+          git push origin "$rama"
+          {
+            echo "Copia automática de \`results/approved.json\` de la factory (commit ${GITHUB_SHA::7})."
+            echo
+            echo "Estrategias: $ids"
+            echo
+            echo "- Una aprobada nueva sin entrada en \`IMPLEMENTACION_FACTORY\` queda *pendiente de implementar*: no opera."
+            echo "- \`nivel: observacion\` = sólo paper. Pasar a real es decisión de Felipe."
+            echo "- Correr \`npm test\` antes de fusionar (el contrato con la factory está en \`test/tendencia4hT7.test.ts\`)."
+            echo
+            echo "Abierto por \`sincronizar-bot.yml\` de fguzman01/backtesting-strategies."
+          } > ../cuerpo.md
+          gh pr create --repo "$BOT" --base dev --head "$rama" --title "Factory: copia de approved.json ($ids)" --body-file ../cuerpo.md

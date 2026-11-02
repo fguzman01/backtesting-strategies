@@ -57,6 +57,9 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `.claude/agents/auditor.md` | Agente auditor: proceso, metodología, rechazadas y paridad con el bot real; propone mejoras (semanal) |
 | `02-DOCS/ideas.md` | Cola de ideas: de acá sale la próxima spec. Las ideas de rechazadas exigen un mecanismo nuevo |
 | `.claude/agents/investigador.md` | Rutina diaria: idea en cola → spec + estrategia + test → PR con auto-merge |
+| `.claude/agents/puente.md` | Rutina semanal: trae el informe del paper del bot (rama `factory-paper`) y los issues `retro` → `02-DOCS/retroalimentacion.md` |
+| `src/bt/puente.py` | Lee el informe del bot, lo resume y lo anota; el auditor avisa si una aprobada rinde peor en paper |
+| `.github/workflows/sincronizar-bot.yml` | Al cambiar `approved.json`, abre solo el PR con la copia en btc-signal-web (`dev`) |
 | `.claude/agents/explorador.md` | Rutina semanal: investiga estrategias conocidas → `02-DOCS/catalogo.md` → cola de ideas |
 | `02-DOCS/catalogo.md` | Catálogo de estrategias conocidas con su evidencia (A–D), mantenido por el explorador |
 | `scripts/rutas_automerge.py` | Qué rutas puede fusionar sola la rutina (usado por `automerge.yml`) |
