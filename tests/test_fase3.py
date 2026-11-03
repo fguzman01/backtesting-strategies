@@ -141,7 +141,7 @@ def test_evaluacion_aprobada_mira_el_holdout_y_escribe_todo(mundo, tmp_path):
     guardada = json.loads((tmp_path / "evaluaciones" / "2026-11-01-prueba.json").read_text())
     assert "filas" not in guardada["desarrollo"]
     filas = (tmp_path / "mediciones.jsonl").read_text().splitlines()
-    assert len(filas) == 4  # 2 símbolos × (desarrollo + holdout)
+    assert len(filas) == 8  # 2 símbolos × (desarrollo + holdout + 2 vecinos de estabilidad)
     assert ev_mod.evaluada("2026-11-01-prueba", tmp_path)
 
 
@@ -277,7 +277,8 @@ def test_comparacion_con_la_madre(mundo, tmp_path):
     assert c["ic95"][0] <= c["diferencia"] <= c["ic95"][1]
     assert "holdout" in ev["comparacionMadre"]
     ev_mod.guardar(ev, tmp_path)
-    assert len((tmp_path / "mediciones.jsonl").read_text().splitlines()) == 8  # hija y madre, 2 tramos × 2
+    # hija y madre en 2 tramos, más los 2 vecinos de estabilidad de la hija, × 2 símbolos
+    assert len((tmp_path / "mediciones.jsonl").read_text().splitlines()) == 12
     assert "Contra la madre" in (tmp_path / "reports" / f"{d['id']}.md").read_text()
 
 
@@ -300,3 +301,26 @@ def test_cupo_por_direccion():
 def test_peor_caida():
     ts = [_t("1", "1", r=1), _t("2", "2", r=-1), _t("3", "3", r=-2), _t("4", "4", r=3)]
     assert ev_mod.peor_caida(ts) == -3.0
+
+
+def test_perturbar_parametros():
+    p = ev_mod.perturbar({"entrada": 20, "salida": 1, "stop_atr": 2.0, "largo": True, "modo": "x"}, 0.8)
+    assert p == {"entrada": 16, "salida": 1, "stop_atr": 1.6, "largo": True, "modo": "x"}
+    assert ev_mod.perturbar({"n": 3}, 1.2) == {"n": 4}  # 3.6 → 4
+    assert ev_mod.perturbar({"n": 2}, 1.2) == {"n": 3}  # 2.4 redondea a 2: se mueve en 1
+
+
+def test_estabilidad_se_mide_antes_del_holdout_y_puede_decidir(mundo, tmp_path):
+    cv, cf, _ = mundo
+    ev = ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path)
+    est = ev["estabilidad"]
+    assert [v["factor"] for v in est["vecinos"]] == [0.8, 1.2]
+    assert est["vecinos"][0]["params"] == {"entrada": 16, "salida": 8}
+    assert not any("estabilidad" in c["criterio"] for c in ev["criterios"])  # sin umbral: sólo informa
+    ev_mod.guardar(ev, tmp_path)
+    assert "Estabilidad de parámetros" in (tmp_path / "reports" / f"{BASE['id']}.md").read_text()
+    assert len((tmp_path / "mediciones.jsonl").read_text().splitlines()) == 8  # 2 tramos + 2 vecinos, × 2
+    exigente = con(id="2026-11-03-exigente", criterio_aprobacion__estabilidad_minima=50.0)  # imposible
+    r = ev_mod.evaluar(desde_dict(exigente), cv, cf, base=tmp_path)
+    assert r["veredicto"] == "RECHAZADA" and r["holdout"] is None
+    assert any("estabilidad" in m for m in r["motivos"])

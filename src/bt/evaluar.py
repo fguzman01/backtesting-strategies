@@ -225,6 +225,46 @@ def comparar_con_madre(hija: dict, madre: dict, nombre: str) -> dict:
             "peorCaidaHija": hija.get("maxDrawdownR"), "peorCaidaMadre": madre.get("maxDrawdownR")}
 
 
+FACTORES_ESTABILIDAD = (0.8, 1.2)
+
+
+def perturbar(params: dict, factor: float) -> dict:
+    """Todos los parámetros numéricos × factor. Un entero que no cambiaría al redondear se mueve en 1
+    (en la dirección del factor), nunca por debajo de 1. Los booleanos y textos quedan igual."""
+    out = {}
+    for k, v in params.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            out[k] = v
+        elif isinstance(v, int):
+            nuevo = max(1, round(v * factor))
+            if nuevo == v:
+                nuevo = max(1, v + (1 if factor > 1 else -1))
+            out[k] = nuevo
+        else:
+            out[k] = v * factor
+    return out
+
+
+def estabilidad(spec: Spec, dev: dict, cargar_velas: CargarVelas, cargar_funding: CargarFunding) -> dict | None:
+    """La misma spec en desarrollo con los parámetros ×0.8 y ×1.2. Nunca toca el holdout."""
+    import dataclasses
+
+    base = dev["global"]["avgRNeto"]
+    vecinos, filas = [], []
+    for f in FACTORES_ESTABILIDAD:
+        params = perturbar(spec.params, f)
+        if params == spec.params:
+            return None  # sin parámetros numéricos: no hay vecindario que medir
+        t = _tramo(dataclasses.replace(spec, params=params), cargar_velas, cargar_funding, holdout=False,
+                   nota=f"estabilidad {spec.id} (x{f})")
+        g = t["global"]
+        vecinos.append({"factor": f, "params": params, "n": g["n"], "avgRNeto": g["avgRNeto"], "ic95": g.get("ic95"),
+                        "fraccion": g["avgRNeto"] / base if base else None})
+        filas += t["filas"]
+    return {"base": base, "vecinos": vecinos, "peorFraccion": min(v["fraccion"] or 0 for v in vecinos),
+            "filas": filas}
+
+
 def _criterios_desarrollo(spec: Spec, d: dict) -> list[dict]:
     c, g = spec.criterio, d["global"]
     out = [{"criterio": f"n ≥ {c.n_minimo}", "valor": g["n"], "ok": g["n"] >= c.n_minimo, "clave": "n"}]
@@ -298,8 +338,22 @@ def evaluar(
     criterios = _criterios_desarrollo(spec, dev)
     motivos = [f"desarrollo: falla «{c['criterio']}» ({c['valor']})" for c in criterios if not c["ok"]]
     holdout = None
-    if dev["global"]["n"] < spec.criterio.n_minimo:
-        veredicto = NO_CONCLUYENTE
+    estab = None
+    veredicto_previo = (NO_CONCLUYENTE if dev["global"]["n"] < spec.criterio.n_minimo
+                        else RECHAZADA if motivos else None)
+    if veredicto_previo is None:
+        # Pasó desarrollo: antes de gastar el holdout, ¿funciona también con parámetros vecinos?
+        estab = estabilidad(spec, dev, cargar_velas, cargar_funding)
+        minimo = spec.criterio.estabilidad_minima
+        if estab is not None and minimo is not None:
+            ok = estab["peorFraccion"] >= minimo
+            c = {"criterio": f"estabilidad: con parámetros ×0.8 y ×1.2 conserva ≥ {minimo:.0%} del avgR",
+                 "valor": " / ".join(f"×{v['factor']}: {v['avgRNeto']:+.3f}" for v in estab["vecinos"]), "ok": ok}
+            criterios.append(c)
+            if not ok:
+                motivos.append(f"desarrollo: falla «{c['criterio']}» ({c['valor']})")
+    if veredicto_previo:
+        veredicto = veredicto_previo
     elif motivos:
         veredicto = RECHAZADA
     else:
@@ -346,6 +400,7 @@ def evaluar(
         "maxPorDireccion": spec.max_por_direccion,
         "universoDinamico": {"top": spec.dinamico_top, "simbolos": spec.simbolos} if spec.dinamico_top else None,
         "comparacionMadre": madre,
+        "estabilidad": estab,
         "desarrollo": dev,
         "holdout": holdout,
     }
@@ -393,6 +448,16 @@ def reporte_md(ev: dict) -> str:
     if rec:
         lineas += ["", f"**Reclasificada {rec['fecha']}: {rec['de']} → {rec['a']}.** {rec['motivo']}"]
     lineas += ["", "## Ficha", ""] + ficha_md(ev)
+    est = ev.get("estabilidad")
+    if est:
+        lineas += ["", "## Estabilidad de parámetros", "",
+                   "Misma spec en desarrollo con todos los parámetros numéricos movidos a la vez. "
+                   "Si sólo funciona con los números exactos, es sobreajuste.", "",
+                   "| Parámetros | n | avgR neto | ±2 EE | Conserva |", "|---|---|---|---|---|",
+                   f"| como se pre-registraron | {ev['desarrollo']['global']['n']} | {est['base']:+.3f} "
+                   f"| {_fmt_ic(ev['desarrollo']['global'])} | 100% |"]
+        lineas += [f"| ×{v['factor']} {json.dumps(v['params'])} | {v['n']} | {v['avgRNeto']:+.3f} | {_fmt_ic(v)} "
+                   f"| {(v['fraccion'] or 0):.0%} |" for v in est["vecinos"]]
     for nombre, t in (("Desarrollo", dev), ("Holdout", ho)):
         if t is None:
             if nombre == "Holdout":
@@ -489,10 +554,12 @@ def guardar(ev: dict, base: Path = RESULTADOS) -> None:
     (base / "reports").mkdir(parents=True, exist_ok=True)
     filas = [f for t in (ev["desarrollo"], ev["holdout"]) if t for f in t["filas"]]
     filas += (ev.get("comparacionMadre") or {}).get("filas", [])
+    filas += (ev.get("estabilidad") or {}).get("filas", [])
     for f in filas:
         bitacora.registrar(f, base / "mediciones.jsonl")
     sin_filas = json.loads(json.dumps(ev, default=str))
-    for t in (sin_filas["desarrollo"], sin_filas["holdout"], sin_filas.get("comparacionMadre")):
+    for t in (sin_filas["desarrollo"], sin_filas["holdout"], sin_filas.get("comparacionMadre"),
+              sin_filas.get("estabilidad")):
         if t:
             t.pop("filas", None)
     (base / "evaluaciones" / f"{ev['id']}.json").write_text(
