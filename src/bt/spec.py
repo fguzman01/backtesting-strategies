@@ -21,7 +21,8 @@ TIMEOUT_MAX_DIAS = 14
 DURACION_MEDIANA_MAX_DIAS = 7
 TIPOS = {"scalp", "swing", "diario"}
 ESTADOS = {"borrador", "pre-registrada", "referencia"}
-CRITERIOS = {"n_minimo", "ic95_excluye_cero", "concluyente", "tramos_positivos_minimo", "supera_nulo_p95"}
+CRITERIOS = {"n_minimo", "ic95_excluye_cero", "concluyente", "tramos_positivos_minimo", "supera_nulo_p95",
+             "estabilidad_minima"}
 
 
 class SpecInvalida(ValueError):
@@ -42,6 +43,9 @@ class Criterio:
     holdout_aguanta_costos: bool = True  # con costos ×1.5 el avgR del holdout sigue > 0
     holdout_sin_mejores_no_negativo: bool = True  # sin las 10 mejores operaciones, avgR ≥ 0
     holdout_fraccion_desarrollo: float = 0.33  # el avgR del holdout conserva al menos 1/3 del de desarrollo
+    # Estabilidad de parámetros (2026-11-03): con todos los parámetros numéricos ×0.8 y ×1.2, el avgR de
+    # desarrollo conserva al menos esta fracción del original. None = se mide igual, pero sólo informa.
+    estabilidad_minima: float | None = None
 
 
 @dataclass(frozen=True)
@@ -178,6 +182,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
         holdout_aguanta_costos=bool(ho.get("aguanta_costos", True)),
         holdout_sin_mejores_no_negativo=bool(ho.get("sin_mejores_no_negativo", True)),
         holdout_fraccion_desarrollo=float(ho.get("fraccion_desarrollo_minima", 0.33)),
+        estabilidad_minima=None if cr.get("estabilidad_minima") is None else float(cr["estabilidad_minima"]),
     )
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha

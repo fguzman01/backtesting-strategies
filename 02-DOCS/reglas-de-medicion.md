@@ -103,6 +103,16 @@ fuera del cero, una observación es *candidata a subir*; si queda negativa, cual
 *candidata a bajar*. Es una sugerencia: el nivel lo cambia Felipe por PR (`results/reports/adelante.md`,
 y el auditor lo avisa).
 
+## Estabilidad de parámetros (desde 2026-11-03)
+
+Si una estrategia pasa desarrollo, antes de mirar el holdout se corre otra vez en desarrollo con
+TODOS sus parámetros numéricos ×0.8 y ×1.2 a la vez (un entero que no cambiaría al redondear se mueve
+en 1). Un edge real no depende de los números exactos que se eligieron; uno sobreajustado se cae con
+el vecino. Por ahora **informa** (reporte, ficha y aviso del auditor si un vecino conserva menos de la
+mitad del avgR). Si la spec pone `criterio_aprobacion.estabilidad_minima` (p. ej. 0.5), decide: no
+cumplirla rechaza sin gastar el holdout. Nunca se usa para elegir parámetros: los vecinos no se
+"prueban para quedarse con el mejor".
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).

@@ -350,6 +350,23 @@ def chequear_adelante(raiz: Path) -> Chequeo:
                    AVISO if avisos else OK, avisos or [f"{len(entradas)} al día, sin sugerencias"])
 
 
+def chequear_estabilidad(evs: dict[str, dict]) -> Chequeo:
+    """¿Lo que pasó desarrollo sigue funcionando con los parámetros vecinos (×0.8 y ×1.2)?"""
+    avisos, medidas = [], 0
+    for sid, ev in sorted(evs.items()):
+        est = ev.get("estabilidad")
+        if not est:
+            continue
+        medidas += 1
+        if est["peorFraccion"] < 0.5:
+            vec = ", ".join(f"×{v['factor']} {v['avgRNeto']:+.3f}" for v in est["vecinos"])
+            avisos.append(f"{sid} ({ev.get('veredicto')}): con parámetros vecinos conserva menos de la mitad del "
+                          f"avgR ({est['base']:+.3f} → {vec}): posible sobreajuste")
+    detalle = avisos or [f"{medidas} evaluación(es) con estabilidad medida, ninguna frágil" if medidas
+                         else "todavía ninguna evaluación con estabilidad medida (existe desde 2026-11-03)"]
+    return Chequeo("Estabilidad de parámetros", "reglas-de-medicion.md", AVISO if avisos else OK, detalle)
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -382,6 +399,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_ficha(raiz),
         chequear_paper(raiz),
         chequear_adelante(raiz),
+        chequear_estabilidad(evs),
     ]
 
 
