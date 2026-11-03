@@ -263,6 +263,9 @@ def test_antecedentes_cuentan_pruebas_y_contaminan_el_holdout(mundo, tmp_path):
     assert ev["holdoutContaminado"] and ev["veredicto"] == "OBSERVACION"
     otra = ev_mod.evaluar(desde_dict(con(id="2026-11-02-otra", familia="otra")), cv, cf, base=tmp_path)
     assert otra["nPruebas"] == 1 and otra["veredicto"] == "APROBADA"
+    d = con(id="2026-11-02-af", familia="otra", pruebas_previas=5)
+    afuera = ev_mod.evaluar(desde_dict(d), cv, cf, base=tmp_path)
+    assert afuera["nPruebas"] == 6
 
 
 def test_comparacion_con_la_madre(mundo, tmp_path):
