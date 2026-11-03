@@ -81,6 +81,26 @@ una). El auditor avisa si falta algo.
 dirección entre todos los símbolos, en orden de tiempo y de símbolo). Aproximación: cada símbolo se
 simula por separado, así que una señal descartada por el cupo no libera ese símbolo para otra.
 
+## Sesgo de supervivencia: universo dinámico (desde 2026-11-03)
+
+Medir en los tokens que siguen vivos hoy deja afuera a los que murieron (LUNA, FTT, SRM...), justo
+los que más cayeron: infla cualquier estrategia que compre. `universo.dinamico: {top: N}` usa, para
+cada mes, los N perpetuos USDT con más volumen en dólares el mes ANTERIOR (sin look-ahead), con al
+menos 3 meses de historia y sin monedas estables, incluidos los que Binance retiró después. Sólo
+cuentan las señales de los meses en que el token era del top; una posición abierta sigue hasta su
+salida. Un retirado sin velas en un tramo se anota en `simbolosSinDatos` y no es un error. La tabla
+(`results/universo/futures-usdt.json`) se versiona y se actualiza sola cada mes. Es el universo por
+defecto de las specs nuevas; las evaluaciones ya hechas no cambian.
+
+## Prueba hacia adelante (desde 2026-11-03)
+
+El holdout fijo se gasta con cada mirada. Cada mes `adelante.yml` corre cada aprobada u observación
+con la misma spec, pero sólo sobre los datos POSTERIORES al fin del holdout que se miró al evaluarla:
+nadie los vio al diseñarla. Con menos de 30 operaciones no se concluye. Si queda positiva con ±2 EE
+fuera del cero, una observación es *candidata a subir*; si queda negativa, cualquier aprobada es
+*candidata a bajar*. Es una sugerencia: el nivel lo cambia Felipe por PR (`results/reports/adelante.md`,
+y el auditor lo avisa).
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).

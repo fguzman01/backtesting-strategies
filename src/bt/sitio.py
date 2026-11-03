@@ -82,6 +82,17 @@ def _e(x) -> str:
     return html.escape(str(x), quote=True)
 
 
+def _n_simbolos(e: dict) -> int:
+    return len(e["spec"]["universo"].get("simbolos") or (e.get("universoDinamico") or {}).get("simbolos", []))
+
+
+def _simbolos_txt(e: dict) -> str:
+    din = e.get("universoDinamico")
+    if din:
+        return f"dinámico: top {din['top']} de cada mes, con retirados ({len(din['simbolos'])} símbolos)"
+    return ", ".join(e["spec"]["universo"]["simbolos"])
+
+
 def _badge(veredicto: str) -> str:
     rol, icono, texto = ESTADO.get(veredicto, ("warning", "?", veredicto))
     return (f'<span class="badge"><span class="dot" style="background:var(--{rol})" aria-hidden="true">'
@@ -195,7 +206,7 @@ def generar(base: Path = Path("results")) -> str:
         nulo = dev["nulo"]["p95"]
         filas.append(
             f'<tr><td><a href="#{_e(e["id"])}">{_e(e["id"])}</a></td><td>{_e(s["estrategia"]["modulo"])}</td>'
-            f'<td>{_e(s["universo"]["intervalo"])}</td><td class="num">{len(s["universo"]["simbolos"])}</td>'
+            f'<td>{_e(s["universo"]["intervalo"])}</td><td class="num">{_n_simbolos(e)}</td>'
             f'<td>{_badge(e["veredicto"])}</td><td class="num">{dev["global"]["n"]}</td>'
             f'<td class="num">{_ic(dev["global"])}</td>'
             f'<td class="num">{"—" if nulo is None else f"{nulo:+.3f}"}</td>'
@@ -210,7 +221,7 @@ def generar(base: Path = Path("results")) -> str:
             f'<section class="eval" id="{_e(e["id"])}"><h3>{_e(e["id"])} · {_badge(e["veredicto"])}</h3>'
             f'<div class="meta">{_e(s["estrategia"]["modulo"])} {_e(json.dumps(s["estrategia"].get("params") or {}))}'
             f' · {_e(s["universo"].get("mercado", "futures"))} {_e(s["universo"]["intervalo"])} · '
-            f'{_e(", ".join(s["universo"]["simbolos"]))} · evaluada {_e(e["fecha"][:10])} · commit {_e(e["commit"])}'
+            f'{_e(_simbolos_txt(e))} · evaluada {_e(e["fecha"][:10])} · commit {_e(e["commit"])}'
             f'</div><p>{_e(str(s.get("hipotesis", "")).strip())}</p>'
             f'<div class="meta">R acumulado por operación, neto de comisión y funding</div>{_grafico(e)}'
             f'<table><thead><tr><th>Criterio pre-registrado</th><th>Valor</th><th></th></tr></thead>'

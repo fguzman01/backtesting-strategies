@@ -46,27 +46,61 @@ CargarVelas = Callable[[str, str, str], pd.DataFrame]
 CargarFunding = Callable[[str], pd.Series]
 
 
-def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding, holdout: bool) -> dict:
+def resolver_universo(spec: Spec, tabla: dict | None = None) -> Spec:
+    """Universo dinámico → la lista de símbolos que alguna vez estuvieron entre los `top` (desde la
+    ventana de desarrollo) y en qué meses. Una spec con lista fija vuelve igual."""
+    import dataclasses
+
+    from bt import universo
+
+    if not spec.dinamico_top or spec.miembros is not None:
+        return spec
+    tabla = tabla if tabla is not None else universo.cargar_tabla()
+    desde = (spec.desde or "2020-01-01")[:7]
+    m = universo.miembros(spec.dinamico_top, tabla, desde)
+    return dataclasses.replace(spec, simbolos=sorted(m), miembros={s: sorted(v) for s, v in m.items()})
+
+
+def _en_universo(spec: Spec, s: str, trades: list[Trade]) -> list[Trade]:
+    """Con universo dinámico, sólo cuentan las señales de los meses en que el símbolo era del top."""
+    if spec.miembros is None:
+        return trades
+    meses = set(spec.miembros.get(s, ()))
+    return [t for t in trades if (t.senal_en or t.abierto_en)[:7] in meses]
+
+
+def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding, holdout: bool,
+           desde_forzado: str | None = None, nota: str | None = None) -> dict:
     desde, hasta = (HOLDOUT_DESDE, None) if holdout else (spec.desde, None)
+    if desde_forzado is not None:
+        desde = desde_forzado
+    nota = nota or f"evaluacion {spec.id} ({'holdout' if holdout else 'desarrollo'})"
     por_simbolo: dict[str, list[Trade]] = {}
     opt_por_simbolo: dict[str, list[Trade]] = {}
     datos: dict = {}
     filas: list[dict] = []
     ventana: list[pd.Timestamp] = []
     calidad: dict[str, dict] = {}
+    sin_datos: list[str] = []
     for s in spec.simbolos:
-        if spec.historia_spot and cargar_velas is data.cargar:
-            df = data.cargar_extendida(s, spec.intervalo)
-        else:
-            df = cargar_velas(s, spec.intervalo, spec.mercado)
-        fund = cargar_funding(s) if spec.funding else None
-        r = run.correr(
-            spec.modulo, df, simbolo=s, intervalo=spec.intervalo, mercado=spec.mercado, desde=desde,
-            hasta=hasta, holdout=holdout, cfg=spec.cfg, params=spec.params, funding=fund,
-            nota=f"evaluacion {spec.id} ({'holdout' if holdout else 'desarrollo'})",
-        )
-        por_simbolo[s] = r.trades["conservador"]
-        opt_por_simbolo[s] = r.trades["optimista"]
+        try:
+            if spec.historia_spot and cargar_velas is data.cargar:
+                df = data.cargar_extendida(s, spec.intervalo)
+            else:
+                df = cargar_velas(s, spec.intervalo, spec.mercado)
+            fund = cargar_funding(s) if spec.funding else None
+            r = run.correr(
+                spec.modulo, df, simbolo=s, intervalo=spec.intervalo, mercado=spec.mercado, desde=desde,
+                hasta=hasta, holdout=holdout, cfg=spec.cfg, params=spec.params, funding=fund, nota=nota,
+            )
+        except (ValueError, FileNotFoundError) as e:
+            # Con universo dinámico, un retirado puede no tener velas en este tramo: no es un error.
+            if spec.miembros is None:
+                raise
+            sin_datos.append(f"{s}: {e}")
+            continue
+        por_simbolo[s] = _en_universo(spec, s, r.trades["conservador"])
+        opt_por_simbolo[s] = _en_universo(spec, s, r.trades["optimista"])
         datos[s] = (df, fund)
         filas.append(r.fila)
         ventana += [pd.Timestamp(r.fila["desde"]), pd.Timestamp(r.fila["hasta"])]
@@ -95,6 +129,7 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "robustez": metrics.robustez(todos),
         "maxDrawdownR": peor_caida(todos),
         "maxPorDireccion": spec.max_por_direccion,
+        "simbolosSinDatos": sin_datos,
         "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
         "filas": filas,
     }
@@ -256,6 +291,7 @@ def evaluar(
       approved.json con `nivel: observacion`: sólo paper, para observar; no es candidata a real.
     - RECHAZADA: holdout sin operaciones o con avgR neto ≤ 0.
     """
+    spec = resolver_universo(spec)
     previas = antecedentes(spec, base)
     contaminado = spec.holdout_contaminado or any(a["holdoutMirado"] for a in previas)
     dev = _tramo(spec, cargar_velas, cargar_funding, holdout=False)
@@ -308,6 +344,7 @@ def evaluar(
         "holdoutContaminado": contaminado,
         "preregistro": preregistro(spec),
         "maxPorDireccion": spec.max_por_direccion,
+        "universoDinamico": {"top": spec.dinamico_top, "simbolos": spec.simbolos} if spec.dinamico_top else None,
         "comparacionMadre": madre,
         "desarrollo": dev,
         "holdout": holdout,
@@ -322,6 +359,14 @@ def _fmt_dias(x: float | None) -> str:
     return f"{x:.1f} días" if x is not None else "—"
 
 
+def _universo_txt(ev: dict) -> str:
+    u, din = ev["spec"]["universo"], ev.get("universoDinamico")
+    if din:
+        return (f"dinámico: los {din['top']} más operados de cada mes, incluidos los retirados "
+                f"({len(din['simbolos'])} símbolos en total)")
+    return ", ".join(u["simbolos"])
+
+
 def reporte_md(ev: dict) -> str:
     s, dev, ho = ev["spec"], ev["desarrollo"], ev["holdout"]
     u = s["universo"]
@@ -329,7 +374,7 @@ def reporte_md(ev: dict) -> str:
         f"# {ev['id']} — {ev['veredicto']}",
         "",
         f"- **Estrategia:** `{s['estrategia']['modulo']}` {json.dumps(s['estrategia'].get('params') or {})}",
-        f"- **Universo:** {u.get('mercado', 'futures')} · {u['intervalo']} · {', '.join(u['simbolos'])}",
+        f"- **Universo:** {u.get('mercado', 'futures')} · {u['intervalo']} · " + _universo_txt(ev),
         f"- **Evaluada:** {ev['fecha']} · commit `{ev['commit']}`",
         "",
         "## Hipótesis",
@@ -420,7 +465,8 @@ def _entrada_aprobada(ev: dict) -> dict:
         "params": s["estrategia"].get("params") or {},
         "mercado": s["universo"].get("mercado", "futures"),
         "intervalo": s["universo"]["intervalo"],
-        "simbolos": s["universo"]["simbolos"],
+        "simbolos": s["universo"].get("simbolos") or (ev.get("universoDinamico") or {}).get("simbolos", []),
+        "universo_dinamico_top": (ev.get("universoDinamico") or {}).get("top"),
         "config": s.get("config") or {},
         "desarrollo": resumen(ev["desarrollo"]),
         "holdout": resumen(ev["holdout"]),
@@ -510,6 +556,7 @@ def bajar(spec: Spec) -> None:
     """Velas (y funding) de todos los símbolos, en paralelo. Completa lo que ya haya en caché."""
     from concurrent.futures import ThreadPoolExecutor
 
+    spec = resolver_universo(spec)
     tareas = [lambda s=s: data.descargar(s, spec.intervalo, "2020-01", spec.mercado) for s in spec.simbolos]
     if spec.funding:
         tareas += [lambda s=s: data.descargar_funding(s, "2020-01") for s in spec.simbolos]

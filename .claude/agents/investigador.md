@@ -46,7 +46,10 @@ Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) 
 - `pregunta`: como se buscaría en `decisiones.md`.
 - `hipotesis`: el mecanismo y por qué el edge sobreviviría a la comisión.
 - `ya_probado`: qué dice `decisiones.md` de algo parecido y por qué esto es distinto.
-- `universo`: símbolos con historia suficiente (desarrollo desde 2020 si existen; incluir 2022).
+- `universo`: **por defecto `dinamico: {top: 20}`** (sin sesgo de supervivencia: los 20 más operados
+  de cada mes, incluidos los retirados; desarrollo desde 2020-01, sin `historia_spot`). Una lista fija
+  sólo si la pregunta es sobre esos tokens (p. ej. los 14 del bot), y entonces decilo en `hipotesis`:
+  una lista de tokens que sobrevivieron hasta hoy infla cualquier estrategia que compre.
 - `config`: comisión realista (0.0005 por lado como mínimo; 0.001 si hay deslizamiento relevante),
   funding en futuros, `timeout_velas` ≤ 14 días y coherente con una mediana ≤ 7 días.
 - `criterio_aprobacion`: **exigente por defecto** — `n_minimo` acorde a la frecuencia (≥ 100 si la

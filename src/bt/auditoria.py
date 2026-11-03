@@ -125,7 +125,8 @@ def chequear_holdout(raiz: Path, evs: dict[str, dict], bitacora: list[dict]) -> 
             problemas.append(f"{sid}: se miró el holdout sin pasar desarrollo")
         if any("--forzar" in m for m in ev.get("motivos", [])):
             avisos.append(f"{sid}: re-evaluada con --forzar (el holdout ya se había mirado antes)")
-        simbolos = len(ev.get("spec", {}).get("universo", {}).get("simbolos", []))
+        simbolos = len(ev.get("spec", {}).get("universo", {}).get("simbolos")
+                       or (ev.get("universoDinamico") or {}).get("simbolos", []))
         miradas = sum(1 for f in bitacora if f.get("nota") == f"evaluacion {sid} (holdout)")
         if simbolos and miradas > simbolos:
             problemas.append(f"{sid}: el holdout aparece {miradas // simbolos} veces en la bitácora")
@@ -328,6 +329,27 @@ def chequear_paper(raiz: Path) -> Chequeo:
     return Chequeo("Paper del bot vs backtest", "retroalimentacion.md", AVISO if alertas else OK, detalle)
 
 
+def chequear_adelante(raiz: Path) -> Chequeo:
+    """Cada aprobada tiene su prueba hacia adelante al día, y se avisa si ahí rinde mal."""
+    import datetime as dt
+
+    ruta = raiz / "results" / "approved.json"
+    entradas = json.loads(ruta.read_text())["estrategias"] if ruta.exists() else []
+    avisos = []
+    for e in entradas:
+        f = raiz / "results" / "adelante" / f"{e['id']}.json"
+        if not f.exists():
+            avisos.append(f"{e['id']}: sin prueba hacia adelante todavía (la corre `adelante.yml` cada mes)")
+            continue
+        h = json.loads(f.read_text())["historial"][-1]
+        if (dt.date.today() - dt.date.fromisoformat(h["fecha"])).days > 40:
+            avisos.append(f"{e['id']}: la última prueba hacia adelante es del {h['fecha']} (más de 40 días)")
+        if h.get("sugerencia"):
+            avisos.append(f"{e['id']}: {h['sugerencia']} (n={h['n']}, avgR {h.get('avgRNeto'):+.3f}); decide Felipe")
+    return Chequeo("Prueba hacia adelante de lo aprobado", "results/reports/adelante.md",
+                   AVISO if avisos else OK, avisos or [f"{len(entradas)} al día, sin sugerencias"])
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -359,6 +381,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_desgaste_holdout(evs),
         chequear_ficha(raiz),
         chequear_paper(raiz),
+        chequear_adelante(raiz),
     ]
 
 
