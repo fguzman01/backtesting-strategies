@@ -1,0 +1,44 @@
+{
+ "id": "2026-11-02-trend4h-tope-7d",
+ "historial": [
+  {
+   "fecha": "2026-11-03",
+   "commit": "7ea4319",
+   "desde": "2026-11-01T00:00:00+00:00",
+   "ventana": [
+    "2026-11-01T00:00:00+00:00",
+    "2026-11-02T20:00:00+00:00"
+   ],
+   "n": 6,
+   "avgRNeto": -0.1715742664782971,
+   "ic95": [
+    -0.5840401857791909,
+    0.24089165282259672
+   ],
+   "maxDrawdownR": -1.4571,
+   "porSimbolo": {
+    "ADAUSDT": 1,
+    "AVAXUSDT": 0,
+    "BNBUSDT": 0,
+    "BTCUSDT": 0,
+    "DOGEUSDT": 1,
+    "DOTUSDT": 0,
+    "ETHUSDT": 0,
+    "LINKUSDT": 0,
+    "LTCUSDT": 1,
+    "NEARUSDT": 1,
+    "SOLUSDT": 1,
+    "TRXUSDT": 1,
+    "UNIUSDT": 0,
+    "XRPUSDT": 0
+   },
+   "referencia": {
+    "desarrollo": 0.24476554862349081,
+    "holdout": 0.03594134733076261
+   },
+   "lectura": "muestra_chica",
+   "sugerencia": null
+  }
+ ],
+ "nivel": "observacion"
+}
