@@ -30,7 +30,7 @@ jobs:
           cache: pip
       - run: pip install -e .
       - name: Caché de datos
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data
           key: datos-${{ github.run_id }}
@@ -46,4 +46,12 @@ jobs:
           git add results/adelante results/universo results/reports/adelante.md results/mediciones.jsonl
           if git diff --cached --quiet; then echo "sin cambios"; exit 0; fi
           git commit -m "Prueba hacia adelante y universo del mes ($(date -u +%Y-%m))"
+          # main pudo avanzar mientras corría (un merge de Felipe): se rebasa antes de empujar.
+          git pull --rebase origin main
           git push origin HEAD:main
+      - name: Guardar caché (aunque falle la publicación, el volumen bajado no se pierde)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: datos-${{ github.run_id }}
