@@ -1,0 +1,67 @@
+id: 2026-11-03-reversion-salto-liquidaciones-1h
+estado: pre-registrada
+fuente: "Idea #9 de 02-DOCS/ideas.md (Felipe, 2026-11-02); catálogo: reversión condicionada a saltos (De Nicola, Ledger 2021; Wen et al., NAJEF 2022)"
+pregunta: "¿Comprar/vender contra un salto de 1h con volumen anómalo (liquidaciones), con stop ancho, tiene edge neto de comisión?"
+
+hipotesis: >
+  Una vela de 1h con cuerpo ≥ 4 ATR y volumen ≥ 2× el promedio suele ser una cascada de liquidaciones
+  apalancadas: el precio se mueve por flujo forzado, no por información, y devuelve parte del tramo
+  en horas. Del otro lado pierden los liquidados y los que persiguen el movimiento. Mecanismo nuevo
+  frente a la reversión rechazada (rangos/piso de canal sin condición de evento): aquí el
+  disparador es un evento de flujo forzado, no una zona de precio. Stop ancho (3 ATR desde la
+  entrada) justamente por la lección de la reversión (stop de 1.5 ATR cortaba las excursiones);
+  objetivo 1R (= 3 ATR, ~75% del salto de 4 ATR). Costo: 0.1% por lado (comisión + deslizamiento
+  alto en momentos de volatilidad); con stop de ~1-1.5% la comisión ronda 0.15-0.2R, el edge bruto
+  debe superarlo. Se fija UNA configuración (4 ATR, 2× volumen, 3 ATR, 1R) antes de correr; no se
+  barren umbrales. Riesgo central: evidencia C (2013-2020, resúmenes sin costos). Criterio exigente
+  por defecto. El holdout se declara contaminado por prudencia (familia reversión ya medida en
+  btc-signal-web con holdout visto en otros diseños): como mucho llega a observación.
+
+ya_probado: >
+  decisiones.md: «Reversión a la media / rangos / comprar piso de canal, con stop» → No, 5 diseños ×
+  2 temporalidades, todos negativos antes de comisiones, porque el stop de 1.5 ATR cortaba las
+  excursiones. Esta es la 6.ª variante de la familia y la primera condicionada a un evento de
+  liquidación (salto + volumen) con stop de 3 ATR. «Contra el funding extremo» → no (continuación):
+  es otra señal. No se copian parámetros de las rechazadas.
+
+horizonte:
+  tipo: swing
+  duracion_mediana_esperada: "4-12 horas (objetivo 1R o stop; tope 2 días)"
+
+familia: reversion
+holdout_contaminado: true
+
+estrategia:
+  modulo: reversion_salto
+  params: {atr_n: 24, salto_atr: 4.0, vol_n: 24, vol_mult: 2.0, stop_atr: 3.0}
+
+universo:
+  mercado: futures
+  simbolos: [ADAUSDT, AVAXUSDT, BNBUSDT, BTCUSDT, DOGEUSDT, DOTUSDT, ETHUSDT, LINKUSDT, LTCUSDT,
+             NEARUSDT, SOLUSDT, TRXUSDT, UNIUSDT, XRPUSDT]
+  intervalo: 1h
+  funding: true
+  historia_spot: true
+
+config:
+  fee_pct_por_lado: 0.001
+  deslizamiento_pct: 0.0
+  timeout_velas: 48         # 2 días en 1h
+  objetivo_r: 1.0
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2017-01-01"
+
+criterio_aprobacion:
+  n_minimo: 150
+  ic95_excluye_cero: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
