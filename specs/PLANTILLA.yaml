@@ -36,8 +36,8 @@ universo:
   mercado: futures          # futures | spot
   simbolos: [BTCUSDT, ETHUSDT]
   # O, sin sesgo de supervivencia (recomendado, desde 2026-11-03): en vez de `simbolos`, los `top` más
-  # operados de CADA mes, incluidos los que Binance retiró después (bt.universo). Sólo futuros, desde
-  # 2020-01, sin historia_spot.
+  # operados de CADA mes, incluidos los que Binance retiró después (bt.universo). Sólo futuros cripto,
+  # la tabla empieza en 2020-04, sin historia_spot.
   # dinamico: {top: 20}
   intervalo: 1d             # 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d
   funding: true             # cobrar funding (sólo futuros)

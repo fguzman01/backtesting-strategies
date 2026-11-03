@@ -86,7 +86,9 @@ simula por separado, así que una señal descartada por el cupo no libera ese s�
 Medir en los tokens que siguen vivos hoy deja afuera a los que murieron (LUNA, FTT, SRM...), justo
 los que más cayeron: infla cualquier estrategia que compre. `universo.dinamico: {top: N}` usa, para
 cada mes, los N perpetuos USDT con más volumen en dólares el mes ANTERIOR (sin look-ahead), con al
-menos 3 meses de historia y sin monedas estables, incluidos los que Binance retiró después. Sólo
+menos 3 meses de historia, sin monedas estables ni perpetuos de activos tradicionales (acciones, ETF,
+oro, petróleo: `NO_CRIPTO`, lista a mano), incluidos los que Binance retiró después. La tabla empieza
+en **2020-04** (antes no hay 3 meses de historia de futuros). Sólo
 cuentan las señales de los meses en que el token era del top; una posición abierta sigue hasta su
 salida. Un retirado sin velas en un tramo se anota en `simbolosSinDatos` y no es un error. La tabla
 (`results/universo/futures-usdt.json`) se versiona y se actualiza sola cada mes. Es el universo por

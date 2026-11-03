@@ -44,11 +44,24 @@ PRIMER_MES = "2019-12"  # los perpetuos USDT empiezan en sep-2019
 ESTABLES = {"USDC", "BUSD", "TUSD", "FDUSD", "USDP", "DAI", "EUR", "GBP", "AEUR", "USDE", "PYUSD", "UST", "USTC"}
 
 
+# Perpetuos de activos tradicionales (acciones, ETF, materias primas, oro tokenizado) que Binance lista
+# desde 2025: cotizan con horario de mercado y otra dinámica. El universo por defecto es CRIPTO; una
+# pregunta sobre estos va con lista fija. Lista a mano (no hay un campo en los datos históricos que lo
+# diga): revisarla cuando aparezcan nuevos en el top. Las marcadas con (?) son dudosas.
+NO_CRIPTO = {
+    "XAU", "XAG", "PAXG", "XAUT", "CL", "BZ",                              # metales y petróleo
+    "NVDA", "TSLA", "GOOGL", "INTC", "MRVL", "MSTR", "MU", "CRCL", "SNDK",  # acciones EE. UU.
+    "SAMSUNG", "SKHYNIX", "SKHY",                                           # acciones Corea
+    "QQQ", "SOXL", "SOXS", "EWY", "KORU",                                   # ETF
+    "SPCX", "DRAM", "SNXX",                                                 # (?) parecen acciones/ETF
+}
+
+
 def es_candidato(simbolo: str) -> bool:
     if not simbolo.endswith("USDT") or "_" in simbolo:  # los trimestrales llevan fecha: BTCUSDT_230331
         return False
     base = simbolo[: -len("USDT")]
-    return bool(base) and base not in ESTABLES
+    return bool(base) and base not in ESTABLES and base not in NO_CRIPTO
 
 
 def _listar(prefijo: str) -> tuple[list[str], list[str]]:
@@ -138,8 +151,10 @@ def construir(hoy: dt.date | None = None, hilos: int = 16) -> Path:
     tabla = armar_tabla(volumenes, f"{hoy.year:04d}-{hoy.month:02d}")
     TABLA.parent.mkdir(parents=True, exist_ok=True)
     TABLA.write_text(json.dumps({
-        "regla": f"top {TOP_MAX} perpetuos USDT por volumen en USDT del mes anterior; ≥ {MESES_MINIMOS} meses de "
-                 "historia; sin monedas estables ni trimestrales. Incluye los retirados después.",
+        "regla": f"top {TOP_MAX} perpetuos USDT de cripto por volumen en USDT del mes anterior; ≥ {MESES_MINIMOS} "
+                 "meses de historia; sin monedas estables, trimestrales ni activos tradicionales. Incluye los "
+                 "retirados después.",
+        "excluidosNoCripto": sorted(NO_CRIPTO),
         "simbolosConsiderados": len(simbolos),
         "meses": tabla,
     }, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
