@@ -66,6 +66,8 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/strategies/` | Una estrategia por archivo, función `senales(df, **params)`. `tendencia_donchian` = TREND_1D |
 | `tests/referencia/` | Copias de scripts de btc-signal-web usadas como oráculo en los tests de paridad |
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
+| `src/bt/universo.py` | Universo sin sesgo de supervivencia: los más operados de cada mes, con los retirados (`results/universo/`) |
+| `src/bt/adelante.py` | Prueba hacia adelante mensual de lo aprobado, con datos posteriores a su evaluación (`adelante.yml`) |
 | `src/bt/contrato.py` | Formato de `approved.json` que lee btc-signal-web (Fase 5); se valida en el CI |
 
 ## Comandos

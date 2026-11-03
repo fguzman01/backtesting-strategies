@@ -27,6 +27,15 @@ python -m bt.data PAXGUSDT 1d 2020-01 --mercado spot
   `data/funding/<SIM>.csv` y `bt.run --funding` lo cobra. En estrategias de varios días importa:
   en TREND_1D pesó −0.076R por operación en desarrollo.
 
+## Universo sin sesgo de supervivencia (desde 2026-11-03)
+
+`bt.universo` lista en el bucket de data.binance.vision todos los perpetuos USDT que existieron
+(~920, incluidos los retirados: LUNA, FTT, SRM...) y baja su volumen mensual (suma de las velas `1d` del mes, columna de
+volumen en USDT; las `1mo` dejaron de publicarse en 2024) a `data/universo/volumen/`. Con eso arma `results/universo/futures-usdt.json`: los 50
+más operados de cada mes según el mes anterior. Usa la dirección S3 del bucket
+(`s3-ap-northeast-1.amazonaws.com/data.binance.vision`), que sirve lo mismo y responde también desde
+redes que no llegan a `data.binance.vision`.
+
 ## Historia extendida con spot (desde 2026-11-01)
 Con `universo.historia_spot: true` en la spec, cada símbolo usa velas de **spot antes del primer día
 con futuros** y de futuros desde ahí (`bt.data.cargar_extendida`). Agrega 2017-2019 (bajista de 2018,

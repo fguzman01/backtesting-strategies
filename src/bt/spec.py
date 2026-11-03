@@ -67,6 +67,8 @@ class Spec:
     holdout_contaminado: bool = False  # el período ya se miró con algo emparentado (p. ej. btc-signal-web)
     madre: dict | None = None  # estrategia de la que es variante: se corre al lado en el mismo período y tokens
     pruebas_previas: int = 0  # variantes de la familia medidas FUERA de este repo (p. ej. btc-signal-web)
+    dinamico_top: int | None = None  # universo dinámico: los `top` de cada mes (bt.universo)
+    miembros: dict | None = field(default=None, repr=False)  # {símbolo: meses AAAA-MM}, lo resuelve evaluar
     max_por_direccion: int | None = None  # cupo de cartera como en el bot (posiciones abiertas por dirección)
 
     @property
@@ -106,7 +108,20 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     mercado = uni.get("mercado", "futures")
     if mercado not in ("futures", "spot"):
         raise SpecInvalida(f"universo.mercado `{mercado}` inválido")
-    simbolos = [str(s).upper() for s in _exigir(uni, "simbolos", "universo.")]
+    dinamico = uni.get("dinamico")
+    top = None
+    if dinamico is not None:
+        # Universo sin sesgo de supervivencia (bt.universo): los `top` más operados de cada mes.
+        top = dinamico.get("top") if isinstance(dinamico, dict) else None
+        if not isinstance(top, int) or not 1 <= top <= 50:
+            raise SpecInvalida("universo.dinamico.top tiene que ser un entero entre 1 y 50")
+        if mercado != "futures":
+            raise SpecInvalida("universo.dinamico sólo existe para futuros USDT")
+        if uni.get("historia_spot"):
+            raise SpecInvalida("universo.dinamico no se combina con historia_spot (la tabla empieza en 2019-12)")
+        simbolos = []
+    else:
+        simbolos = [str(s).upper() for s in _exigir(uni, "simbolos", "universo.")]
     intervalo = str(_exigir(uni, "intervalo", "universo."))
     if intervalo not in INTERVALOS:
         raise SpecInvalida(
@@ -185,7 +200,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
                 str(desde) if desde else None, criterio, ruta, d, historia_spot,
                 familia=familia, holdout_contaminado=bool(d.get("holdout_contaminado", False)),
-                madre=madre, max_por_direccion=cupo, pruebas_previas=previas)
+                madre=madre, max_por_direccion=cupo, pruebas_previas=previas, dinamico_top=top)
 
 
 def cargar(ruta: Path | str) -> Spec:

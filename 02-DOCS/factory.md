@@ -102,4 +102,5 @@ tokens.
 | 4. Rutina diaria + auditor semanal | código hecho (2026-10-31): agente `investigador`, auto-merge con rutas seguras. Falta crear las dos rutinas en la cuenta de Felipe |
 | 4b. Explorador semanal (catálogo de estrategias conocidas → cola) | código hecho (2026-11-02); falta que Felipe agregue el repo a su rutina |
 | 5. Contrato `approved.json` con btc-signal-web | hecha (2026-11-02): contrato validado (`bt.contrato`), ficha con `nivel`, TREND_4H_T7 en paper (observación) |
+| 7. Confianza: universo sin supervivencia + prueba hacia adelante | código hecho (2026-11-03): `bt.universo` (por defecto en las specs nuevas) y `bt.adelante` mensual |
 | 6. Retroalimentación automática | código hecho (2026-11-02): PR automático al bot, informe diario del paper, agente puente. Falta el secreto `BOT_REPO_TOKEN` y sumar el puente a la rutina semanal |
