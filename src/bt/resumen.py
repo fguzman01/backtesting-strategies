@@ -58,6 +58,16 @@ def cola(raiz: Path) -> dict[str, list[str]]:
     return out
 
 
+def recomendadas(raiz: Path) -> list[str]:
+    """Las del PO para esta semana (02-DOCS/backlog.md), con su nombre."""
+    ruta = raiz / "02-DOCS" / "backlog.md"
+    if not ruta.exists():
+        return []
+    texto = ruta.read_text(encoding="utf-8")
+    bloque = texto.split("## Recomendadas para esta semana", 1)[-1].split("\n## ", 1)[0]
+    return [re.sub(r"\*\*", "", m).strip() for m in re.findall(r"^\d+\.\s+(.+)$", bloque, re.M)][:3]
+
+
 def armar(raiz: Path = Path("."), hoy: dt.date | None = None, informe_bot: dict | None = None,
           prs: list[dict] | None = None, auditoria: list | None = None) -> str:
     hoy = hoy or dt.date.today()
@@ -108,6 +118,10 @@ def armar(raiz: Path = Path("."), hoy: dt.date | None = None, informe_bot: dict 
         lineas += ["", f"<b>Auditor:</b> {len(fallas)} violaciones, {len(avisos)} avisos"]
         lineas += [f"❌ {e(ch.nombre)}" for ch in fallas]
         lineas += [f"⚠️ {e(ch.nombre)}" for ch in avisos[:4]]
+
+    rec = recomendadas(raiz)
+    if rec:
+        lineas += ["", "<b>Backlog: el PO recomienda</b>"] + [f"{i}. {e(x)}" for i, x in enumerate(rec, 1)]
 
     pendientes = [p for p in (prs or []) if not p.get("title", "").startswith("[rutina]")]
     lineas += ["", f"<b>Te esperan: {len(pendientes)} PR</b>"]
