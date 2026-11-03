@@ -30,6 +30,15 @@ def test_resumen_semanal(tmp_path):
     assert len(texto) <= resumen.LIMITE
 
 
+def test_recomendadas_del_po(tmp_path):
+    (tmp_path / "02-DOCS").mkdir()
+    (tmp_path / "02-DOCS" / "backlog.md").write_text(
+        "# B\n\n## Recomendadas para esta semana\n\nTexto.\n\n1. **B-01** Cartera\n2. **B-02** Pruebas\n"
+        "3. **B-03** Sesgos\n4. **B-04** Sobra\n\n## Pendientes\n\n1. no cuenta\n")
+    assert resumen.recomendadas(tmp_path) == ["B-01 Cartera", "B-02 Pruebas", "B-03 Sesgos"]
+    assert "el PO recomienda" in resumen.armar(tmp_path)
+
+
 def test_cola_vacia_avisa(tmp_path):
     (tmp_path / "02-DOCS").mkdir()
     (tmp_path / "02-DOCS" / "ideas.md").write_text("| 1 | x | a | b | c | descartada |\n")
