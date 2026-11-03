@@ -66,6 +66,7 @@ class Spec:
     familia: str = ""  # para contar cuántas variantes se probaron (n_pruebas)
     holdout_contaminado: bool = False  # el período ya se miró con algo emparentado (p. ej. btc-signal-web)
     madre: dict | None = None  # estrategia de la que es variante: se corre al lado en el mismo período y tokens
+    pruebas_previas: int = 0  # variantes de la familia medidas FUERA de este repo (p. ej. btc-signal-web)
     max_por_direccion: int | None = None  # cupo de cartera como en el bot (posiciones abiertas por dirección)
 
     @property
@@ -175,13 +176,16 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
             raise SpecInvalida(f"madre.modulo `{m_mod}` no es un nombre de módulo válido")
         madre = {"modulo": m_mod, "params": madre.get("params", params) or {},
                  "config": madre.get("config") or {}, "nombre": str(madre.get("nombre") or m_mod)}
+    previas = d.get("pruebas_previas", 0)
+    if not isinstance(previas, int) or previas < 0:
+        raise SpecInvalida("`pruebas_previas` tiene que ser un entero ≥ 0 (variantes medidas fuera de este repo)")
     cupo = c.get("max_por_direccion")
     if cupo is not None and (not isinstance(cupo, int) or cupo < 1):
         raise SpecInvalida("config.max_por_direccion tiene que ser un entero ≥ 1 (o no ponerlo)")
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
                 str(desde) if desde else None, criterio, ruta, d, historia_spot,
                 familia=familia, holdout_contaminado=bool(d.get("holdout_contaminado", False)),
-                madre=madre, max_por_direccion=cupo)
+                madre=madre, max_por_direccion=cupo, pruebas_previas=previas)
 
 
 def cargar(ruta: Path | str) -> Spec:

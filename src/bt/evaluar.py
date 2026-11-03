@@ -302,7 +302,8 @@ def evaluar(
         "criterios": criterios,
         "spec": spec.crudo,
         "familia": spec.familia,
-        "nPruebas": len(previas) + 1,
+        "nPruebas": len(previas) + spec.pruebas_previas + 1,
+        "pruebasPrevias": spec.pruebas_previas,
         "variantes": previas,
         "holdoutContaminado": contaminado,
         "preregistro": preregistro(spec),
@@ -382,7 +383,8 @@ def ficha_md(ev: dict) -> list[str]:
     pre = ev.get("preregistro")
     out = [
         f"- **Nivel:** {ev.get('nivel') or '—'}",
-        f"- **Pruebas en la familia `{ev.get('familia', '—')}`:** {ev.get('nPruebas', 1)} (esta incluida)",
+        f"- **Pruebas en la familia `{ev.get('familia', '—')}`:** {ev.get('nPruebas', 1)} (esta incluida"
+        + (f"; {ev['pruebasPrevias']} medidas fuera de este repo" if ev.get("pruebasPrevias") else "") + ")",
     ]
     out += [f"  - `{v['id']}`: {v['veredicto']}, desarrollo "
             + (f"{v['avgRNetoDesarrollo']:+.3f}" if v.get("avgRNetoDesarrollo") is not None else "—")

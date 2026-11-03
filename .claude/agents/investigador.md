@@ -55,6 +55,8 @@ Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) 
 - `familia`: la de la idea (p. ej. `tendencia`, `reversion`, `estacionalidad`). Si es variante de
   una estrategia ya medida (acá o en btc-signal-web), poné `madre` (módulo, params, config) para que
   se corra al lado, y `holdout_contaminado: true` si ese período ya se miró con la madre.
+  `pruebas_previas`: cuántas variantes de esa familia se midieron FUERA de este repo según
+  `decisiones.md` (p. ej. reversión: 5 en btc-signal-web). Las de este repo se cuentan solas.
 - `config.max_por_direccion`: el cupo con que la operaría el bot (si hay uno parecido en
   btc-signal-web, el mismo; si no, 3). Sin cupo, el backtest abre más de lo que el bot abriría.
 - `estado: pre-registrada`.
