@@ -1,0 +1,41 @@
+# Resumen semanal de la factory a Felipe por Telegram (bt.resumen): evaluadas, cola, lo aprobado en
+# paper y hacia adelante, auditor y PRs que esperan. Lunes 09:23 hora de Chile.
+# Secretos: TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID (los mismos del bot de producción); BOT_REPO_TOKEN
+# (ya existe) para leer el informe del paper en btc-signal-web. Sin los de Telegram, sólo lo imprime.
+name: resumen
+
+on:
+  schedule:
+    - cron: "23 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  resumen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Informe del paper (btc-signal-web) y PRs abiertos
+        env:
+          BOT: ${{ secrets.BOT_REPO_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "$BOT" ] && git clone -q --depth 1 --branch factory-paper "https://x-access-token:${BOT}@github.com/fguzman01/btc-signal-web.git" bot; then
+            cp bot/factory-paper.json informe.json
+          fi
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,title > prs.json || echo "[]" > prs.json
+      - name: Enviar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m bt.resumen --informe-bot informe.json --prs prs.json --enviar

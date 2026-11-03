@@ -68,5 +68,6 @@ jobs:
             gh pr create --base main --head "$rama" --title "Estrategia aprobada u observación: $IDS" --body-file cuerpo.md
           else
             git commit -m "Evaluación: $IDS"
+            git pull --rebase origin main  # main pudo avanzar mientras evaluaba
             git push origin HEAD:main
           fi

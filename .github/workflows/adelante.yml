@@ -46,4 +46,6 @@ jobs:
           git add results/adelante results/universo results/reports/adelante.md results/mediciones.jsonl
           if git diff --cached --quiet; then echo "sin cambios"; exit 0; fi
           git commit -m "Prueba hacia adelante y universo del mes ($(date -u +%Y-%m))"
+          # main pudo avanzar mientras corría (un merge de Felipe): se rebasa antes de empujar.
+          git pull --rebase origin main
           git push origin HEAD:main
