@@ -1,8 +1,8 @@
 """¿Puede fusionarse solo este PR de la rutina? Lee `<estado> <ruta>` por línea en stdin.
 
-Permitido: specs, estrategias y tests NUEVOS, y cambios a 02-DOCS/ideas.md y 02-DOCS/catalogo.md
-(el explorador) 02-DOCS/retroalimentacion.md (el puente) y
-02-DOCS/backlog.md (el PO). Cualquier otra cosa
+Permitido: specs NUEVAS (con su revisión de sesgos en specs/revisiones/), estrategias y tests
+NUEVOS, y cambios a 02-DOCS/ideas.md y 02-DOCS/catalogo.md (el explorador),
+02-DOCS/retroalimentacion.md (el puente) y 02-DOCS/backlog.md (el PO). Cualquier otra cosa
 (results/, approved.json, el motor, workflows, el Brain, specs o estrategias existentes) exige que
 Felipe lo revise. Sale con 0 si se puede fusionar, 1 si no (e imprime por qué).
 """
@@ -10,7 +10,8 @@ Felipe lo revise. Sale con 0 si se puede fusionar, 1 si no (e imprime por qué).
 import re
 import sys
 
-NUEVOS = [r"specs/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.yaml", r"src/bt/strategies/[a-z0-9_]+\.py",
+NUEVOS = [r"specs/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.yaml", r"specs/revisiones/\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md",
+          r"src/bt/strategies/[a-z0-9_]+\.py",
           r"tests/test_estrategia_[a-z0-9_]+\.py"]
 EDITABLES = [r"02-DOCS/ideas\.md", r"02-DOCS/catalogo\.md", r"02-DOCS/retroalimentacion\.md",
              r"02-DOCS/backlog\.md"]
@@ -30,6 +31,12 @@ def main() -> int:
         print("el PR no cambia archivos")
         return 1
     problemas = [m for e, r in lineas if (m := motivo(e, r.strip()))]
+    # Toda spec nueva trae la crítica del revisor de sesgos (desde 2026-11-04).
+    rutas = {r.strip() for _, r in lineas}
+    for r in rutas:
+        m = re.fullmatch(r"specs/(\d{4}-\d{2}-\d{2}-[a-z0-9-]+)\.yaml", r)
+        if m and f"specs/revisiones/{m.group(1)}.md" not in rutas:
+            problemas.append(f"{r}: falta specs/revisiones/{m.group(1)}.md (la revisión de sesgos)")
     for p in problemas:
         print(p)
     return 1 if problemas else 0

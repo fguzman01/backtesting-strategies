@@ -367,6 +367,23 @@ def chequear_estabilidad(evs: dict[str, dict]) -> Chequeo:
     return Chequeo("Estabilidad de parámetros", "reglas-de-medicion.md", AVISO if avisos else OK, detalle)
 
 
+REVISION_DESDE = "2026-11-05"  # specs con fecha desde acá traen la revisión de sesgos
+
+
+def chequear_revisiones(raiz: Path, evs: dict[str, dict]) -> Chequeo:
+    """Cada spec nueva tiene su revisión de sesgos; una evaluada con «bloquea» es una alarma."""
+    avisos = []
+    for ruta in sorted((raiz / "specs").glob("20*.yaml")):
+        sid = ruta.stem
+        rev = raiz / "specs" / "revisiones" / f"{sid}.md"
+        if sid[:10] >= REVISION_DESDE and not rev.exists():
+            avisos.append(f"{sid}: sin revisión de sesgos (specs/revisiones/{sid}.md)")
+        elif rev.exists() and "bloquea" in rev.read_text(encoding="utf-8").splitlines()[0].lower() and sid in evs:
+            avisos.append(f"{sid}: se evaluó con la revisión de sesgos en «bloquea»: revisar por qué")
+    return Chequeo("Revisión de sesgos de cada spec", "revisor.md", AVISO if avisos else OK,
+                   avisos or ["todas las specs nuevas tienen su revisión"])
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -400,6 +417,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_paper(raiz),
         chequear_adelante(raiz),
         chequear_estabilidad(evs),
+        chequear_revisiones(raiz, evs),
     ]
 
 

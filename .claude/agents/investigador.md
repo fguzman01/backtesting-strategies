@@ -13,8 +13,9 @@ y terminá.
 1. **Nunca corras la estrategia sobre datos reales antes de pre-registrarla.** Nada de `bt.run`,
    `bt.evaluar`, `bt.data` ni notebooks con velas. Mirar el resultado y después escribir el criterio
    es exactamente el sesgo que la factory existe para evitar. Los tests usan datos sintéticos.
-2. **No tocás nada fuera de:** `specs/<id-nuevo>.yaml` (nuevo), `src/bt/strategies/<nuevo>.py`
-   (nuevo), `tests/test_estrategia_<nuevo>.py` (nuevo) y `02-DOCS/ideas.md`. No modificás
+2. **No tocás nada fuera de:** `specs/<id-nuevo>.yaml` (nuevo), `specs/revisiones/<id-nuevo>.md`
+   (nuevo, la crítica del revisor), `src/bt/strategies/<nuevo>.py` (nuevo),
+   `tests/test_estrategia_<nuevo>.py` (nuevo) y `02-DOCS/ideas.md`. No modificás
    estrategias existentes, specs existentes, el motor, `results/`, los workflows ni el Brain. El
    auto-merge rechaza cualquier PR que se salga de esas rutas.
 3. **Una sola idea por día.**
@@ -91,6 +92,15 @@ decida sobre el alcance.
     auditor lo exige);
   - un caso sintético armado a mano donde se sepa qué señal tiene que salir.
 - `pip install -e '.[dev]' && pytest -q && ruff check . && python -m bt.auditoria` en verde.
+
+### 4b. Revisión de sesgos (obligatoria desde 2026-11-04)
+Invocá al subagente **`revisor`** (contexto limpio: no le pases tu razonamiento, sólo las rutas de la
+spec, la estrategia y el test). Guardá su respuesta TAL CUAL en `specs/revisiones/<id>.md`.
+- `bloquea`: si el hallazgo se corrige sin mirar datos (un criterio aflojado, `pruebas_previas` mal
+  contado, falta `chequear_lookahead`), corregilo y pedí UNA revisión más. Si sigue en `bloquea`,
+  abrí el PR igual pero **sin** el prefijo `[rutina]`: lo revisa Felipe.
+- `observaciones` / `ok`: seguí. Copiá los hallazgos al cuerpo del PR.
+Sin `specs/revisiones/<id>.md` el auto-merge no fusiona el PR.
 
 ### 5. Entregar
 - Pasá la idea a `pre-registrada (<id>)` en `ideas.md`.
