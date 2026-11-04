@@ -113,6 +113,16 @@ mitad del avgR). Si la spec pone `criterio_aprobacion.estabilidad_minima` (p. ej
 cumplirla rechaza sin gastar el holdout. Nunca se usa para elegir parámetros: los vecinos no se
 "prueban para quedarse con el mejor".
 
+## Corrección por número de pruebas (desde 2026-11-04)
+
+Con ±2 EE, de cada 40 ideas sin edge una pasa por azar. Si en una familia se prueban muchas
+variantes, la que "funcionó" puede ser esa. Con `criterio_aprobacion.ajuste_por_pruebas: true` (por
+defecto en las specs nuevas), el avgR de desarrollo tiene que quedar a más de `z` errores estándar del
+cero, con `z` de Bonferroni sobre `n_pruebas` (las variantes de la familia en este repo, más
+`pruebas_previas`, más ella): 1 → 1.96, 2 → 2.24, 5 → 2.58, 8 → 2.73, 20 → 3.02. Es conservador a
+propósito: las variantes de una familia se parecen y no son pruebas independientes. Las
+evaluaciones ya hechas no cambian.
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).
