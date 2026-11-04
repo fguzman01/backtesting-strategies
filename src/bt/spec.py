@@ -22,7 +22,7 @@ DURACION_MEDIANA_MAX_DIAS = 7
 TIPOS = {"scalp", "swing", "diario"}
 ESTADOS = {"borrador", "pre-registrada", "referencia"}
 CRITERIOS = {"n_minimo", "ic95_excluye_cero", "concluyente", "tramos_positivos_minimo", "supera_nulo_p95",
-             "estabilidad_minima"}
+             "estabilidad_minima", "ajuste_por_pruebas"}
 
 
 # Familia de los módulos anteriores a que existiera `familia` en la spec (2026-11-02): sin esto, las
@@ -54,6 +54,9 @@ class Criterio:
     # Estabilidad de parámetros (2026-11-03): con todos los parámetros numéricos ×0.8 y ×1.2, el avgR de
     # desarrollo conserva al menos esta fracción del original. None = se mide igual, pero sólo informa.
     estabilidad_minima: float | None = None
+    # Corrección por número de pruebas (2026-11-04, B-02): el margen sobre el cero crece con las
+    # variantes probadas de la familia (Bonferroni). False en specs viejas que no lo declaran.
+    ajuste_por_pruebas: bool = False
 
 
 @dataclass(frozen=True)
@@ -191,6 +194,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
         holdout_sin_mejores_no_negativo=bool(ho.get("sin_mejores_no_negativo", True)),
         holdout_fraccion_desarrollo=float(ho.get("fraccion_desarrollo_minima", 0.33)),
         estabilidad_minima=None if cr.get("estabilidad_minima") is None else float(cr["estabilidad_minima"]),
+        ajuste_por_pruebas=bool(cr.get("ajuste_por_pruebas", False)),
     )
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha

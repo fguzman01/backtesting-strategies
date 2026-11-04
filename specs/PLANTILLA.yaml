@@ -62,6 +62,7 @@ ventana_desarrollo:
 criterio_aprobacion:        # todo en desarrollo; si pasa, se mira el holdout UNA vez
   n_minimo: 100             # menos que esto → NO_CONCLUYENTE
   ic95_excluye_cero: true   # avgR > 0 con ±2 EE fuera del cero
+  ajuste_por_pruebas: true  # además, el margen crece con las variantes de la familia (1 → 1.96 EE, 8 → 2.73)
   concluyente: true         # muestra, modelos de llenado y tramos coherentes (bt.metrics)
   tramos_positivos_minimo: 3
   supera_nulo_p95: true     # le gana al percentil 95 de entradas al azar

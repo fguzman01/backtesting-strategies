@@ -267,7 +267,15 @@ def estabilidad(spec: Spec, dev: dict, cargar_velas: CargarVelas, cargar_funding
             "filas": filas}
 
 
-def _criterios_desarrollo(spec: Spec, d: dict) -> list[dict]:
+def z_por_pruebas(n_pruebas: int, alfa: float = 0.05) -> float:
+    """Cuántos errores estándar sobre el cero exigir con `n_pruebas` variantes de la familia
+    (Bonferroni, dos colas): 1 prueba → 1.96 (≈ los ±2 EE de siempre); 8 → 2.73; 20 → 3.02."""
+    from statistics import NormalDist
+
+    return NormalDist().inv_cdf(1 - alfa / (2 * max(1, n_pruebas)))
+
+
+def _criterios_desarrollo(spec: Spec, d: dict, n_pruebas: int = 1) -> list[dict]:
     c, g = spec.criterio, d["global"]
     out = [{"criterio": f"n ≥ {c.n_minimo}", "valor": g["n"], "ok": g["n"] >= c.n_minimo, "clave": "n"}]
     if c.ic95_excluye_cero:
@@ -275,6 +283,14 @@ def _criterios_desarrollo(spec: Spec, d: dict) -> list[dict]:
         out.append({"criterio": "avgR neto > 0 y ±2 EE fuera del cero",
                     "valor": f"{g['avgRNeto']:+.3f} [{ic[0]:+.3f}, {ic[1]:+.3f}]" if ic else f"{g['avgRNeto']:+.3f}",
                     "ok": bool(ic and ic[0] > 0)})
+    if c.ajuste_por_pruebas:
+        ic = g.get("ic95")
+        z = z_por_pruebas(n_pruebas)
+        ee = (ic[1] - ic[0]) / 4 if ic else None
+        piso = g["avgRNeto"] - z * ee if ee is not None else None
+        out.append({"criterio": f"ajustado por {n_pruebas} prueba(s) de la familia: avgR − {z:.2f} EE > 0",
+                    "valor": f"{g['avgRNeto']:+.3f} − {z:.2f}×{ee:.3f} = {piso:+.3f}" if piso is not None else "sin EE",
+                    "ok": piso is not None and piso > 0})
     else:
         out.append({"criterio": "avgR neto > 0", "valor": f"{g['avgRNeto']:+.3f}", "ok": g["avgRNeto"] > 0})
     if c.concluyente:
@@ -337,7 +353,7 @@ def evaluar(
     previas = antecedentes(spec, base)
     contaminado = spec.holdout_contaminado or any(a["holdoutMirado"] for a in previas)
     dev = _tramo(spec, cargar_velas, cargar_funding, holdout=False)
-    criterios = _criterios_desarrollo(spec, dev)
+    criterios = _criterios_desarrollo(spec, dev, len(previas) + spec.pruebas_previas + 1)
     motivos = [f"desarrollo: falla «{c['criterio']}» ({c['valor']})" for c in criterios if not c["ok"]]
     holdout = None
     estab = None

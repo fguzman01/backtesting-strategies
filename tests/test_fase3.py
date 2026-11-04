@@ -331,3 +331,16 @@ def test_familia_por_modulo_cuenta_las_variantes_viejas(mundo, tmp_path):
     ev_mod.guardar(ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path), tmp_path)  # sin `familia`
     nueva = con(id="2026-11-04-nueva", familia="tendencia")
     assert ev_mod.evaluar(desde_dict(nueva), cv, cf, base=tmp_path)["nPruebas"] == 2
+
+
+def test_correccion_por_numero_de_pruebas(mundo, tmp_path):
+    assert round(ev_mod.z_por_pruebas(1), 2) == 1.96 and round(ev_mod.z_por_pruebas(8), 2) == 2.73
+    cv, cf, _ = mundo
+    d = con(criterio_aprobacion__ajuste_por_pruebas=True)
+    uno = ev_mod.evaluar(desde_dict(d), cv, cf, base=tmp_path)
+    c = [x for x in uno["criterios"] if x["criterio"].startswith("ajustado")][0]
+    assert "1 prueba" in c["criterio"] and "1.96" in c["criterio"]
+    muchas = ev_mod.evaluar(desde_dict(con(criterio_aprobacion__ajuste_por_pruebas=True, pruebas_previas=10_000)),
+                            cv, cf, base=tmp_path)
+    c2 = [x for x in muchas["criterios"] if x["criterio"].startswith("ajustado")][0]
+    assert "10001 prueba" in c2["criterio"] and float(c2["criterio"].split("− ")[1].split(" ")[0]) > 4.4
