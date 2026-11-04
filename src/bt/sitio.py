@@ -107,9 +107,9 @@ def _ic(g: dict | None) -> str:
 
 def _grafico(ev: dict) -> str:
     """Una serie: R acumulado por operación. El corte del holdout es una línea punteada rotulada."""
-    curva = [(f, r, "desarrollo") for f, r in ev["desarrollo"]["curva"]]
+    curva = [(c[0], c[1], "desarrollo") for c in ev["desarrollo"]["curva"]]
     if ev.get("holdout"):
-        curva += [(f, r, "holdout") for f, r in ev["holdout"]["curva"]]
+        curva += [(c[0], c[1], "holdout") for c in ev["holdout"]["curva"]]
     if len(curva) < 2:
         return '<p class="meta">Sin operaciones suficientes para graficar.</p>'
     acum, s = [], 0.0
