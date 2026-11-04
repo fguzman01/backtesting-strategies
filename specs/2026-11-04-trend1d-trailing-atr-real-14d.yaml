@@ -1,0 +1,78 @@
+id: 2026-11-04-trend1d-trailing-atr-real-14d
+estado: pre-registrada
+fuente: "Idea #3 de 02-DOCS/ideas.md (Felipe, 2026-11-03), nacida de la auditoría 2026-11-01 (mejora 4: trailing real, ya soportado por el motor)"
+pregunta: "¿TREND_1D con trailing en ATR real (desde la entrada, 2 ATR, tope 14 días) tiene edge neto dentro del alcance?"
+
+hipotesis: >
+  El edge de TREND_1D vive en pocas tendencias largas. El chandelier anterior (máximo móvil de 22
+  velas − 3 ATR) casi nunca disparó (100% de las salidas por timeout, mediana 14.0 d), así que la
+  hipótesis «trailing» nunca se midió. Aquí el stop inicial de 2 ATR sube con el mejor precio DESDE
+  LA ENTRADA (trailing real del motor, distancia 2 ATR, sin canal corto de 10 velas): las
+  perdedoras se cortan en cuanto la tendencia retrocede 2 ATR desde su máximo y las buenas siguen
+  hasta el tope de 14 días. El mecanismo es el de la persecución de tendencia (los rezagados entran
+  tarde y sostienen el movimiento); el trailing protege la ganancia sin cortar por tiempo.
+  Se fija UNA distancia (2.0 ATR = la del stop inicial, sin barrer k) antes de correr. Costo: 0.1% por
+  lado (comisión + deslizamiento); con stop de 2 ATR diarios (~4-8%) la comisión ronda 0.03-0.05R.
+  Riesgo declarado: la mediana de duración debe quedar ≤ 7 d para entrar en el alcance; la distancia
+  de 2 ATR (la más ajustada coherente con el stop inicial) se eligió justamente para que las
+  operaciones sin continuación salgan en pocos días. Si aun así la mediana supera 7 d es una
+  cuestión de alcance, no de parámetros, y no se prueban otros k.
+  Universo dinámico (los 20 más operados de cada mes, con retirados) para no inflar con
+  sobrevivientes. Cupo 5 por dirección, como TREND_1D en el bot. Holdout declarado contaminado
+  (btc-signal-web ya miró el holdout de TREND_1D): como mucho llega a observación.
+
+ya_probado: >
+  decisiones.md: TREND_1D tope 7 d (`2026-10-31-trend1d-tope-7d`) rechazada al borde (+0.087
+  [−0.001, +0.175]); chandelier 14 d (`2026-11-01-trend1d-chandelier-14d`) rechazada por régimen y
+  mediana 14 d, con la salida casi inactiva (no probó el trailing). «Abrir el techo o trailing»
+  fue plano en SCALP_1H (2026-10-11), otra familia y temporalidad. Esta es la 3.ª variante de
+  TREND_1D en este repo; pruebas previas fuera del repo: TREND_1D, TREND_4H, el motor de tendencia
+  1h y TREND_1D en oro. Mecanismo distinto de las anteriores: trailing real con estado desde la
+  entrada (no tope de tiempo ni máximo móvil sin estado). No se re-evalúa ninguna rechazada; la
+  madre se corre al lado en la misma ventana, tokens y cupo.
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "4-7 días (sale por trailing de 2 ATR; sólo las tendencias sostenidas llegan al tope de 14)"
+
+familia: tendencia
+pruebas_previas: 4
+holdout_contaminado: true
+madre:
+  nombre: "TREND_1D con tope de 14 días"
+  modulo: tendencia_donchian
+  params: {entrada: 20, salida: 10, atr_n: 20, ema_n: 200, stop_atr: 2.0}
+  config: {timeout_velas: 14}
+
+estrategia:
+  modulo: tendencia_trailing
+  params: {entrada: 20, atr_n: 20, ema_n: 200, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%, igual que TREND_1D y la madre
+  deslizamiento_pct: 0.0
+  timeout_velas: 14
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 5
+
+ventana_desarrollo:
+  desde: "2020-01-01"
+
+criterio_aprobacion:
+  n_minimo: 100
+  ic95_excluye_cero: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
