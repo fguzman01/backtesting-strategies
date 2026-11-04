@@ -360,3 +360,11 @@ def test_sitio_secciones_de_docs(tmp_path):
     pagina = sitio.generar(base)
     assert 'href="#adelante"' in pagina and 'id="cola"' in pagina and 'id="backlog"' in pagina
     assert "&lt;b&gt;x&lt;/b&gt;" in pagina and "vieja" not in pagina and "<b>B-01</b>" in pagina
+
+
+def test_spec_de_medicion_nunca_va_a_approved(mundo, tmp_path):
+    cv, cf, _ = mundo
+    ev = ev_mod.evaluar(desde_dict(con(medicion=True)), cv, cf, base=tmp_path)
+    assert ev["veredicto"] == "APROBADA" and ev["soloMedicion"]
+    ev_mod.guardar(ev, tmp_path)
+    assert not (tmp_path / "approved.json").exists()

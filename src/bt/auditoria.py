@@ -137,7 +137,8 @@ def chequear_holdout(raiz: Path, evs: dict[str, dict], bitacora: list[dict]) -> 
 def chequear_aprobadas(raiz: Path, evs: dict[str, dict]) -> Chequeo:
     ruta = raiz / "results" / "approved.json"
     en_archivo = {e["id"] for e in json.loads(ruta.read_text())["estrategias"]} if ruta.exists() else set()
-    aprobadas = {sid for sid, ev in evs.items() if ev.get("veredicto") in ("APROBADA", "OBSERVACION")}
+    aprobadas = {sid for sid, ev in evs.items()
+                 if ev.get("veredicto") in ("APROBADA", "OBSERVACION") and not ev.get("soloMedicion")}
     problemas = [f"{s}: está en approved.json sin evaluación APROBADA u OBSERVACION"
                  for s in sorted(en_archivo - aprobadas)]
     avisos = [f"{s}: aprobada/observación pero no está en approved.json (¿PR pendiente?)"
