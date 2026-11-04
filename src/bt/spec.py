@@ -25,6 +25,14 @@ CRITERIOS = {"n_minimo", "ic95_excluye_cero", "concluyente", "tramos_positivos_m
              "estabilidad_minima"}
 
 
+# Familia de los módulos anteriores a que existiera `familia` en la spec (2026-11-02): sin esto, las
+# variantes viejas no cuentan en n_pruebas de una spec nueva de la misma familia.
+FAMILIA_POR_MODULO = {
+    "tendencia_donchian": "tendencia", "tendencia_chandelier": "tendencia", "tendencia_trailing": "tendencia",
+    "donchian_breakout": "tendencia", "reversion_salto": "reversion",
+}
+
+
 class SpecInvalida(ValueError):
     pass
 
@@ -186,7 +194,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     )
     if desde is not None:
         pd.Timestamp(desde)  # que sea una fecha
-    familia = str(d.get("familia") or modulo)
+    familia = str(d.get("familia") or FAMILIA_POR_MODULO.get(modulo, modulo))
     madre = d.get("madre")
     if madre is not None:
         if not isinstance(madre, dict):
