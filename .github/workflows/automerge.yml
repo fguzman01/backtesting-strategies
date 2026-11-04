@@ -39,5 +39,12 @@ jobs:
             gh pr comment "$pr" --repo "$REPO" --body "Auto-merge: no se fusiona solo porque toca rutas fuera de lo permitido para la rutina (ver el log de automerge). Necesita revisión de Felipe."
             exit 0
           fi
+          # Si el revisor de sesgos dijo «bloquea», no se fusiona solo.
+          for f in $(gh api "repos/$REPO/pulls/$pr/files" --paginate --jq '.[] | select(.filename | startswith("specs/revisiones/")) | .filename'); do
+            if gh api "repos/$REPO/contents/$f?ref=$SHA" -H "Accept: application/vnd.github.raw" | head -1 | grep -qi "veredicto: *bloquea"; then
+              gh pr comment "$pr" --repo "$REPO" --body "Auto-merge: el revisor de sesgos bloqueó esta spec ($f). Necesita revisión de Felipe."
+              exit 0
+            fi
+          done
           gh pr merge "$pr" --repo "$REPO" --squash --delete-branch --match-head-commit "$SHA"
           gh workflow run evaluar.yml --repo "$REPO" --ref main

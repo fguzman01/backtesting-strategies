@@ -43,3 +43,15 @@ def test_cola_vacia_avisa(tmp_path):
     (tmp_path / "02-DOCS").mkdir()
     (tmp_path / "02-DOCS" / "ideas.md").write_text("| 1 | x | a | b | c | descartada |\n")
     assert "La cola está vacía" in resumen.armar(tmp_path, dt.date(2026, 11, 9))
+
+
+def test_auditor_exige_revision_de_specs_nuevas(tmp_path):
+    from bt.auditoria import AVISO, OK, chequear_revisiones
+    (tmp_path / "specs" / "revisiones").mkdir(parents=True)
+    (tmp_path / "specs" / "2026-11-01-vieja.yaml").write_text("x")
+    assert chequear_revisiones(tmp_path, {}).estado == OK                 # anterior a la regla
+    (tmp_path / "specs" / "2026-11-06-nueva.yaml").write_text("x")
+    assert chequear_revisiones(tmp_path, {}).estado == AVISO
+    (tmp_path / "specs" / "revisiones" / "2026-11-06-nueva.md").write_text("veredicto: bloquea\nx")
+    assert chequear_revisiones(tmp_path, {}).estado == OK
+    assert chequear_revisiones(tmp_path, {"2026-11-06-nueva": {}}).estado == AVISO

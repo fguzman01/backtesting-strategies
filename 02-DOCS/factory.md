@@ -16,7 +16,7 @@ Entrada ──► Spec (pre-registro) ──► Builder (TDD) ──► Revisió
 | Spec | Hipótesis, reglas, universo, timeframe, ventana, **criterio de aprobación** | Claude | `specs/*.yaml` |
 | Builder | `src/bt/strategies/<slug>.py` + test (incluye chequeo de look-ahead) | Claude | commit en rama |
 | Revisión determinista | look-ahead, comisión aplicada, n mínimo, determinismo | CI (`bt.checks`) | log de Actions |
-| Revisión de sesgos | Subagente con contexto limpio: overfitting, data snooping, supervivencia | Claude | comentario en el reporte |
+| Revisión de sesgos | Subagente `revisor` con contexto limpio (desde 2026-11-04): repetición, snooping, criterio, familia, universo, costos, alcance, look-ahead. Veredicto ok / observaciones / bloquea; «bloquea» frena el auto-merge | Claude (dentro del investigador) | `specs/revisiones/<id>.md` |
 | Veredicto | Desarrollo contra el criterio; sólo si pasa se mira el holdout, una vez | código (`bt.verdict`) | `results/reports/`, `mediciones.jsonl` |
 | ¿Humano? | **Regla fija**: rechazos/no concluyentes → `main` directo. Aprobadas y en observación → PR que toca `approved.json`, con su `nivel` y su ficha | código + Felipe | PR |
 | Auditor determinista | 12 chequeos. Proceso: pre-registro antes de evaluar, holdout una vez y sólo si pasa desarrollo, `approved.json` coherente, test de look-ahead por estrategia, Brain al día, bitácora determinista, data snooping. Metodología: ventana y potencia estadística (años, 2022 bajista, ±2 EE vs comisión, n por tramo), calidad de datos, rechazos al borde, desgaste del holdout | CI (`bt.auditoria`) | resumen del CI, dashboard |

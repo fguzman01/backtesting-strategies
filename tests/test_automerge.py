@@ -4,8 +4,10 @@ import sys
 import pytest
 
 CASOS = [
-    ("added specs/2026-11-02-algo-nuevo.yaml\nadded src/bt/strategies/rsi_dos.py\n"
-     "added tests/test_estrategia_rsi_dos.py\nmodified 02-DOCS/ideas.md", 0),
+    ("added specs/2026-11-02-algo-nuevo.yaml\nadded specs/revisiones/2026-11-02-algo-nuevo.md\n"
+     "added src/bt/strategies/rsi_dos.py\nadded tests/test_estrategia_rsi_dos.py\nmodified 02-DOCS/ideas.md", 0),
+    ("added specs/2026-11-02-algo-nuevo.yaml\nmodified 02-DOCS/ideas.md", 1),   # sin revisión de sesgos
+    ("added specs/2026-11-02-algo-nuevo.yaml\nadded specs/revisiones/2026-11-02-otra.md", 1),
     ("modified 02-DOCS/ideas.md", 0),
     ("modified 02-DOCS/catalogo.md\nmodified 02-DOCS/ideas.md", 0),  # PR del explorador
     ("modified 02-DOCS/alcance.md", 1),
