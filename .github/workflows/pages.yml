@@ -4,7 +4,7 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ["results/**", "src/bt/sitio.py"]
+    paths: ["results/**", "src/bt/sitio.py", "02-DOCS/ideas.md", "02-DOCS/backlog.md", "02-DOCS/retroalimentacion.md"]
   workflow_run:
     workflows: [evaluar]
     types: [completed]
