@@ -422,7 +422,9 @@ def evaluar(
         "desarrollo": dev,
         "holdout": holdout,
     }
-    if veredicto in NIVEL:
+    if spec.medicion:
+        resultado["soloMedicion"] = True
+    if veredicto in NIVEL and not spec.medicion:
         resultado["carteraMarginal"] = _marginal(resultado, base)
     return resultado
 
@@ -604,7 +606,7 @@ def guardar(ev: dict, base: Path = RESULTADOS) -> None:
     (base / "evaluaciones" / f"{ev['id']}.json").write_text(
         json.dumps(sin_filas, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (base / "reports" / f"{ev['id']}.md").write_text(reporte_md(ev), encoding="utf-8")
-    if ev["veredicto"] in NIVEL:
+    if ev["veredicto"] in NIVEL and not ev.get("soloMedicion"):
         ruta = base / "approved.json"
         actual = json.loads(ruta.read_text()) if ruta.exists() else {"estrategias": []}
         actual["estrategias"] = [e for e in actual["estrategias"] if e["id"] != ev["id"]]
@@ -707,7 +709,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{spec.id}: {ev['veredicto']}" + (f" — {'; '.join(ev['motivos'])}" if ev["motivos"] else ""))
 
     if a.salida_github:
-        aprobadas = [e["id"] for e in evaluaciones if e["veredicto"] in NIVEL]  # aprobadas u observación
+        aprobadas = [e["id"] for e in evaluaciones if e["veredicto"] in NIVEL and not e.get("soloMedicion")]
         with a.salida_github.open("a") as f:
             f.write(f"evaluadas={len(evaluaciones)}\n")
             f.write(f"aprobadas={len(aprobadas)}\n")

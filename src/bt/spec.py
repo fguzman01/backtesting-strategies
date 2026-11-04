@@ -81,6 +81,7 @@ class Spec:
     familia: str = ""  # para contar cuántas variantes se probaron (n_pruebas)
     holdout_contaminado: bool = False  # el período ya se miró con algo emparentado (p. ej. btc-signal-web)
     madre: dict | None = None  # estrategia de la que es variante: se corre al lado en el mismo período y tokens
+    medicion: bool = False  # pregunta de medición, no estrategia para operar: nunca va a approved.json
     pruebas_previas: int = 0  # variantes de la familia medidas FUERA de este repo (p. ej. btc-signal-web)
     dinamico_top: int | None = None  # universo dinámico: los `top` de cada mes (bt.universo)
     miembros: dict | None = field(default=None, repr=False)  # {símbolo: meses AAAA-MM}, lo resuelve evaluar
@@ -217,7 +218,8 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     return Spec(sid, estado, hipotesis, tipo, modulo, params, mercado, simbolos, intervalo, funding, cfg,
                 str(desde) if desde else None, criterio, ruta, d, historia_spot,
                 familia=familia, holdout_contaminado=bool(d.get("holdout_contaminado", False)),
-                madre=madre, max_por_direccion=cupo, pruebas_previas=previas, dinamico_top=top)
+                madre=madre, max_por_direccion=cupo, pruebas_previas=previas, dinamico_top=top,
+                medicion=bool(d.get("medicion", False)))
 
 
 def cargar(ruta: Path | str) -> Spec:

@@ -20,6 +20,7 @@ horizonte:                  # 02-DOCS/alcance.md: señal 5m–1d, trades de día
 # una misma idea: la evaluación cuenta cuántas se probaron (n_pruebas) y, si alguna ya miró el holdout,
 # lo da por contaminado. Sin `familia`, se usa el módulo.
 familia: donchian
+medicion: false             # true = pregunta de medición (comparar, cuantificar un sesgo): nunca va a approved.json
 pruebas_previas: 0          # variantes de esta familia ya medidas FUERA de este repo (p. ej. 5 en btc-signal-web)
 holdout_contaminado: false  # true si ese período ya se miró con algo emparentado (p. ej. en btc-signal-web)
 # madre:                    # si es variante de otra: se corre al lado, mismo período, tokens y cupo
