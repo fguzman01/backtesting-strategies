@@ -324,3 +324,10 @@ def test_estabilidad_se_mide_antes_del_holdout_y_puede_decidir(mundo, tmp_path):
     r = ev_mod.evaluar(desde_dict(exigente), cv, cf, base=tmp_path)
     assert r["veredicto"] == "RECHAZADA" and r["holdout"] is None
     assert any("estabilidad" in m for m in r["motivos"])
+
+
+def test_familia_por_modulo_cuenta_las_variantes_viejas(mundo, tmp_path):
+    cv, cf, _ = mundo
+    ev_mod.guardar(ev_mod.evaluar(desde_dict(BASE), cv, cf, base=tmp_path), tmp_path)  # sin `familia`
+    nueva = con(id="2026-11-04-nueva", familia="tendencia")
+    assert ev_mod.evaluar(desde_dict(nueva), cv, cf, base=tmp_path)["nPruebas"] == 2

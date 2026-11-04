@@ -29,7 +29,7 @@ import pandas as pd
 from bt import bitacora, data, metrics, run
 from bt.engine import Trade
 from bt.nulo import control_nulo
-from bt.spec import DURACION_MEDIANA_MAX_DIAS, Spec, SpecInvalida, cargar, listar
+from bt.spec import DURACION_MEDIANA_MAX_DIAS, FAMILIA_POR_MODULO, Spec, SpecInvalida, cargar, listar
 from bt.splits import HOLDOUT_DESDE
 
 RESULTADOS = Path("results")
@@ -179,7 +179,8 @@ def antecedentes(spec: Spec, base: Path = RESULTADOS) -> list[dict]:
         if ev.get("id") == spec.id:
             continue
         s = ev.get("spec") or {}
-        familia = s.get("familia") or (s.get("estrategia") or {}).get("modulo")
+        modulo = (s.get("estrategia") or {}).get("modulo")
+        familia = s.get("familia") or FAMILIA_POR_MODULO.get(modulo, modulo)
         if familia != spec.familia:
             continue
         g = (ev.get("desarrollo") or {}).get("global") or {}
@@ -483,7 +484,10 @@ def reporte_md(ev: dict) -> str:
         lineas += ["", "| Tramo | n | avgR neto |", "|---|---|---|"]
         lineas += [f"| {x['desde']} → {x['hasta']} | {x['n']} | {x['avgRNeto']:+.3f} |" for x in t["porTramo"]]
         lineas += ["", "| Símbolo | n | avgR neto | ±2 EE |", "|---|---|---|---|"]
-        lineas += [f"| {k} | {m['n']} | {m['avgRNeto']:+.3f} | {_fmt_ic(m)} |" for k, m in t["porSimbolo"].items()]
+        con = {k: m for k, m in t["porSimbolo"].items() if m["n"]}
+        lineas += [f"| {k} | {m['n']} | {m['avgRNeto']:+.3f} | {_fmt_ic(m)} |" for k, m in con.items()]
+        if len(con) < len(t["porSimbolo"]):
+            lineas += ["", f"{len(t['porSimbolo']) - len(con)} símbolos del universo sin operaciones en este tramo."]
     return "\n".join(lineas) + "\n"
 
 
