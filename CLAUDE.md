@@ -70,6 +70,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `results/` | `mediciones.jsonl`, reportes, `approved.json` |
 | `src/bt/universo.py` | Universo sin sesgo de supervivencia: los más operados de cada mes, con los retirados (`results/universo/`) |
 | `src/bt/adelante.py` | Prueba hacia adelante mensual de lo aprobado, con datos posteriores a su evaluación (`adelante.yml`) |
+| `src/bt/cartera.py` | Las aprobadas juntas: peor caída de la cartera y correlación mensual (`results/reports/cartera.md`, mensual) |
 | `src/bt/resumen.py` | Resumen semanal a Felipe por Telegram (`resumen.yml`, lunes) |
 | `src/bt/contrato.py` | Formato de `approved.json` que lee btc-signal-web (Fase 5); se valida en el CI |
 

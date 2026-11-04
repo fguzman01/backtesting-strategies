@@ -130,7 +130,8 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
         "maxDrawdownR": peor_caida(todos),
         "maxPorDireccion": spec.max_por_direccion,
         "simbolosSinDatos": sin_datos,
-        "curva": [[t.abierto_en[:10], round(t.r_neto, 4)] for t in resueltos],
+        # [apertura, R neto, cierre]: el cierre lo usa bt.cartera para la peor caída de la cartera.
+        "curva": [[t.abierto_en[:10], round(t.r_neto, 4), (t.cerrado_en or t.abierto_en)[:10]] for t in resueltos],
         "filas": filas,
     }
 
@@ -383,7 +384,7 @@ def evaluar(
                 tm = _tramo(sm, cargar_velas, cargar_funding, holdout=nombre == "holdout")
                 madre[nombre] = comparar_con_madre(t, tm, spec.madre["nombre"])
                 madre["filas"] += tm["filas"]
-    return {
+    resultado = {
         "id": spec.id,
         "fecha": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         "commit": bitacora.commit_actual(),
@@ -405,6 +406,19 @@ def evaluar(
         "desarrollo": dev,
         "holdout": holdout,
     }
+    if veredicto in NIVEL:
+        resultado["carteraMarginal"] = _marginal(resultado, base)
+    return resultado
+
+
+def _marginal(ev: dict, base: Path) -> dict | None:
+    """Qué le hace esta aprobada a la cartera de lo ya aprobado (correlación y peor caída)."""
+    from bt import cartera
+
+    ruta = base / "approved.json"
+    ids = [e["id"] for e in json.loads(ruta.read_text())["estrategias"]] if ruta.exists() else []
+    ids = [i for i in ids if i != ev["id"] and (base / "evaluaciones" / f"{i}.json").exists()]
+    return cartera.marginal(ev, cartera.cargar(ids, base)) if ids else None
 
 
 def _fmt_ic(g: dict) -> str:
@@ -512,6 +526,11 @@ def ficha_md(ev: dict) -> list[str]:
         t = ev.get(nombre)
         if t and t.get("maxDrawdownR") is not None:
             out.append(f"- **Peor caída ({nombre}):** {t['maxDrawdownR']:+.2f} R")
+    cm = ev.get("carteraMarginal")
+    if cm:
+        corr = ", ".join(f"`{k}` {v:+.2f}" for k, v in cm["correlacionMensual"].items()) or "—"
+        out.append(f"- **En la cartera de lo aprobado** ({cm['ventana'][0]} → {cm['ventana'][1]}): peor caída "
+                   f"{cm['peorCaidaAntes']:+.1f} R → {cm['peorCaidaDespues']:+.1f} R; correlación mensual: {corr}")
     m = ev.get("comparacionMadre") or {}
     for nombre in ("desarrollo", "holdout"):
         c = m.get(nombre)
