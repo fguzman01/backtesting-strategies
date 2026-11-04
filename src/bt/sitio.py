@@ -35,6 +35,10 @@ font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px;box-si
 .wrap{max-width:1100px;margin:0 auto}
 h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:32px 0 8px}
 .sub{color:var(--text-secondary);margin:0 0 20px}
+.nav{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 4px;font-size:13px}
+.nav a{color:var(--text-secondary)}
+.doc ul{padding-left:18px}.doc p{max-width:75ch}.doc h3,.doc h4{font-size:14px;margin:16px 0 6px}
+.ancho{overflow-x:auto}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
 .tile{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
 .tile .v{font-size:28px;font-weight:650}.tile .l{color:var(--text-secondary);font-size:12px}
@@ -193,6 +197,118 @@ def _seccion_auditoria(ruta: Path) -> str:
             f"<th>Regla</th><th>Detalle</th></tr></thead><tbody>{''.join(filas)}</tbody></table>")
 
 
+def _inline(t: str) -> str:
+    """Escapa y convierte lo poco de markdown que usan las docs: **negrita** y `código`."""
+    import re
+
+    t = _e(t)
+    t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", t)
+
+
+def md_a_html(texto: str) -> str:
+    """Markdown mínimo → HTML: títulos, tablas, listas y párrafos. Todo el texto se escapa."""
+    out, tabla, lista, parrafo = [], [], [], []
+
+    def cerrar():
+        if tabla:
+            filas = [f for f in tabla if not set(f.replace("|", "").strip()) <= set("-: ")]
+            celdas = [[c.strip() for c in f.strip().strip("|").split("|")] for f in filas]
+            cab = "".join(f"<th>{_inline(c)}</th>" for c in celdas[0])
+            cuerpo = "".join("<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in r) + "</tr>" for r in celdas[1:])
+            out.append(f'<div class="ancho"><table><thead><tr>{cab}</tr></thead><tbody>{cuerpo}</tbody></table></div>')
+            tabla.clear()
+        if lista:
+            out.append("<ul>" + "".join(f"<li>{_inline(x)}</li>" for x in lista) + "</ul>")
+            lista.clear()
+        if parrafo:
+            out.append(f"<p>{_inline(' '.join(parrafo))}</p>")
+            parrafo.clear()
+
+    import re
+
+    for linea in texto.splitlines():
+        s = linea.strip()
+        if s.startswith("|"):
+            if lista or parrafo:
+                cerrar()
+            tabla.append(s)
+        elif re.match(r"^(-|\d+\.)\s+", s):
+            if tabla or parrafo:
+                cerrar()
+            lista.append(re.sub(r"^(-|\d+\.)\s+", "", s))
+        elif s.startswith("#"):
+            cerrar()
+            nivel = min(4, len(s) - len(s.lstrip("#")) + 1)
+            out.append(f"<h{nivel}>{_inline(s.lstrip('#').strip())}</h{nivel}>")
+        elif not s:
+            cerrar()
+        else:
+            if tabla or lista:
+                cerrar()
+            parrafo.append(s)
+    cerrar()
+    return "".join(out)
+
+
+def _leer(ruta: Path) -> str | None:
+    return ruta.read_text(encoding="utf-8") if ruta.exists() else None
+
+
+def _sin_titulo(md: str) -> str:
+    return "\n".join(x for x in md.splitlines() if not x.startswith("# "))
+
+
+def _seccion(ancla: str, titulo: str, sub: str, md: str | None) -> str:
+    if not md:
+        return ""
+    return f'<h2 id="{ancla}">{_e(titulo)}</h2><p class="sub">{sub}</p><div class="doc">{md_a_html(md)}</div>'
+
+
+def secciones_extra(base: Path) -> tuple[str, list[tuple[str, str]]]:
+    """Lo aprobado (hacia adelante y cartera), lo que vuelve del bot, la cola y el backlog."""
+    docs = base.parent / "02-DOCS"
+    partes, nav = [], []
+
+    def agregar(ancla, titulo, sub, md):
+        html_ = _seccion(ancla, titulo, sub, md)
+        if html_:
+            partes.append(html_)
+            nav.append((ancla, titulo))
+
+    adel = _leer(base / "reports" / "adelante.md")
+    cart = _leer(base / "reports" / "cartera.md")
+    agregar("adelante", "Prueba hacia adelante", "Lo aprobado con datos posteriores a su evaluación "
+            "(<code>bt.adelante</code>, mensual).", _sin_titulo(adel).split("\n", 2)[-1] if adel else None)
+    agregar("cartera", "Cartera de lo aprobado", "Las aprobadas juntas (<code>bt.cartera</code>).",
+            _sin_titulo(cart) if cart else None)
+    retro = _leer(docs / "retroalimentacion.md")
+    if retro and "\n## Informe del " in retro:
+        ultimo = "## Informe del " + retro.split("\n## Informe del ", 1)[1].split("\n## ", 1)[0]
+        agregar("bot", "Lo que vuelve del bot", "El paper de btc-signal-web contra lo que predijo la factory "
+                "(agente puente, semanal).", ultimo)
+    ideas = _leer(docs / "ideas.md")
+    if ideas:
+        filas = [x for x in ideas.splitlines() if x.startswith("| ") and not x.startswith("| #")]
+        vivas = []
+        for x in filas:
+            c = [y.strip() for y in x.strip().strip("|").split("|")]
+            if len(c) >= 6 and c[-1].lstrip("*").lower().startswith(("en cola", "propuesta")):
+                estado = c[-1] if len(c[-1]) < 140 else c[-1][:137].replace("`", "") + "..."
+                vivas.append(f"| {c[0]} | {c[1]} | {estado} |")
+        md = "| # | Idea | Estado |\n|---|---|---|\n" + "\n".join(vivas) if vivas else (
+            "La cola está vacía: la rutina diaria va a proponer en vez de evaluar.")
+        agregar("cola", "Cola de ideas", "Las que esperan: <code>en cola</code> se pre-registran solas; las "
+                "<code>propuesta</code> esperan el visto bueno de Felipe.", md)
+    back = _leer(docs / "backlog.md")
+    if back:
+        rec = back.split("## Recomendadas para esta semana", 1)[-1].split("\n## ", 1)[0]
+        pend = back.split("## Pendientes", 1)[-1].split("\n## ", 1)[0] if "## Pendientes" in back else ""
+        agregar("backlog", "Backlog del sistema", "Mejoras de la factory misma, priorizadas por el PO "
+                "(semanal); Felipe decide.", "### Recomendadas\n" + rec + "\n### Pendientes\n" + pend)
+    return "".join(partes), nav
+
+
 def generar(base: Path = Path("results")) -> str:
     evs = [json.loads(p.read_text(encoding="utf-8")) for p in sorted((base / "evaluaciones").glob("*.json"))]
     evs.sort(key=lambda e: e["fecha"], reverse=True)
@@ -228,6 +344,9 @@ def generar(base: Path = Path("results")) -> str:
             f"<tbody>{crit}</tbody></table></section>"
         )
     auditoria = _seccion_auditoria(base / "auditoria.json")
+    extra, nav = secciones_extra(base)
+    nav_html = ('<nav class="nav"><a href="#evaluaciones">Evaluaciones</a>'
+                + "".join(f'<a href="#{a}">{_e(t)}</a>' for a, t in nav) + "</nav>")
     tiles = [("Evaluadas", len(evs)), ("Aprobadas", cuenta["APROBADA"]), ("En observación", cuenta["OBSERVACION"]),
              ("Rechazadas", cuenta["RECHAZADA"]),
              ("No concluyentes", cuenta["NO_CONCLUYENTE"])]
@@ -241,10 +360,12 @@ def generar(base: Path = Path("results")) -> str:
 se mira una vez y sólo si pasa desarrollo. Resultados en R, netos de comisión y funding.</p>
 <div class="tiles">{"".join(f'<div class="tile"><div class="v">{v}</div><div class="l">{_e(k)}</div></div>'
                             for k, v in tiles)}</div>
-<h2>Evaluaciones</h2>
+{nav_html}
+<h2 id="evaluaciones">Evaluaciones</h2>
 <table><thead><tr><th>Spec</th><th>Estrategia</th><th>TF</th><th class="num">Símbolos</th><th>Veredicto</th>
 <th class="num">n dev</th><th class="num">avgR dev [±2 EE]</th><th class="num">Nulo p95</th>
 <th class="num">avgR holdout</th></tr></thead><tbody>{cuerpo_tabla}</tbody></table>
+{extra}
 {auditoria}
 {"".join(detalles)}
 </div></div><script>{JS}</script></body></html>

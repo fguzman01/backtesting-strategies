@@ -344,3 +344,19 @@ def test_correccion_por_numero_de_pruebas(mundo, tmp_path):
                             cv, cf, base=tmp_path)
     c2 = [x for x in muchas["criterios"] if x["criterio"].startswith("ajustado")][0]
     assert "10001 prueba" in c2["criterio"] and float(c2["criterio"].split("− ")[1].split(" ")[0]) > 4.4
+
+
+def test_sitio_secciones_de_docs(tmp_path):
+    base = tmp_path / "results"
+    (base / "reports").mkdir(parents=True)
+    (tmp_path / "02-DOCS").mkdir()
+    (base / "reports" / "adelante.md").write_text(
+        "# Prueba hacia adelante\n\nTexto.\n\n| a | b |\n|---|---|\n| 1 | 2 |\n")
+    (tmp_path / "02-DOCS" / "ideas.md").write_text(
+        "| # | Idea | a | b | c | Estado |\n|---|---|---|---|---|---|\n| 7 | <b>x</b> | 1 | 2 | 3 | en cola |\n"
+        "| 8 | vieja | 1 | 2 | 3 | descartada |\n")
+    (tmp_path / "02-DOCS" / "backlog.md").write_text(
+        "## Recomendadas para esta semana\n\n1. **B-01** Algo\n\n## Pendientes\n")
+    pagina = sitio.generar(base)
+    assert 'href="#adelante"' in pagina and 'id="cola"' in pagina and 'id="backlog"' in pagina
+    assert "&lt;b&gt;x&lt;/b&gt;" in pagina and "vieja" not in pagina and "<b>B-01</b>" in pagina
