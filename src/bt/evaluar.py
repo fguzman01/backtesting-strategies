@@ -633,7 +633,7 @@ def bajar(spec: Spec) -> None:
         tareas += [lambda s=s: data.descargar_funding(s, "2020-01") for s in spec.simbolos]
     if spec.historia_spot:
         tareas += [lambda s=s: _spot_si_existe(s, spec.intervalo) for s in spec.simbolos]
-    with ThreadPoolExecutor(4) as ex:
+    with ThreadPoolExecutor(8) as ex:
         for ruta in ex.map(lambda f: f(), tareas):
             print(f"  {ruta}", flush=True)
 
