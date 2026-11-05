@@ -1,0 +1,75 @@
+id: 2026-11-05-overnight-nyse-max10-1h
+estado: pre-registrada
+fuente: "Idea #8 de 02-DOCS/ideas.md (Felipe, 2026-11-04); catálogo: Overnight de sesión NYSE condicionado a MAX(10) (Quantpedia, resumen de Gemini 2015–2024)"
+pregunta: "¿Comprar BTC al cierre de NYSE (16:00 ET) sólo cuando está en su máximo de 10 días y salir a las 10:00 ET del día siguiente tiene edge neto de comisión?"
+
+hipotesis: >
+  La subida de BTC se concentraría fuera del horario bursátil de EE. UU. (flujos de sesión y
+  liquidez); el filtro de máximo de 10 días agrega inercia (momentum de corto plazo) a esa deriva
+  nocturna. Del otro lado pierde quien vende contra la inercia en una noche sin la contraparte
+  bursátil. Costo: 0.1% por lado (comisión + deslizamiento) contra una operación de ~18 h con stop
+  de 6 ATR de 1h (~3%): ~0.07R de comisión, que el edge bruto debe superar. UNA regla fija antes de
+  correr, sin barrer parámetros: entrada en la apertura de las 16:00 ET (tras la vela que cierra a
+  las 16:00 ET), cierre ≥ máximo de los cierres de las 240 velas previas (10 días), sólo largo,
+  salida por regla en la apertura de las 10:00 ET siguiente, todos los días (cripto no cierra los
+  fines de semana), horario de EE. UU. con cambio de hora (America/New_York). Stop 6 ATR(24) de 1h
+  como protección de cola (no es parte del mecanismo). El 10 viene del trabajo de origen, no se
+  optimizó acá. Universo: sólo BTCUSDT porque la evidencia de origen es de BTC y la pregunta es sobre
+  ese mecanismo (con spot desde 2017 para tener varios regímenes, incluido el bajista de 2018); no
+  es una lista de supervivientes que compre alts. Riesgo central: evidencia C (sin costos en la
+  fuente, corte fuera de muestra elegido a dedo, una sola operación por noche). Criterio exigente
+  por defecto con corrección por pruebas. Holdout declarado contaminado por prudencia: la
+  estacionalidad por hora ya se midió en btc-signal-web sobre un período que cruza el holdout de
+  este repo; como mucho llega a observación.
+
+ya_probado: >
+  decisiones.md: «¿Hay estacionalidad aprovechable (hora del día, bloque de 4 h, día de la semana)?»
+  → No (btc-signal-web, 2026-10-20): ninguna hora ni bloque de 4h paga 0.2% ida y vuelta. Eso es
+  estacionalidad pura, sin condición. Esta spec agrega un filtro de estado (máximo de 10 días) y una
+  ventana de ~18 h en vez de una hora suelta, pero sigue siendo de la familia: se cuenta como la 4.ª
+  variante (3 medidas fuera de este repo: hora, bloque de 4h y día de la semana). «Reversión» y
+  «funding contrarian» son otras señales. No se copian parámetros de nada rechazado.
+
+horizonte:
+  tipo: swing
+  duracion_mediana_esperada: "18 horas (salida por regla a las 10:00 ET; tope 1 día)"
+
+familia: estacionalidad
+medicion: false
+pruebas_previas: 3
+holdout_contaminado: true
+
+estrategia:
+  modulo: overnight_max
+  params: {max_dias: 10, atr_n: 24, stop_atr: 6.0, hora_entrada: 16, hora_salida: 10}
+
+universo:
+  mercado: futures
+  simbolos: [BTCUSDT]
+  intervalo: 1h
+  funding: true
+  historia_spot: true
+
+config:
+  fee_pct_por_lado: 0.001
+  deslizamiento_pct: 0.0
+  timeout_velas: 24         # 1 día en 1h; la salida por regla llega a las 18 h
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 1      # una sola operación por noche
+
+ventana_desarrollo:
+  desde: "2017-01-01"
+
+criterio_aprobacion:
+  n_minimo: 150
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
