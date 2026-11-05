@@ -1,0 +1,828 @@
+{
+ "id": "2026-11-05-overnight-nyse-max10-1h",
+ "fecha": "2026-11-05T06:41:22+00:00",
+ "commit": "a9f8907",
+ "veredicto": "NO_CONCLUYENTE",
+ "nivel": null,
+ "motivos": [
+  "desarrollo: falla «n ≥ 150» (105)",
+  "desarrollo: falla «avgR neto > 0 y ±2 EE fuera del cero» (+0.007 [-0.105, +0.119])",
+  "desarrollo: falla «ajustado por 4 prueba(s) de la familia: avgR − 2.50 EE > 0» (+0.007 − 2.50×0.056 = -0.133)",
+  "desarrollo: falla «concluyente (muestra, modelos, tramos)» (los tramos no coinciden en signo (2017-09-01:-0.12R 2019-05-13:-0.05R 2021-10-01:+0.22R 2023-12-08:-0.02R): depende del régimen; la dispersión entre tramos (0.35R) supera el doble del avgR (0.007R))",
+  "desarrollo: falla «tramos positivos ≥ 3» (1/4)",
+  "desarrollo: falla «supera el percentil 95 del control nulo» (+0.007 vs p95 +0.094)"
+ ],
+ "criterios": [
+  {
+   "criterio": "n ≥ 150",
+   "valor": 105,
+   "ok": false,
+   "clave": "n"
+  },
+  {
+   "criterio": "avgR neto > 0 y ±2 EE fuera del cero",
+   "valor": "+0.007 [-0.105, +0.119]",
+   "ok": false
+  },
+  {
+   "criterio": "ajustado por 4 prueba(s) de la familia: avgR − 2.50 EE > 0",
+   "valor": "+0.007 − 2.50×0.056 = -0.133",
+   "ok": false
+  },
+  {
+   "criterio": "concluyente (muestra, modelos, tramos)",
+   "valor": "los tramos no coinciden en signo (2017-09-01:-0.12R 2019-05-13:-0.05R 2021-10-01:+0.22R 2023-12-08:-0.02R): depende del régimen; la dispersión entre tramos (0.35R) supera el doble del avgR (0.007R)",
+   "ok": false
+  },
+  {
+   "criterio": "tramos positivos ≥ 3",
+   "valor": "1/4",
+   "ok": false
+  },
+  {
+   "criterio": "supera el percentil 95 del control nulo",
+   "valor": "+0.007 vs p95 +0.094",
+   "ok": false
+  },
+  {
+   "criterio": "alcance: duración mediana ≤ 7 días",
+   "valor": "0.8 días",
+   "ok": true
+  }
+ ],
+ "spec": {
+  "id": "2026-11-05-overnight-nyse-max10-1h",
+  "estado": "pre-registrada",
+  "fuente": "Idea #8 de 02-DOCS/ideas.md (Felipe, 2026-11-04); catálogo: Overnight de sesión NYSE condicionado a MAX(10) (Quantpedia, resumen de Gemini 2015–2024)",
+  "pregunta": "¿Comprar BTC al cierre de NYSE (16:00 ET) sólo cuando está en su máximo de 10 días y salir a las 10:00 ET del día siguiente tiene edge neto de comisión?",
+  "hipotesis": "La subida de BTC se concentraría fuera del horario bursátil de EE. UU. (flujos de sesión y liquidez); el filtro de máximo de 10 días agrega inercia (momentum de corto plazo) a esa deriva nocturna. Del otro lado pierde quien vende contra la inercia en una noche sin la contraparte bursátil. Costo: 0.1% por lado (comisión + deslizamiento) contra una operación de ~18 h con stop de 6 ATR de 1h (~3%): ~0.07R de comisión, que el edge bruto debe superar. UNA regla fija antes de correr, sin barrer parámetros: entrada en la apertura de las 16:00 ET (tras la vela que cierra a las 16:00 ET), cierre ≥ máximo de los cierres de las 240 velas previas (10 días), sólo largo, salida por regla en la apertura de las 10:00 ET siguiente, todos los días (cripto no cierra los fines de semana), horario de EE. UU. con cambio de hora (America/New_York). Stop 6 ATR(24) de 1h como protección de cola (no es parte del mecanismo). El 10 viene del trabajo de origen, no se optimizó acá. Universo: sólo BTCUSDT porque la evidencia de origen es de BTC y la pregunta es sobre ese mecanismo (con spot desde 2017 para tener varios regímenes, incluido el bajista de 2018); no es una lista de supervivientes que compre alts. Riesgo central: evidencia C (sin costos en la fuente, corte fuera de muestra elegido a dedo, una sola operación por noche). Criterio exigente por defecto con corrección por pruebas. Holdout declarado contaminado por prudencia: la estacionalidad por hora ya se midió en btc-signal-web sobre un período que cruza el holdout de este repo; como mucho llega a observación.\n",
+  "ya_probado": "decisiones.md: «¿Hay estacionalidad aprovechable (hora del día, bloque de 4 h, día de la semana)?» → No (btc-signal-web, 2026-10-20): ninguna hora ni bloque de 4h paga 0.2% ida y vuelta. Eso es estacionalidad pura, sin condición. Esta spec agrega un filtro de estado (máximo de 10 días) y una ventana de ~18 h en vez de una hora suelta, pero sigue siendo de la familia: se cuenta como la 4.ª variante (3 medidas fuera de este repo: hora, bloque de 4h y día de la semana). «Reversión» y «funding contrarian» son otras señales. No se copian parámetros de nada rechazado.\n",
+  "horizonte": {
+   "tipo": "swing",
+   "duracion_mediana_esperada": "18 horas (salida por regla a las 10:00 ET; tope 1 día)"
+  },
+  "familia": "estacionalidad",
+  "medicion": false,
+  "pruebas_previas": 3,
+  "holdout_contaminado": true,
+  "estrategia": {
+   "modulo": "overnight_max",
+   "params": {
+    "max_dias": 10,
+    "atr_n": 24,
+    "stop_atr": 6.0,
+    "hora_entrada": 16,
+    "hora_salida": 10
+   }
+  },
+  "universo": {
+   "mercado": "futures",
+   "simbolos": [
+    "BTCUSDT"
+   ],
+   "intervalo": "1h",
+   "funding": true,
+   "historia_spot": true
+  },
+  "config": {
+   "fee_pct_por_lado": 0.001,
+   "deslizamiento_pct": 0.0,
+   "timeout_velas": 24,
+   "objetivo_r": null,
+   "cerrar_al_final": true,
+   "max_por_direccion": 1
+  },
+  "ventana_desarrollo": {
+   "desde": "2017-01-01"
+  },
+  "criterio_aprobacion": {
+   "n_minimo": 150,
+   "ic95_excluye_cero": true,
+   "ajuste_por_pruebas": true,
+   "concluyente": true,
+   "tramos_positivos_minimo": 3,
+   "supera_nulo_p95": true,
+   "holdout": {
+    "avgRNeto_positivo": true,
+    "aguanta_costos": true,
+    "sin_mejores_no_negativo": true,
+    "fraccion_desarrollo_minima": 0.33
+   }
+  }
+ },
+ "familia": "estacionalidad",
+ "nPruebas": 4,
+ "pruebasPrevias": 3,
+ "variantes": [],
+ "holdoutContaminado": true,
+ "preregistro": {
+  "commit": "a9f8907",
+  "fecha": "2026-11-05T06:40:51Z"
+ },
+ "maxPorDireccion": 1,
+ "universoDinamico": null,
+ "comparacionMadre": null,
+ "estabilidad": null,
+ "desarrollo": {
+  "ventana": [
+   "2017-08-17T04:00:00+00:00",
+   "2025-09-08T23:00:00+00:00"
+  ],
+  "global": {
+   "n": 105,
+   "suficiente": true,
+   "avgR": 0.051549908712732975,
+   "avgRNeto": 0.006619662728750955,
+   "ic95": [
+    -0.10544612230176095,
+    0.11868544775926287
+   ],
+   "winRatePct": 46.666666666666664,
+   "profitFactor": 1.0308746554490642,
+   "totalRNeto": 0.6950645865188503,
+   "maeMedianoR": 0.29941302832627004,
+   "velasMediana": 19,
+   "porMotivo": {
+    "SL": 9,
+    "SALIDA": 96
+   }
+  },
+  "porTramo": [
+   {
+    "desde": "2017-09-01",
+    "hasta": "2019-05-09",
+    "n": 27,
+    "suficiente": true,
+    "avgR": -0.08619730896896344,
+    "avgRNeto": -0.12274228540306847,
+    "ic95": [
+     -0.34707789649365567,
+     0.10159332568751872
+    ],
+    "winRatePct": 37.03703703703704,
+    "profitFactor": 0.5676059725452796,
+    "totalRNeto": -3.3140417058828486,
+    "maeMedianoR": 0.331266109185694,
+    "velasMediana": 19,
+    "porMotivo": {
+     "SL": 4,
+     "SALIDA": 23
+    }
+   },
+   {
+    "desde": "2019-05-13",
+    "hasta": "2021-08-07",
+    "n": 26,
+    "suficiente": true,
+    "avgR": -0.014012294128679667,
+    "avgRNeto": -0.05311707510612572,
+    "ic95": [
+     -0.25385228245043806,
+     0.1476181322381866
+    ],
+    "winRatePct": 53.84615384615385,
+    "profitFactor": 0.7717123318449381,
+    "totalRNeto": -1.3810439527592686,
+    "maeMedianoR": 0.31572451029339565,
+    "velasMediana": 19.0,
+    "porMotivo": {
+     "SALIDA": 23,
+     "SL": 3
+    }
+   },
+   {
+    "desde": "2021-10-01",
+    "hasta": "2023-12-02",
+    "n": 26,
+    "suficiente": true,
+    "avgR": 0.2742940923224983,
+    "avgRNeto": 0.223990718805995,
+    "ic95": [
+     -0.020358669848994898,
+     0.46834010746098487
+    ],
+    "winRatePct": 46.15384615384615,
+    "profitFactor": 2.803663073501354,
+    "totalRNeto": 5.82375868895587,
+    "maeMedianoR": 0.2538511491180099,
+    "velasMediana": 19.0,
+    "porMotivo": {
+     "SALIDA": 26
+    }
+   },
+   {
+    "desde": "2023-12-08",
+    "hasta": "2025-08-13",
+    "n": 26,
+    "suficiente": true,
+    "avgR": 0.03741311553691116,
+    "avgRNeto": -0.016677247838265477,
+    "ic95": [
+     -0.2302999905991755,
+     0.19694549492264457
+    ],
+    "winRatePct": 50.0,
+    "profitFactor": 0.9221477701216602,
+    "totalRNeto": -0.43360844379490243,
+    "maeMedianoR": 0.31672678623808104,
+    "velasMediana": 19.0,
+    "porMotivo": {
+     "SALIDA": 24,
+     "SL": 2
+    }
+   }
+  ],
+  "brechaEntreModelosR": 0.0,
+  "concluyente": false,
+  "porQueNoConcluyente": [
+   "los tramos no coinciden en signo (2017-09-01:-0.12R 2019-05-13:-0.05R 2021-10-01:+0.22R 2023-12-08:-0.02R): depende del régimen",
+   "la dispersión entre tramos (0.35R) supera el doble del avgR (0.007R)"
+  ],
+  "nulo": {
+   "iteraciones": 1000,
+   "media": -0.017377581766292196,
+   "p95": 0.09373867985651745
+  },
+  "duracionMedianaDias": 0.7916666666666666,
+  "porSimbolo": {
+   "BTCUSDT": {
+    "n": 105,
+    "suficiente": true,
+    "avgR": 0.051549908712732975,
+    "avgRNeto": 0.006619662728750955,
+    "ic95": [
+     -0.10544612230176095,
+     0.11868544775926287
+    ],
+    "winRatePct": 46.666666666666664,
+    "profitFactor": 1.0308746554490642,
+    "totalRNeto": 0.6950645865188503,
+    "maeMedianoR": 0.29941302832627004,
+    "velasMediana": 19,
+    "porMotivo": null
+   }
+  },
+  "calidadDatos": {
+   "BTCUSDT": {
+    "velas": 70580,
+    "huecos": 96,
+    "huecosPct": 0.136,
+    "duplicadas": 0,
+    "volumenCero": 2,
+    "saltos": 0,
+    "inconsistentes": 0
+   }
+  },
+  "robustez": {
+   "costosX": 1.5,
+   "costos": {
+    "n": 105,
+    "avgRNeto": -0.013455131743846483,
+    "ic95": [
+     -0.12550551940796445,
+     0.09859525592027148
+    ]
+   },
+   "sinMejores": 10,
+   "sinTop": {
+    "n": 95,
+    "avgRNeto": -0.10807298328193389,
+    "ic95": [
+     -0.20302545218520623,
+     -0.013120514378661546
+    ]
+   }
+  },
+  "maxDrawdownR": -5.842,
+  "maxPorDireccion": 1,
+  "simbolosSinDatos": [],
+  "curva": [
+   [
+    "2017-09-01",
+    -1.0293,
+    "2017-09-02"
+   ],
+   [
+    "2017-09-27",
+    -0.0624,
+    "2017-09-28"
+   ],
+   [
+    "2017-09-30",
+    -0.1897,
+    "2017-10-01"
+   ],
+   [
+    "2017-10-09",
+    0.1249,
+    "2017-10-10"
+   ],
+   [
+    "2017-10-20",
+    0.062,
+    "2017-10-21"
+   ],
+   [
+    "2017-11-04",
+    0.2487,
+    "2017-11-05"
+   ],
+   [
+    "2017-11-19",
+    0.2864,
+    "2017-11-20"
+   ],
+   [
+    "2017-12-06",
+    1.3874,
+    "2017-12-07"
+   ],
+   [
+    "2017-12-11",
+    -0.2803,
+    "2017-12-12"
+   ],
+   [
+    "2018-01-05",
+    -0.1314,
+    "2018-01-06"
+   ],
+   [
+    "2018-02-19",
+    0.2502,
+    "2018-02-20"
+   ],
+   [
+    "2018-02-20",
+    -1.0229,
+    "2018-02-21"
+   ],
+   [
+    "2018-04-12",
+    0.59,
+    "2018-04-13"
+   ],
+   [
+    "2018-04-24",
+    -0.8706,
+    "2018-04-25"
+   ],
+   [
+    "2018-07-08",
+    -0.2191,
+    "2018-07-09"
+   ],
+   [
+    "2018-07-22",
+    0.5742,
+    "2018-07-23"
+   ],
+   [
+    "2018-07-24",
+    -0.1675,
+    "2018-07-25"
+   ],
+   [
+    "2018-08-28",
+    -0.0111,
+    "2018-08-29"
+   ],
+   [
+    "2018-09-01",
+    -0.2712,
+    "2018-09-02"
+   ],
+   [
+    "2018-09-02",
+    -0.119,
+    "2018-09-03"
+   ],
+   [
+    "2018-09-03",
+    0.156,
+    "2018-09-04"
+   ],
+   [
+    "2018-09-21",
+    -0.2215,
+    "2018-09-22"
+   ],
+   [
+    "2018-10-08",
+    -0.6587,
+    "2018-10-09"
+   ],
+   [
+    "2019-02-23",
+    -1.0509,
+    "2019-02-24"
+   ],
+   [
+    "2019-04-03",
+    -0.317,
+    "2019-04-04"
+   ],
+   [
+    "2019-04-10",
+    -1.0417,
+    "2019-04-11"
+   ],
+   [
+    "2019-05-09",
+    0.6704,
+    "2019-05-10"
+   ],
+   [
+    "2019-05-13",
+    0.3143,
+    "2019-05-14"
+   ],
+   [
+    "2019-05-26",
+    0.5462,
+    "2019-05-27"
+   ],
+   [
+    "2019-06-20",
+    0.5017,
+    "2019-06-21"
+   ],
+   [
+    "2019-06-26",
+    -1.0177,
+    "2019-06-26"
+   ],
+   [
+    "2019-08-03",
+    -0.3802,
+    "2019-08-04"
+   ],
+   [
+    "2019-09-04",
+    -0.2301,
+    "2019-09-05"
+   ],
+   [
+    "2019-10-25",
+    0.686,
+    "2019-10-26"
+   ],
+   [
+    "2020-01-07",
+    0.2911,
+    "2020-01-08"
+   ],
+   [
+    "2020-01-30",
+    -0.6778,
+    "2020-01-31"
+   ],
+   [
+    "2020-02-12",
+    -0.3738,
+    "2020-02-13"
+   ],
+   [
+    "2020-04-06",
+    0.1439,
+    "2020-04-07"
+   ],
+   [
+    "2020-04-29",
+    0.165,
+    "2020-04-30"
+   ],
+   [
+    "2020-05-07",
+    -0.0049,
+    "2020-05-08"
+   ],
+   [
+    "2020-08-01",
+    -1.0501,
+    "2020-08-02"
+   ],
+   [
+    "2020-11-12",
+    0.0368,
+    "2020-11-13"
+   ],
+   [
+    "2020-11-16",
+    0.3884,
+    "2020-11-17"
+   ],
+   [
+    "2020-12-20",
+    -1.0387,
+    "2020-12-21"
+   ],
+   [
+    "2020-12-26",
+    0.4663,
+    "2020-12-27"
+   ],
+   [
+    "2020-12-30",
+    -0.2142,
+    "2020-12-31"
+   ],
+   [
+    "2021-01-06",
+    0.4363,
+    "2021-01-07"
+   ],
+   [
+    "2021-02-08",
+    0.4435,
+    "2021-02-09"
+   ],
+   [
+    "2021-02-17",
+    -0.0685,
+    "2021-02-18"
+   ],
+   [
+    "2021-03-13",
+    -0.4229,
+    "2021-03-14"
+   ],
+   [
+    "2021-06-29",
+    -0.5707,
+    "2021-06-30"
+   ],
+   [
+    "2021-08-06",
+    0.046,
+    "2021-08-07"
+   ],
+   [
+    "2021-08-07",
+    0.2029,
+    "2021-08-08"
+   ],
+   [
+    "2021-10-01",
+    -0.0894,
+    "2021-10-02"
+   ],
+   [
+    "2021-10-04",
+    0.2275,
+    "2021-10-05"
+   ],
+   [
+    "2021-10-05",
+    0.8942,
+    "2021-10-06"
+   ],
+   [
+    "2021-10-06",
+    -0.1526,
+    "2021-10-07"
+   ],
+   [
+    "2021-10-11",
+    -0.1965,
+    "2021-10-12"
+   ],
+   [
+    "2021-10-19",
+    0.4386,
+    "2021-10-20"
+   ],
+   [
+    "2022-02-28",
+    0.5077,
+    "2022-03-01"
+   ],
+   [
+    "2022-07-07",
+    -0.4074,
+    "2022-07-08"
+   ],
+   [
+    "2022-09-10",
+    -0.0752,
+    "2022-09-11"
+   ],
+   [
+    "2022-09-12",
+    -0.9695,
+    "2022-09-13"
+   ],
+   [
+    "2022-10-25",
+    0.3386,
+    "2022-10-26"
+   ],
+   [
+    "2022-11-30",
+    -0.0386,
+    "2022-12-01"
+   ],
+   [
+    "2023-01-10",
+    -0.2709,
+    "2023-01-11"
+   ],
+   [
+    "2023-01-11",
+    1.1254,
+    "2023-01-12"
+   ],
+   [
+    "2023-01-12",
+    -0.0919,
+    "2023-01-13"
+   ],
+   [
+    "2023-01-13",
+    1.3746,
+    "2023-01-14"
+   ],
+   [
+    "2023-01-17",
+    -0.0188,
+    "2023-01-18"
+   ],
+   [
+    "2023-01-20",
+    0.5899,
+    "2023-01-21"
+   ],
+   [
+    "2023-02-15",
+    0.2059,
+    "2023-02-16"
+   ],
+   [
+    "2023-03-13",
+    0.6787,
+    "2023-03-14"
+   ],
+   [
+    "2023-07-03",
+    -0.3721,
+    "2023-07-04"
+   ],
+   [
+    "2023-07-13",
+    -0.3457,
+    "2023-07-14"
+   ],
+   [
+    "2023-08-08",
+    -0.0855,
+    "2023-08-09"
+   ],
+   [
+    "2023-10-19",
+    0.8501,
+    "2023-10-20"
+   ],
+   [
+    "2023-10-23",
+    1.8213,
+    "2023-10-24"
+   ],
+   [
+    "2023-12-02",
+    -0.1147,
+    "2023-12-03"
+   ],
+   [
+    "2023-12-08",
+    -0.3213,
+    "2023-12-09"
+   ],
+   [
+    "2024-02-07",
+    0.5685,
+    "2024-02-08"
+   ],
+   [
+    "2024-02-08",
+    0.8925,
+    "2024-02-09"
+   ],
+   [
+    "2024-02-10",
+    0.1438,
+    "2024-02-11"
+   ],
+   [
+    "2024-02-12",
+    -0.6676,
+    "2024-02-13"
+   ],
+   [
+    "2024-03-04",
+    0.2632,
+    "2024-03-05"
+   ],
+   [
+    "2024-03-08",
+    -0.2291,
+    "2024-03-09"
+   ],
+   [
+    "2024-03-25",
+    -0.186,
+    "2024-03-26"
+   ],
+   [
+    "2024-05-15",
+    0.0633,
+    "2024-05-16"
+   ],
+   [
+    "2024-05-20",
+    0.1705,
+    "2024-05-21"
+   ],
+   [
+    "2024-07-16",
+    -0.0407,
+    "2024-07-17"
+   ],
+   [
+    "2024-07-19",
+    -0.2386,
+    "2024-07-20"
+   ],
+   [
+    "2024-07-22",
+    -0.7583,
+    "2024-07-23"
+   ],
+   [
+    "2024-08-21",
+    -0.2891,
+    "2024-08-22"
+   ],
+   [
+    "2024-08-23",
+    0.1572,
+    "2024-08-24"
+   ],
+   [
+    "2024-10-14",
+    0.6392,
+    "2024-10-15"
+   ],
+   [
+    "2024-10-28",
+    0.9407,
+    "2024-10-29"
+   ],
+   [
+    "2024-11-06",
+    -0.2828,
+    "2024-11-07"
+   ],
+   [
+    "2024-11-11",
+    -0.0265,
+    "2024-11-12"
+   ],
+   [
+    "2024-12-04",
+    0.9897,
+    "2024-12-05"
+   ],
+   [
+    "2025-01-19",
+    -1.0437,
+    "2025-01-19"
+   ],
+   [
+    "2025-05-20",
+    0.0011,
+    "2025-05-21"
+   ],
+   [
+    "2025-06-09",
+    0.1818,
+    "2025-06-10"
+   ],
+   [
+    "2025-07-02",
+    0.1246,
+    "2025-07-03"
+   ],
+   [
+    "2025-07-09",
+    -0.4216,
+    "2025-07-10"
+   ],
+   [
+    "2025-08-13",
+    -1.0645,
+    "2025-08-14"
+   ]
+  ]
+ },
+ "holdout": null
+}
