@@ -12,6 +12,21 @@ acumulan y el desarrollo del sistema mismo se detiene. **Objetivo:** que el proy
 los días solo y que Felipe dirija desde un grupo de Telegram del proyecto, aprobando, rechazando o
 pidiendo, sin abrir GitHub ni una sesión.
 
+## 1b. Lo que ya existe y se reutiliza [marco]
+
+btc-signal-web ya corre una primera versión de esto desde el 2026-11-04 (`rutinas/equipo.md` en su
+rama `dev`): desarrollador a las 00:00 y a las 09:00, QA a las 20:00, informe diario a las 22:00 con ✅
+por Telegram, arquitecto los domingos y PO los lunes. Este marco **generaliza lo que ahí funciona**
+en vez de inventar algo paralelo:
+- **Un solo mensaje por día con lo que espera decisión**, más avisos sólo si algo se rompe.
+- **Una idea a la vez:** no se toma una nueva mientras haya otra trabada.
+- **Sólo tareas S o M;** lo grande se parte.
+- **QA no es quien desarrolló.**
+- **Lo que toca dinero real queda en «requiere sesión».**
+
+Lo que agrega: GitHub Issues como tablero en vez de un `BACKLOG.md` a mano, un operador reutilizable
+entre proyectos y los pedidos en texto libre desde el grupo.
+
 ## 2. Principios [marco]
 
 1. **Felipe decide, los agentes proponen y ejecutan.** Nada que toque código del sistema, dinero o
@@ -85,23 +100,40 @@ Un grupo por proyecto, con un bot (el **operador**). Tipos de mensaje:
 |---|---|---|
 | `riesgo:bajo`: docs, cola de ideas, catálogo, backlog generado; **[proyecto]** specs con revisión de sesgos no bloqueada, resultados de evaluaciones rechazadas | Todo código del sistema, workflows, `approved.json` **[proyecto]**, despliegues, cambios de reglas de medición | Dinero real (encender el real bot, cambiar tamaños) **[proyecto]** |
 
-## 7. Horario y presupuesto [proyecto]
+## 7. Horario y presupuesto [cuenta completa]
 
-Plan de Claude: $20. Sesiones por día y semana (cada fila es una rutina):
+Todas las rutinas de la cuenta comparten el mismo plan de Claude ($20): ventanas de uso de 5 horas
+que empiezan con la primera sesión, más un tope semanal. Un horario nuevo se decide mirando la
+cuenta completa, no un proyecto. Ocupación al 2026-11-06 (hora de Chile):
 
-| Hora (Chile) | Rol | Sesiones |
+| Ventana (aprox.) | Qué corre hoy | Carga |
 |---|---|---|
-| 03:37 diario | Investigador (factory) | 1 |
-| 06:00 diario | Analista liviano | 1 (corta) |
-| 07:00 diario | Diseñador | 1 (corta, sólo si hay `aprobada`) |
-| 08:00 diario | Desarrollador | 1 (sólo si hay `diseñada` aprobada) |
-| 09–21 cada hora | Atención de pedidos | sólo si hay pedidos nuevos |
-| 21:00 diario | Cronista | 0 (Actions) |
-| Sábado 04:23 | Explorador | 1 |
-| Domingo 05:13 / 07:47 | Auditor + puente / Analista semanal | 2 |
+| 20:00–01:00 | QA btc 20:00 (opus) · informe btc 22:00 (opus) · desarrollador btc 00:00 (opus) | **alta** |
+| 01:00–03:30 | — | libre |
+| **03:37–08:37** | investigador factory 03:37 · Seedbox analista 08:23; sáb. explorador 04:23; dom. auditor 05:13 y PO factory 07:47 | **baja entre semana** |
+| 09:00–14:00 | desarrollador btc 09:00 (sonnet); lun. PO btc 10:00 (opus); sesiones de Felipe | media |
+| 14:00–20:00 | sesiones de Felipe; dom. arquitecto btc 18:00 (opus) | la usa Felipe |
 
-**Una tarea de desarrollo por día** (decisión de Felipe, 2026-11-06). Las rutinas que no encuentran
-trabajo terminan sin abrir sesión larga.
+**Propuesta para la factory:** todo el ciclo nuevo en la ventana de la madrugada, que es la más libre y
+termina antes de que Felipe despierte. Las tarjetas lo esperan en la mañana.
+
+| Hora (Chile) | Rol | Modelo | Corre sólo si |
+|---|---|---|---|
+| 03:37 | Investigador (ya existe) | el de siempre | — |
+| 04:15 | Analista liviano | sonnet | hubo cambios desde ayer |
+| 04:45 | Diseñador | sonnet | hay un issue `aprobada` |
+| 05:15 | Desarrollador + revisor de código (subagente) | el de siempre | hay un `diseñada` aprobado y nada trabado |
+| 07:45 | Atención de pedidos (1.ª) | sonnet | hay pedidos nuevos |
+| 19:45 | Atención de pedidos (2.ª, abre la ventana nocturna) | sonnet | hay pedidos nuevos |
+| 21:00 | Cronista | — (Actions) | hubo movimiento o hay decisiones pendientes |
+
+- **Pedidos dos veces al día, no cada hora:** cada hora abriría ventanas en el horario de Felipe y gastaría
+  sin necesidad. Algo urgente se pide en una sesión.
+- **Fines de semana:** el sábado y el domingo la madrugada ya trae explorador, auditor y PO. El
+  desarrollador de la factory no corre esos días.
+- **Una tarea de desarrollo por día** (decisión de Felipe, 2026-11-06).
+- **A revisar después de una semana** en la página de uso de Claude: si el tope semanal aprieta,
+  primero se pasa a sonnet lo que hoy corre en opus en btc-signal-web y no escribe código (informe, QA).
 
 ## 8. El operador [marco]
 
@@ -116,21 +148,27 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
   pide ✅.
 - **Sin estado propio:** el estado vive en GitHub (etiquetas, comentarios). Si el operador se cae,
   no se pierde nada.
-- **Dónde corre:** a decidir entre Cloudflare Worker (gratis, sin servidor) y Railway (como el bot).
+- **Dónde corre:** un servicio propio en **Railway**, en la nube que ya se usa (decisión de Felipe,
+  2026-11-06). btc-signal-web ya resuelve el webhook de Telegram y el merge por la API de GitHub
+  (`lib/ops/despliegue.ts`, `/api/telegram`): el operador nace de ese código, generalizado.
 
 ## 9. Plan de implementación [proyecto]
 
 | Fase | Qué | Hecho cuando |
 |---|---|---|
-| 1 | Etiquetas en GitHub; migrar `backlog.md` a issues; `backlog.md` pasa a generarse | Los B-xx pendientes son issues; el resumen los lee de ahí |
+| 1 | Etiquetas en GitHub; migrar `backlog.md` a issues; `backlog.md` pasa a generarse | Los B-xx pendientes son issues; el resumen los lee de ahí (**código hecho 2026-11-06**: `.operador.yml`, `etiquetas.yml`, `bt.backlog`, `backlog.yml`, PO con issues) |
 | 2 | Operador mínimo: grupo nuevo, tarjetas de propuesta y PR con ✅/❌, pedidos como issues | Aprobar #N desde Telegram cambia su etiqueta; un mensaje libre abre un issue |
 | 3 | Diseñador, desarrollador y revisor de código como rutinas, más el liberador | Un issue aprobado llega a PR sin sesión manual |
 | 4 | Atención de pedidos y cronista | Un pedido escrito a las 10:00 tiene plan en el grupo antes de las 12:00 |
 | 5 | Copiar el marco a btc-signal-web y Sitbox (`OPERACION.md` + `.operador.yml`) | Cada uno con su grupo y su ciclo diario |
 
-## 10. Preguntas abiertas
+## 10. Decisiones tomadas (2026-11-06)
 
-- ¿Cloudflare Worker o Railway para el operador?
-- ¿Horario activo de la atención de pedidos (09–21 está propuesto)?
-- ¿El cronista manda todos los días, o sólo cuando hubo movimiento?
-- ¿Qué pasa con una tarjeta sin respuesta? Propuesta: se recuerda en el cierre del día y no vence.
+- **Tareas:** GitHub Issues.
+- **Operador:** servicio propio reutilizable, en Railway.
+- **Ritmo:** una tarea de desarrollo por día.
+- **Autonomía:** sólo pasa solo lo de bajo riesgo, como hoy.
+- **Pedidos:** se vuelven issues y se toman en la siguiente corrida.
+- **Tarjetas sin respuesta:** no vencen y se recuerdan en el cierre del día.
+- **Horario:** el ciclo de la factory corre en la ventana de la madrugada (§7). Confirmado por Felipe.
+- **Cierre del día:** sólo si hubo movimiento o hay decisiones pendientes. Confirmado por Felipe.

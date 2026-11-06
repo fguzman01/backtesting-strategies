@@ -1,0 +1,41 @@
+# Regenera 02-DOCS/backlog.md desde los GitHub Issues cada vez que una tarea cambia (OPERACION.md §3).
+name: backlog
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed, reopened]
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: backlog
+  cancel-in-progress: false
+
+jobs:
+  backlog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 \
+            --json number,title,labels,state,closedAt,url > issues.json
+          python -m bt.backlog issues.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 02-DOCS/backlog.md
+          if git diff --cached --quiet; then echo "sin cambios"; exit 0; fi
+          git commit -m "Backlog regenerado desde los issues"
+          git pull --rebase origin main
+          git push origin HEAD:main
