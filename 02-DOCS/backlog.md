@@ -8,7 +8,11 @@ Nada pendiente.
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado |
+|---|---|---|---|---|---|
+| [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | propuesta | ← aprobar o descartar
+| [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) | Fijar el umbral de estabilidad de parámetros por defecto | mejora | P2 | medio | propuesta | ← aprobar o descartar
+| [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | propuesta | ← aprobar o descartar
 
 ## En marcha
 
@@ -16,7 +20,11 @@ Nada.
 
 ## Pendientes
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado |
+|---|---|---|---|---|---|
+| [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | propuesta |
+| [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) | Fijar el umbral de estabilidad de parámetros por defecto | mejora | P2 | medio | propuesta |
+| [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | propuesta |
 
 ## Hechas (últimas 20)
 
