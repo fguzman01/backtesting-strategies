@@ -1,0 +1,64 @@
+# De GitHub al grupo de Telegram (OPERACION.md §5): una tarjeta con ✅/❌ cuando un issue pasa a
+# `estado:propuesta` o `estado:diseñada`, y cuando un PR que no es de la rutina queda con el CI verde.
+# Secretos: OPERADOR_URL y OPERADOR_KEY. Sin ellos, imprime la tarjeta y no falla.
+name: tarjetas
+
+on:
+  issues:
+    types: [labeled]
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  issue:
+    if: >-
+      github.event_name == 'issues' &&
+      (github.event.label.name == 'estado:propuesta' || github.event.label.name == 'estado:diseñada')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - env:
+          OPERADOR_URL: ${{ secrets.OPERADOR_URL }}
+          OPERADOR_KEY: ${{ secrets.OPERADOR_KEY }}
+          PYTHONPATH: src
+        run: python -m bt.operador issue "$GITHUB_EVENT_PATH"
+
+  pr:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - env:
+          OPERADOR_URL: ${{ secrets.OPERADOR_URL }}
+          OPERADOR_KEY: ${{ secrets.OPERADOR_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RAMA: ${{ github.event.workflow_run.head_branch }}
+          PYTHONPATH: src
+        run: |
+          pr=$(gh pr list --repo "$REPO" --head "$RAMA" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then echo "sin PR abierto"; exit 0; fi
+          gh api "repos/$REPO/pulls/$pr" > pr.json
+          titulo=$(python -c "import json;print(json.load(open('pr.json'))['title'])")
+          case "$titulo" in "[rutina]"*) echo "PR de la rutina: lo maneja automerge"; exit 0;; esac
+          # Una tarjeta por PR: la etiqueta operador:tarjeta marca que ya se mandó.
+          if gh api "repos/$REPO/issues/$pr/labels" --jq '.[].name' | grep -qx "operador:tarjeta"; then
+            echo "ya se mandó la tarjeta de #$pr"; exit 0
+          fi
+          python -m bt.operador pr pr.json
+          gh api -X POST "repos/$REPO/issues/$pr/labels" -f "labels[]=operador:tarjeta" > /dev/null

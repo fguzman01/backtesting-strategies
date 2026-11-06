@@ -62,6 +62,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/puente.py` | Lee el informe del bot, lo resume y lo anota; el auditor avisa si una aprobada rinde peor en paper |
 | `.github/workflows/sincronizar-bot.yml` | Al cambiar `approved.json`, abre solo el PR con la copia en btc-signal-web (`dev`) |
 | `OPERACION.md` | **Marco de operación autónoma** (roles diarios, Telegram, qué pasa solo y qué pide ✅). Reutilizable en todos los proyectos |
+| `src/bt/operador.py` | Tarjetas y cierre del día al grupo de Telegram vía el operador (`tarjetas.yml`, `cierre.yml` 21:00) |
 | `.operador.yml` | Configuración del marco para este repo: etiquetas de los issues, grupo de Telegram |
 | `.claude/agents/po.md` | Analista/PO: mantiene las tareas del sistema como GitHub Issues (`estado:` `tipo:` `prio:` `riesgo:`) |
 | `02-DOCS/backlog.md` | Vista **generada** desde los issues (`bt.backlog`, `backlog.yml`); no se edita a mano |

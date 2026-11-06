@@ -27,3 +27,5 @@ etiquetas:
     bajo: {color: "c2e0c6", descripcion: "Docs, datos: puede pasar solo"}
     medio: {color: "fbca04", descripcion: "Código con tests: pide ✅"}
     alto: {color: "b60205", descripcion: "Workflows, contrato, dinero, producción: pide ✅"}
+  operador:
+    tarjeta: {color: "ededed", descripcion: "Ya se mandó la tarjeta de este PR al grupo"}

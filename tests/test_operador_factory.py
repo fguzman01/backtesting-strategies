@@ -1,0 +1,39 @@
+import datetime as dt
+import json
+
+from bt import operador
+
+
+def issue(n, titulo, estado, prio="P2"):
+    return {"number": n, "title": titulo, "state": "OPEN", "body": "**Problema:** x <b>\n\n---\n_pie_",
+            "labels": [{"name": f"estado:{estado}"}, {"name": "tipo:mejora"}, {"name": f"prio:{prio}"}],
+            "html_url": f"u/{n}"}
+
+
+def test_texto_issue_y_pr():
+    t = operador.texto_issue(issue(45, "Motor <intrabar>", "propuesta"), "propuesta")
+    assert "#45 Motor &lt;intrabar&gt;" in t and "¿Se hace?" in t and "_pie_" not in t and "&lt;b&gt;" in t
+    p = operador.texto_pr({"number": 60, "title": "Algo", "body": "cuerpo", "additions": 10, "deletions": 2,
+                           "changed_files": 3})
+    assert "PR #60" in p and "+10 −2 en 3" in p and "¿Se fusiona?" in p
+
+
+def test_cierre_solo_si_hay_algo():
+    hoy = dt.date(2026, 11, 6)
+    assert operador.texto_cierre([issue(1, "a", "hecha")], [], [], hoy) is None
+    t = operador.texto_cierre([issue(45, "Motor", "propuesta"), issue(49, "Pedido", "aprobada")],
+                              [{"number": 60, "title": "PR x"}, {"number": 61, "title": "[rutina] y"}],
+                              ["PR #58 fusionado: z"], hoy)
+    assert "Espera tu decisión (2)" in t and "#45 Motor" in t and "PR #60" in t and "[rutina]" not in t
+    assert "Mañana se trabaja" in t and "#49" in t and "06-11" in t
+
+
+def test_cli_sin_operador_no_falla(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("OPERADOR_URL", raising=False)
+    ev = tmp_path / "ev.json"
+    ev.write_text(json.dumps({"label": {"name": "estado:propuesta"}, "issue": issue(45, "Motor", "propuesta")}))
+    assert operador.main(["issue", str(ev)]) == 0
+    assert "no se envía" in capsys.readouterr().out
+    ev.write_text(json.dumps({"label": {"name": "tipo:mejora"}, "issue": issue(45, "Motor", "propuesta")}))
+    assert operador.main(["issue", str(ev)]) == 0
+    assert "no pide decisión" in capsys.readouterr().out
