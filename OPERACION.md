@@ -157,7 +157,7 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
 | Fase | Qué | Hecho cuando |
 |---|---|---|
 | 1 | Etiquetas en GitHub; migrar `backlog.md` a issues; `backlog.md` pasa a generarse | Los B-xx pendientes son issues; el resumen los lee de ahí (**código hecho 2026-11-06**: `.operador.yml`, `etiquetas.yml`, `bt.backlog`, `backlog.yml`, PO con issues) |
-| 2 | Operador mínimo: grupo nuevo, tarjetas de propuesta y PR con ✅/❌, pedidos como issues | Aprobar #N desde Telegram cambia su etiqueta; un mensaje libre abre un issue |
+| 2 | Operador mínimo: grupo nuevo, tarjetas de propuesta y PR con ✅/❌, pedidos como issues | Aprobar #N desde Telegram cambia su etiqueta; un mensaje libre abre un issue (**hecho 2026-11-06**: fguzman01/operador en Railway, grupo «Factory · Operación», pedido #49; tarjetas `tarjetas.yml` y cierre `cierre.yml`) |
 | 3 | Diseñador, desarrollador y revisor de código como rutinas, más el liberador | Un issue aprobado llega a PR sin sesión manual |
 | 4 | Atención de pedidos y cronista | Un pedido escrito a las 10:00 tiene plan en el grupo antes de las 12:00 |
 | 5 | Copiar el marco a btc-signal-web y Sitbox (`OPERACION.md` + `.operador.yml`) | Cada uno con su grupo y su ciclo diario |
