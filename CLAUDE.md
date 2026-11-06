@@ -61,8 +61,10 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `.claude/agents/puente.md` | Rutina semanal: trae el informe del paper del bot (rama `factory-paper`) y los issues `retro` → `02-DOCS/retroalimentacion.md` |
 | `src/bt/puente.py` | Lee el informe del bot, lo resume y lo anota; el auditor avisa si una aprobada rinde peor en paper |
 | `.github/workflows/sincronizar-bot.yml` | Al cambiar `approved.json`, abre solo el PR con la copia en btc-signal-web (`dev`) |
-| `.claude/agents/po.md` | Rutina semanal (domingo, después del auditor): mantiene `02-DOCS/backlog.md`, las mejoras del sistema, y recomienda 3 |
-| `02-DOCS/backlog.md` | Backlog de mejoras y desarrollo nuevo de la factory (no estrategias). Felipe aprueba |
+| `OPERACION.md` | **Marco de operación autónoma** (roles diarios, Telegram, qué pasa solo y qué pide ✅). Reutilizable en todos los proyectos |
+| `.operador.yml` | Configuración del marco para este repo: etiquetas de los issues, grupo de Telegram |
+| `.claude/agents/po.md` | Analista/PO: mantiene las tareas del sistema como GitHub Issues (`estado:` `tipo:` `prio:` `riesgo:`) |
+| `02-DOCS/backlog.md` | Vista **generada** desde los issues (`bt.backlog`, `backlog.yml`); no se edita a mano |
 | `.claude/agents/explorador.md` | Rutina semanal: investiga estrategias conocidas → `02-DOCS/catalogo.md` → cola de ideas |
 | `02-DOCS/catalogo.md` | Catálogo de estrategias conocidas con su evidencia (A–D), mantenido por el explorador |
 | `scripts/rutas_automerge.py` | Qué rutas puede fusionar sola la rutina (usado por `automerge.yml`) |

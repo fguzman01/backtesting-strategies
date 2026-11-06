@@ -1,0 +1,29 @@
+# Configuración del marco de operación (OPERACION.md) para este repositorio. La leen el operador
+# (servicio en Railway, fase 2), scripts/etiquetas.py y bt.backlog. Lo mismo en cada proyecto de Felipe.
+proyecto: backtesting-strategies
+nombre: Factory de backtesting
+telegram:
+  grupo: null            # chat_id del grupo del proyecto (fase 2)
+etiquetas:
+  estado:
+    propuesta: {color: "c5def5", descripcion: "La escribió un agente; espera el ✅ de Felipe"}
+    aprobada: {color: "0e8a16", descripcion: "Felipe dijo que sí; espera diseño"}
+    diseñada: {color: "1d76db", descripcion: "Tiene plan; espera el ✅ para implementar"}
+    en-curso: {color: "fbca04", descripcion: "El desarrollador la está construyendo"}
+    en-revision: {color: "d93f0b", descripcion: "PR abierto; espera revisión y el ✅ para fusionar"}
+    hecha: {color: "5319e7", descripcion: "Fusionada (o resuelta)"}
+    descartada: {color: "cccccc", descripcion: "No se hace (con el motivo en un comentario)"}
+    requiere-sesion: {color: "b60205", descripcion: "Toca dinero real o reglas de medición: se conversa con Felipe"}
+  tipo:
+    mejora: {color: "a2eeef", descripcion: "Mejora del sistema"}
+    pedido: {color: "f9d0c4", descripcion: "Lo pidió Felipe por el grupo"}
+    bug: {color: "ee0701", descripcion: "Algo roto"}
+    investigacion: {color: "d4c5f9", descripcion: "Pregunta a responder, sin código"}
+  prio:
+    P1: {color: "b60205", descripcion: "Sube la confianza o destraba algo"}
+    P2: {color: "fbca04", descripcion: "Ahorra trabajo"}
+    P3: {color: "c2e0c6", descripcion: "Conveniente"}
+  riesgo:
+    bajo: {color: "c2e0c6", descripcion: "Docs, datos: puede pasar solo"}
+    medio: {color: "fbca04", descripcion: "Código con tests: pide ✅"}
+    alto: {color: "b60205", descripcion: "Workflows, contrato, dinero, producción: pide ✅"}
