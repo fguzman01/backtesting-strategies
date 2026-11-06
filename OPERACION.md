@@ -170,7 +170,5 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
 - **Autonomía:** sólo pasa solo lo de bajo riesgo, como hoy.
 - **Pedidos:** se vuelven issues y se toman en la siguiente corrida.
 - **Tarjetas sin respuesta:** no vencen y se recuerdan en el cierre del día.
-- **Horario:** el ciclo de la factory corre en la ventana de la madrugada (§7). Pendiente de que
-  Felipe lo confirme.
-- **Cierre del día:** sólo si hubo movimiento o hay decisiones pendientes. Pendiente de que Felipe
-  lo confirme.
+- **Horario:** el ciclo de la factory corre en la ventana de la madrugada (§7). Confirmado por Felipe.
+- **Cierre del día:** sólo si hubo movimiento o hay decisiones pendientes. Confirmado por Felipe.
