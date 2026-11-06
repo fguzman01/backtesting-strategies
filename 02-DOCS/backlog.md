@@ -4,7 +4,7 @@
 
 ## Recomendadas para esta semana
 
-Nada pendiente.
+1. **#49** Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos
 
 ## Espera tu decisión
 
@@ -16,7 +16,9 @@ Nada pendiente.
 
 ## En marcha
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado |
+|---|---|---|---|---|---|
+| [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) | Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos | pedido | P2 | — | aprobada |
 
 ## Pendientes
 
