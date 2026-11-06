@@ -3,7 +3,7 @@
 proyecto: backtesting-strategies
 nombre: Factory de backtesting
 telegram:
-  grupo: null            # chat_id del grupo del proyecto (fase 2)
+  grupo: -1003933476662   # «Factory · Operación» (2026-11-06)
 etiquetas:
   estado:
     propuesta: {color: "c5def5", descripcion: "La escribió un agente; espera el ✅ de Felipe"}
