@@ -44,7 +44,10 @@ def texto_issue(issue: dict, estado: str) -> str:
     e = html.escape
     meta = " · ".join(x for x in (_etq(issue, "tipo"), _etq(issue, "prio"), _etq(issue, "riesgo") and
                                   f"riesgo {_etq(issue, 'riesgo')}") if x)
-    cuerpo = _corto(issue.get("body"))
+    cuerpo = issue.get("body") or ""
+    if estado == "diseñada" and "## Plan" in cuerpo:  # la tarjeta del plan muestra el plan
+        cuerpo = "## Plan" + cuerpo.split("## Plan", 1)[1]
+    cuerpo = _corto(cuerpo, 900 if estado == "diseñada" else 600)
     return (f"🗂 <b>#{issue['number']} {e(issue['title'])}</b>\n<i>{e(meta)}</i>\n\n{e(cuerpo)}\n\n"
             f"<b>{QUE_DECIDIR.get(estado, '')}</b>").strip()
 
@@ -54,6 +57,32 @@ def texto_pr(pr: dict) -> str:
     cambios = f"+{pr.get('additions', 0)} −{pr.get('deletions', 0)} en {pr.get('changed_files', '?')} archivos"
     cuerpo = e(_corto(pr.get("body"), 500))
     return f"🔀 <b>PR #{pr['number']} {e(pr['title'])}</b>\n<i>CI ✅ · {cambios}</i>\n\n{cuerpo}\n\n<b>¿Se fusiona?</b>"
+
+
+MARCA_TELEGRAM = "<!-- telegram -->"
+
+
+def texto_comentario(issue: dict, comentario: dict) -> str | None:
+    """Respuestas de los agentes que empiezan con la marca: le llegan a Felipe al grupo."""
+    cuerpo = (comentario.get("body") or "").strip()
+    if not cuerpo.startswith(MARCA_TELEGRAM):
+        return None
+    e = html.escape
+    return f"💬 <b>#{issue['number']} {e(issue['title'])}</b>\n\n{e(_corto(cuerpo[len(MARCA_TELEGRAM):], 1200))}"
+
+
+def recordatorios(issues: list[dict], prs: list[dict], maximo: int = 5) -> list[tuple]:
+    """Tarjetas con botones de lo que sigue esperando a Felipe (se reenvían en el cierre)."""
+    out = []
+    for i in sorted(issues, key=lambda x: x["number"]):
+        est = _etq(i, "estado")
+        if (i.get("state") or "OPEN").upper() == "OPEN" and est in QUE_DECIDIR:
+            out.append(("issue", "🔁 " + texto_issue(i, est), i["number"], i.get("html_url") or i.get("url")))
+    for p in prs:
+        if not p.get("title", "").startswith("[rutina]"):
+            out.append(("pr", f"🔁 🔀 <b>PR #{p['number']} {html.escape(p['title'])}</b>\n\n<b>¿Se fusiona?</b>",
+                        p["number"], p.get("html_url") or p.get("url")))
+    return out[:maximo]
 
 
 def texto_cierre(issues: list[dict], prs: list[dict], hechos: list[str], hoy: dt.date) -> str | None:
@@ -100,6 +129,9 @@ def main(argv: list[str] | None = None) -> int:
     pc.add_argument("--issues", type=Path, required=True)
     pc.add_argument("--prs", type=Path, required=True)
     pc.add_argument("--hechos", type=Path, required=True)
+    pc.add_argument("--recordar", action="store_true", help="reenviar las tarjetas de lo pendiente")
+    pm = sub.add_parser("comentario", help="evento `issue_comment` de GitHub")
+    pm.add_argument("evento", type=Path)
     a = p.parse_args(argv)
     leer = lambda r: json.loads(r.read_text(encoding="utf-8"))  # noqa: E731
     if a.cmd == "issue":
@@ -110,6 +142,13 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         i = ev["issue"]
         enviar("issue", texto_issue(i, estado), i["number"], i.get("html_url"))
+    elif a.cmd == "comentario":
+        ev = leer(a.evento)
+        texto = texto_comentario(ev["issue"], ev["comment"])
+        if texto is None:
+            print("comentario sin la marca de Telegram: no se reenvía")
+            return 0
+        enviar("aviso", texto, url=ev["comment"].get("html_url"))
     elif a.cmd == "pr":
         pr = leer(a.pr)
         enviar("pr", texto_pr(pr), pr["number"], pr.get("html_url"))
@@ -121,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
             print("sin movimiento ni pendientes: no se manda cierre")
             return 0
         enviar("aviso", texto)
+        if a.recordar:
+            for tipo, t, n, url in recordatorios(leer(a.issues), leer(a.prs)):
+                enviar(tipo, t, n, url)
     return 0
 
 

@@ -29,8 +29,8 @@ jobs:
           PYTHONPATH: src
         run: |
           desde=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-          gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title,labels,state > issues.json
-          gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,title > prs.json
+          gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 200 --json number,title,labels,state,body,url > issues.json
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,title,url > prs.json
           python - "$desde" <<'PY'
           import json, subprocess, sys
           desde = sys.argv[1]
@@ -53,4 +53,5 @@ jobs:
               hechos.append(f"evaluada: {f.rsplit('/', 1)[-1].removesuffix('.json')}")
           json.dump(hechos, open("hechos.json", "w"), ensure_ascii=False)
           PY
-          python -m bt.operador cierre --issues issues.json --prs prs.json --hechos hechos.json
+          # Con --recordar, después del resumen se reenvían las tarjetas (con botones) de lo pendiente.
+          python -m bt.operador cierre --issues issues.json --prs prs.json --hechos hechos.json --recordar
