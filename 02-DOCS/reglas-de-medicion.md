@@ -113,6 +113,10 @@ mitad del avgR). Si la spec pone `criterio_aprobacion.estabilidad_minima` (p. ej
 cumplirla rechaza sin gastar el holdout. Nunca se usa para elegir parámetros: los vecinos no se
 "prueban para quedarse con el mejor".
 
+**Desde el 2026-11-08 decide por defecto** (Felipe, issue #46): la PLANTILLA trae
+`estabilidad_minima: 0.5`. Es un piso contra lo claramente frágil, no una calibración fina: las dos
+evaluaciones que la midieron conservaron 82–91%. Las specs ya evaluadas no cambian.
+
 ## Corrección por número de pruebas (desde 2026-11-04)
 
 Con ±2 EE, de cada 40 ideas sin edge una pasa por azar. Si en una familia se prueban muchas
