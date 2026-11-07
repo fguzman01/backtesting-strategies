@@ -20,12 +20,6 @@ Nada.
 | [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) | Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos | pedido | P2 | — | aprobada |
 | [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | aprobada |
 
-## Requiere sesión con Felipe
-
-| # | Tarea | Tipo | Prio | Riesgo | Estado |
-|---|---|---|---|---|---|
-| [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) | Fijar el umbral de estabilidad de parámetros por defecto | mejora | P2 | medio | requiere-sesion |
-
 ## Hechas (últimas 20)
 
-Todavía ninguna desde que se usan issues.
+- [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) Fijar el umbral de estabilidad de parámetros por defecto (2026-11-07)
