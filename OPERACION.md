@@ -1,9 +1,13 @@
-# OPERACION.md — Marco de operación autónoma
+# OPERACION.md — Marco de operación autónoma en la factory
 
-> **Borrador para revisar (2026-11-06).** Es el marco que Felipe va a usar en todos sus proyectos
-> con IA (esta factory, btc-signal-web, Sitbox). Esta primera versión se escribe acá porque es el
-> proyecto más ordenado. Las partes **[marco]** se copian tal cual a otro proyecto; las
-> **[proyecto]** se completan en cada uno.
+> **El marco genérico y canónico está en `MARCO.md` de fguzman01/operador** (v1, 2026-11-08): principios,
+> ciclo de vida, roles genéricos, Telegram, autonomía, cómo llevarlo a otro proyecto e historial.
+> Este archivo es la **instancia de la factory**: cómo se aplica acá, con sus agentes, su horario y sus
+> decisiones. Las partes **[marco]** repiten lo genérico para leerlo todo junto; si difieren, manda
+> `MARCO.md`. Al cambiar algo del marco, se actualizan los dos.
+
+**Estado (2026-11-08): fases 1 a 4 en marcha** (§9). Grupo de Telegram «Factory Backtesting»; rutinas
+del marco: diseñador 04:45 y 19:45, desarrollador 05:15 lun–vie, PO domingo 07:47.
 
 ## 1. El problema [marco]
 
