@@ -61,7 +61,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `.claude/agents/puente.md` | Rutina semanal: trae el informe del paper del bot (rama `factory-paper`) y los issues `retro` → `02-DOCS/retroalimentacion.md` |
 | `src/bt/puente.py` | Lee el informe del bot, lo resume y lo anota; el auditor avisa si una aprobada rinde peor en paper |
 | `.github/workflows/sincronizar-bot.yml` | Al cambiar `approved.json`, abre solo el PR con la copia en btc-signal-web (`dev`) |
-| `OPERACION.md` | **Marco de operación autónoma** (roles diarios, Telegram, qué pasa solo y qué pide ✅). Reutilizable en todos los proyectos |
+| `OPERACION.md` | **Marco de operación autónoma** en la factory (roles diarios, Telegram, qué pasa solo y qué pide ✅). El marco genérico y canónico está en `MARCO.md` de fguzman01/operador |
 | `src/bt/operador.py` | Tarjetas y cierre del día al grupo de Telegram vía el operador (`tarjetas.yml`, `cierre.yml` 21:00) |
 | `.operador.yml` | Configuración del marco para este repo: etiquetas de los issues, grupo de Telegram |
 | `.claude/agents/disenador.md` | Diseñador + atención de pedidos (04:45 y 19:45): plan en el issue → `estado:diseñada` → tarjeta a Felipe |
