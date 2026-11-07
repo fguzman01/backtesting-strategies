@@ -67,7 +67,7 @@ criterio_aprobacion:        # todo en desarrollo; si pasa, se mira el holdout UN
   concluyente: true         # muestra, modelos de llenado y tramos coherentes (bt.metrics)
   tramos_positivos_minimo: 3
   supera_nulo_p95: true     # le gana al percentil 95 de entradas al azar
-  estabilidad_minima: null  # p. ej. 0.5: con parámetros ×0.8 y ×1.2 conserva ≥ 50% del avgR (si no, sólo informa)
+  estabilidad_minima: 0.5   # con parámetros ×0.8 y ×1.2 conserva ≥ 50% del avgR; si no, rechaza sin mirar el holdout (Felipe, 2026-11-08)
   holdout:                  # se mira UNA vez; endurecido el 2026-11-02 (ver reglas-de-medicion.md)
     avgRNeto_positivo: true
     aguanta_costos: true          # con costos ×1.5 sigue > 0
