@@ -20,6 +20,7 @@ import os
 import sys
 import urllib.request
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "fguzman01/backtesting-strategies")
 QUE_DECIDIR = {"propuesta": "¿Se hace?", "diseñada": "¿Se implementa este plan?"}
@@ -113,7 +114,9 @@ def main(argv: list[str] | None = None) -> int:
         pr = leer(a.pr)
         enviar("pr", texto_pr(pr), pr["number"], pr.get("html_url"))
     else:
-        texto = texto_cierre(leer(a.issues), leer(a.prs), leer(a.hechos), dt.date.today())
+        # El cierre corre a las 00:00 UTC, que en Chile todavía es el día anterior (21:00).
+        hoy = dt.datetime.now(ZoneInfo("America/Santiago")).date()
+        texto = texto_cierre(leer(a.issues), leer(a.prs), leer(a.hechos), hoy)
         if texto is None:
             print("sin movimiento ni pendientes: no se manda cierre")
             return 0
