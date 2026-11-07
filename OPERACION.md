@@ -120,13 +120,11 @@ termina antes de que Felipe despierte. Las tarjetas lo esperan en la mañana.
 | Hora (Chile) | Rol | Modelo | Corre sólo si |
 |---|---|---|---|
 | 03:37 | Investigador (ya existe) | el de siempre | — |
-| 04:15 | Analista liviano | sonnet | hubo cambios desde ayer |
-| 04:45 | Diseñador | sonnet | hay un issue `aprobada` |
-| 05:15 | Desarrollador + revisor de código (subagente) | el de siempre | hay un `diseñada` aprobado y nada trabado |
-| 07:45 | Atención de pedidos (1.ª) | sonnet | hay pedidos nuevos |
-| 19:45 | Atención de pedidos (2.ª, abre la ventana nocturna) | sonnet | hay pedidos nuevos |
+| 04:45 y 19:45 | Diseñador + atención de pedidos (`disenador.md`) | sonnet | hay un issue `aprobada` (mejoras aprobadas y pedidos) |
+| 05:15 (lun–vie) | Desarrollador + revisor de código (`desarrollador.md`, `revisor-codigo.md`) | el de siempre | hay un issue `en-curso` (plan aprobado) y nada trabado |
 | 21:00 | Cronista | — (Actions) | hubo movimiento o hay decisiones pendientes |
 
+- **El analista diario no se creó:** el PO semanal (domingo) alcanza por ahora; se suma si el backlog se queda corto.
 - **Pedidos dos veces al día, no cada hora:** cada hora abriría ventanas en el horario de Felipe y gastaría
   sin necesidad. Algo urgente se pide en una sesión.
 - **Fines de semana:** el sábado y el domingo la madrugada ya trae explorador, auditor y PO. El
@@ -158,8 +156,8 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
 |---|---|---|
 | 1 | Etiquetas en GitHub; migrar `backlog.md` a issues; `backlog.md` pasa a generarse | Los B-xx pendientes son issues; el resumen los lee de ahí (**código hecho 2026-11-06**: `.operador.yml`, `etiquetas.yml`, `bt.backlog`, `backlog.yml`, PO con issues) |
 | 2 | Operador mínimo: grupo nuevo, tarjetas de propuesta y PR con ✅/❌, pedidos como issues | Aprobar #N desde Telegram cambia su etiqueta; un mensaje libre abre un issue (**hecho 2026-11-06**: fguzman01/operador en Railway, grupo «Factory · Operación», pedido #49; tarjetas `tarjetas.yml` y cierre `cierre.yml`) |
-| 3 | Diseñador, desarrollador y revisor de código como rutinas, más el liberador | Un issue aprobado llega a PR sin sesión manual |
-| 4 | Atención de pedidos y cronista | Un pedido escrito a las 10:00 tiene plan en el grupo antes de las 12:00 |
+| 3 | Diseñador, desarrollador y revisor de código como rutinas, más el liberador | Un issue aprobado llega a PR sin sesión manual (**código hecho 2026-11-08**: agentes `disenador`, `desarrollador`, `revisor-codigo`; el liberador son las tarjetas de PR + auto-merge) |
+| 4 | Atención de pedidos y cronista | Un pedido tiene plan en el grupo en la siguiente corrida del diseñador (04:45 o 19:45) (**hecho 2026-11-08**: el diseñador atiende los pedidos; respuestas con `<!-- telegram -->` llegan al grupo; el cierre reenvía las tarjetas pendientes) |
 | 5 | Copiar el marco a btc-signal-web y Sitbox (`OPERACION.md` + `.operador.yml`) | Cada uno con su grupo y su ciclo diario |
 
 ## 10. Decisiones tomadas (2026-11-06)

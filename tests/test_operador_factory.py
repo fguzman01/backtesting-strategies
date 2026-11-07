@@ -37,3 +37,21 @@ def test_cli_sin_operador_no_falla(tmp_path, monkeypatch, capsys):
     ev.write_text(json.dumps({"label": {"name": "tipo:mejora"}, "issue": issue(45, "Motor", "propuesta")}))
     assert operador.main(["issue", str(ev)]) == 0
     assert "no pide decisión" in capsys.readouterr().out
+
+
+def test_tarjeta_del_plan_muestra_el_plan():
+    i = issue(51, "Algo", "diseñada")
+    i["body"] = "**Problema:** largo " + "x" * 700 + "\n\n## Plan\n**Qué cambia:** esto"
+    t = operador.texto_issue(i, "diseñada")
+    assert "## Plan" in t and "Qué cambia" in t and "xxxx" not in t and "¿Se implementa este plan?" in t
+
+
+def test_comentarios_marcados_y_recordatorios():
+    i = issue(49, "Pedido", "aprobada")
+    assert operador.texto_comentario(i, {"body": "sin marca"}) is None
+    t = operador.texto_comentario(i, {"body": "<!-- telegram -->\nLa respuesta <b>"})
+    assert "#49 Pedido" in t and "La respuesta &lt;b&gt;" in t and "telegram" not in t
+    r = operador.recordatorios([issue(45, "A", "propuesta"), issue(49, "B", "aprobada"), issue(46, "C", "diseñada")],
+                               [{"number": 60, "title": "PR x", "url": "u"}, {"number": 61, "title": "[rutina] y"}])
+    assert [(x[0], x[2]) for x in r] == [("issue", 45), ("issue", 46), ("pr", 60)]
+    assert r[0][1].startswith("🔁")
