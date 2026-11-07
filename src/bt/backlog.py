@@ -55,16 +55,14 @@ def generar(issues: list[dict]) -> str:
            "## Recomendadas para esta semana", ""]
     out += [f"{n}. **#{i['number']}** {i['title']}" for n, i in enumerate(rec, 1)] or ["Nada pendiente."]
     espera = sorted((i for i in abiertos if estado[i["number"]] in ESPERA_FELIPE), key=_clave)
+    cab_d = "| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |\n|---|---|---|---|---|---|---|"
     out += ["", "## Espera tu decisión", ""]
-    out += ([cab] + [_fila(i) + f" ← {ESPERA_FELIPE[estado[i['number']]]}" for i in espera]) if espera else ["Nada."]
+    out += ([cab_d] + [_fila(i) + f" {ESPERA_FELIPE[estado[i['number']]]} |" for i in espera]) if espera else ["Nada."]
     trab = sorted((i for i in abiertos if estado[i["number"]] in ("aprobada", "en-curso")), key=_clave)
     out += ["", "## En marcha", ""] + (([cab] + [_fila(i) for i in trab]) if trab else ["Nada."])
     ses = [i for i in abiertos if estado[i["number"]] == "requiere-sesion"]
     if ses:
         out += ["", "## Requiere sesión con Felipe", "", cab] + [_fila(i) for i in sorted(ses, key=_clave)]
-    out += ["", "## Pendientes", ""]
-    resto = sorted((i for i in abiertos if estado[i["number"]] == "propuesta"), key=_clave)
-    out += ([cab] + [_fila(i) for i in resto]) if resto else ["Nada."]
     hechas = [i for i in cerrados if _etq(i, "estado") != "descartada"][:20]
     desc = [i for i in cerrados if _etq(i, "estado") == "descartada"][:20]
     out += ["", "## Hechas (últimas 20)", ""] + (

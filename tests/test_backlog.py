@@ -18,6 +18,9 @@ def test_backlog_generado(tmp_path):
     assert rec.index("#4") < rec.index("#2") < rec.index("#3") and "#1" not in rec
     espera = md.split("## Espera tu decisión")[1].split("## ")[0]
     assert "fusionar o rechazar" in espera and "#2" not in espera
+    fila = next(x for x in espera.splitlines() if "#4" in x)
+    assert fila.endswith("fusionar o rechazar el PR |") and fila.count("|") == 8  # 7 columnas, dentro de la tabla
+    assert "## Pendientes" not in md and md.count("[#1]") == 1                    # cada tarea aparece una vez
     assert "Vieja" in md.split("## Hechas")[1] and "No" in md.split("## Descartadas")[1]
     (tmp_path / "02-DOCS").mkdir()
     (tmp_path / "02-DOCS" / "backlog.md").write_text(md)

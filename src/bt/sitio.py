@@ -303,9 +303,11 @@ def secciones_extra(base: Path) -> tuple[str, list[tuple[str, str]]]:
     back = _leer(docs / "backlog.md")
     if back:
         rec = back.split("## Recomendadas para esta semana", 1)[-1].split("\n## ", 1)[0]
-        pend = back.split("## Pendientes", 1)[-1].split("\n## ", 1)[0] if "## Pendientes" in back else ""
-        agregar("backlog", "Backlog del sistema", "Mejoras de la factory misma, priorizadas por el PO "
-                "(semanal); Felipe decide.", "### Recomendadas\n" + rec + "\n### Pendientes\n" + pend)
+        def seccion(titulo):
+            return back.split(f"## {titulo}", 1)[-1].split("\n## ", 1)[0] if f"## {titulo}" in back else ""
+        agregar("backlog", "Backlog del sistema", "Mejoras de la factory misma (GitHub Issues); Felipe decide desde "
+                "Telegram.", "### Recomendadas\n" + rec + "\n### Espera tu decisión\n" + seccion("Espera tu decisión")
+                + "\n### En marcha\n" + seccion("En marcha"))
     return "".join(partes), nav
 
 
