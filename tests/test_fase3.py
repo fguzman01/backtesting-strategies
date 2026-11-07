@@ -356,7 +356,7 @@ def test_sitio_secciones_de_docs(tmp_path):
         "| # | Idea | a | b | c | Estado |\n|---|---|---|---|---|---|\n| 7 | <b>x</b> | 1 | 2 | 3 | en cola |\n"
         "| 8 | vieja | 1 | 2 | 3 | descartada |\n")
     (tmp_path / "02-DOCS" / "backlog.md").write_text(
-        "## Recomendadas para esta semana\n\n1. **B-01** Algo\n\n## Pendientes\n")
+        "## Recomendadas para esta semana\n\n1. **B-01** Algo\n\n## Espera tu decisión\n\nNada.\n")
     pagina = sitio.generar(base)
     assert 'href="#adelante"' in pagina and 'id="cola"' in pagina and 'id="backlog"' in pagina
     assert "&lt;b&gt;x&lt;/b&gt;" in pagina and "vieja" not in pagina and "<b>B-01</b>" in pagina
