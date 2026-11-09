@@ -314,6 +314,8 @@ def chequear_ficha(raiz: Path) -> Chequeo:
               for e in entradas if any(e.get(c) is None for c in FICHA)]
     avisos += [f"{e.get('id')}: es variante (n_pruebas={e['n_pruebas']}) y no trae comparación con la madre"
                for e in entradas if (e.get("n_pruebas") or 1) > 1 and not e.get("comparacion_madre")]
+    avisos += [f"{e.get('id')}: medida sólo en tokens vivos y sin `sin_sesgo` (universo dinámico, bt.universo)"
+               for e in entradas if not e.get("universo_dinamico_top") and not e.get("sin_sesgo")]
     return Chequeo("Ficha de cada aprobada completa", "btc-signal-web (2026-11-02)", AVISO if avisos else OK, avisos)
 
 

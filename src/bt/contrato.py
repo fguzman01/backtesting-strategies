@@ -5,6 +5,12 @@ PR) y la lee con tipos fijos en `src/config/factory.ts`. Si el formato cambia ac
 el bot deja de entender lo aprobado: por eso se valida en el CI.
 
     python -m bt.contrato            # valida results/approved.json; sale con 1 si no cumple
+
+Campos opcionales (retrocompatibles: el bot que no los conoce los ignora):
+- `sin_sesgo` (desde 2026-11-09, #63): la misma regla medida en el universo sin sesgo de supervivencia
+  (`bt.universo`). Va AL LADO de `desarrollo`/`holdout`, que no cambian; **si existe, es el número que
+  decide** cuánto confiar (Felipe, 2026-11-09). `{fuente, universo, desarrollo, holdout}`.
+- `comparacion_madre`: hija − madre en el mismo período (null si la spec no declaró madre).
 """
 
 from __future__ import annotations
@@ -22,6 +28,15 @@ CAMPOS = {
 }
 NIVELES = {"aprobada", "observacion"}  # observacion = sólo paper, para observar
 METRICAS = {"n": int, "avgRNeto": (int, float), "ic95": (list, type(None))}
+
+
+def _metricas(m: object, donde: str) -> list[str]:
+    m = m if isinstance(m, dict) else {}
+    errores = [f"{donde}.{campo}: falta o tiene otro tipo" for campo, tipo in METRICAS.items()
+               if not isinstance(m.get(campo), tipo)]
+    if isinstance(m.get("ic95"), list) and len(m["ic95"]) != 2:
+        errores.append(f"{donde}.ic95: tiene que tener 2 valores")
+    return errores
 
 
 def validar(datos: dict) -> list[str]:
@@ -46,12 +61,17 @@ def validar(datos: dict) -> list[str]:
             errores.append(f"{donde}.id: repetido ({e.get('id')})")
         ids.add(e.get("id"))
         for tramo in ("desarrollo", "holdout"):
-            m = e.get(tramo) if isinstance(e.get(tramo), dict) else {}
-            for campo, tipo in METRICAS.items():
-                if not isinstance(m.get(campo), tipo):
-                    errores.append(f"{donde}.{tramo}.{campo}: falta o tiene otro tipo")
-            if isinstance(m.get("ic95"), list) and len(m["ic95"]) != 2:
-                errores.append(f"{donde}.{tramo}.ic95: tiene que tener 2 valores")
+            errores += _metricas(e.get(tramo), f"{donde}.{tramo}")
+        ss = e.get("sin_sesgo")
+        if ss is not None:
+            if not isinstance(ss, dict):
+                errores.append(f"{donde}.sin_sesgo: tiene que ser un objeto o null")
+            else:
+                for campo in ("fuente", "universo"):
+                    if not isinstance(ss.get(campo), str):
+                        errores.append(f"{donde}.sin_sesgo.{campo}: falta o no es str")
+                for tramo in ("desarrollo", "holdout"):
+                    errores += _metricas(ss.get(tramo), f"{donde}.sin_sesgo.{tramo}")
         if isinstance(e.get("simbolos"), list) and not all(isinstance(s, str) for s in e["simbolos"]):
             errores.append(f"{donde}.simbolos: tienen que ser textos")
         if isinstance(e.get("config"), dict) and not isinstance(e["config"].get("timeout_velas"), int):

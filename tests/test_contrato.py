@@ -40,3 +40,23 @@ def test_el_approved_json_del_repo_cumple():
     if ruta.exists():
         assert validar(json.loads(ruta.read_text())) == []
     assert main([str(ruta)]) == 0
+
+
+def test_sin_sesgo_es_opcional_pero_si_viene_se_valida():
+    d = copy.deepcopy(VALIDA)
+    d["estrategias"][0]["sin_sesgo"] = None
+    assert validar(d) == []
+    d["estrategias"][0]["sin_sesgo"] = {"fuente": "s", "universo": "dinamico top 20",
+                                        "desarrollo": {"n": 9, "avgRNeto": 0.1, "ic95": [0.0, 0.2]},
+                                        "holdout": {"n": 4, "avgRNeto": 0.0, "ic95": None}}
+    assert validar(d) == []
+    d["estrategias"][0]["sin_sesgo"]["desarrollo"]["ic95"] = [0.1]
+    del d["estrategias"][0]["sin_sesgo"]["universo"]
+    errores = " ".join(validar(d))
+    assert "sin_sesgo.desarrollo.ic95" in errores and "sin_sesgo.universo" in errores
+
+
+def test_la_aprobada_vigente_trae_el_numero_sin_sesgo():
+    datos = json.loads(Path("results/approved.json").read_text())
+    for e in datos["estrategias"]:
+        assert e.get("universo_dinamico_top") or e.get("sin_sesgo"), e["id"]

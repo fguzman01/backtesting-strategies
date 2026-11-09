@@ -98,6 +98,11 @@ Cualquier "no" es un hallazgo: el backtest no mide lo que se opera. Si hay opera
 proponé comparar paper contra backtest en la misma ventana (btc-signal-web tiene
 `scripts/comparar-paper-backtest.py`); la brecha simulado-vivo de su historia es la razón de esto.
 
+**Umbrales de seguimiento.** Si una aprobada tiene umbrales de revisión, retiro o promoción fijados en
+`decisiones.md` (TREND_4H_T7 desde el 2026-11-09), decí en qué punto está (trades cerrados en paper,
+meses de prueba hacia adelante) y si ya se cumple alguno. Si se cumple, es la mejora n.º 1 del informe
+y se le avisa a Felipe; no se cambian los umbrales ni el nivel por cuenta propia.
+
 ### 5. Mejoras
 
 Máximo 5, ordenadas por impacto en la confiabilidad. Cada una: qué cambiar, dónde, por qué (qué
