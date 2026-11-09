@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  issues: read
 
 jobs:
   resumen:
@@ -34,8 +35,9 @@ jobs:
             cp bot/factory-paper.json informe.json
           fi
           gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,title > prs.json || echo "[]" > prs.json
+          gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 500 --json number,title,labels > issues.json || echo "[]" > issues.json
       - name: Enviar
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python -m bt.resumen --informe-bot informe.json --prs prs.json --enviar
+        run: python -m bt.resumen --informe-bot informe.json --prs prs.json --issues issues.json --enviar

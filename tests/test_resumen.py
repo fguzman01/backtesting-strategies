@@ -55,3 +55,13 @@ def test_auditor_exige_revision_de_specs_nuevas(tmp_path):
     (tmp_path / "specs" / "revisiones" / "2026-11-06-nueva.md").write_text("veredicto: bloquea\nx")
     assert chequear_revisiones(tmp_path, {}).estado == OK
     assert chequear_revisiones(tmp_path, {"2026-11-06-nueva": {}}).estado == AVISO
+
+
+def test_resumen_cuenta_issues_abiertos(tmp_path):
+    (tmp_path / "02-DOCS").mkdir()
+    issues = [{"number": 1, "title": "a", "labels": [{"name": "estado:diseñada"}]},
+              {"number": 2, "title": "b", "labels": [{"name": "estado:en-curso"}]}]
+    hoy = dt.date(2026, 11, 9)
+    assert "Issues abiertos: 2 (1 esperan tu ✅)" in resumen.armar(tmp_path, hoy, issues=issues)
+    assert "Issues abiertos: 0" in resumen.armar(tmp_path, hoy, issues=[])
+    assert "Issues abiertos" not in resumen.armar(tmp_path, hoy)

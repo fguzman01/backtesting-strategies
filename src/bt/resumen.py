@@ -69,7 +69,8 @@ def recomendadas(raiz: Path) -> list[str]:
 
 
 def armar(raiz: Path = Path("."), hoy: dt.date | None = None, informe_bot: dict | None = None,
-          prs: list[dict] | None = None, auditoria: list | None = None) -> str:
+          prs: list[dict] | None = None, auditoria: list | None = None,
+          issues: list[dict] | None = None) -> str:
     hoy = hoy or dt.date.today()
     desde = hoy - dt.timedelta(days=7)
     e = html.escape
@@ -126,6 +127,10 @@ def armar(raiz: Path = Path("."), hoy: dt.date | None = None, informe_bot: dict 
     pendientes = [p for p in (prs or []) if not p.get("title", "").startswith("[rutina]")]
     lineas += ["", f"<b>Te esperan: {len(pendientes)} PR</b>"]
     lineas += [f"▸ #{p['number']} {e(p['title'][:80])}" for p in pendientes[:6]]
+    if issues is not None:
+        esperan = [i for i in issues if any((x if isinstance(x, str) else x.get("name")) == "estado:diseñada"
+                                            for x in i.get("labels", []))]
+        lineas.append(f"Issues abiertos: {len(issues)}" + (f" ({len(esperan)} esperan tu ✅)" if esperan else ""))
     if c.get("propuesta"):
         lineas.append(f"▸ {len(c['propuesta'])} ideas propuestas para revisar en 02-DOCS/ideas.md")
     lineas += ["", f"📊 {PAGINA}"]
@@ -147,12 +152,13 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--informe-bot", type=Path, help="factory-paper.json de btc-signal-web")
     p.add_argument("--prs", type=Path, help="PRs abiertos (JSON de `gh pr list --json number,title`)")
+    p.add_argument("--issues", type=Path, help="issues abiertos (JSON de `gh issue list --json number,title,labels`)")
     p.add_argument("--enviar", action="store_true")
     a = p.parse_args(argv)
     from bt.auditoria import auditar
 
     leer = lambda r: json.loads(r.read_text()) if r and r.exists() and r.stat().st_size else None  # noqa: E731
-    texto = armar(informe_bot=leer(a.informe_bot), prs=leer(a.prs), auditoria=auditar())
+    texto = armar(informe_bot=leer(a.informe_bot), prs=leer(a.prs), issues=leer(a.issues), auditoria=auditar())
     print(texto)
     if a.enviar:
         token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
