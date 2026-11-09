@@ -10,13 +10,14 @@
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
+|---|---|---|---|---|---|---|
+| [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) | Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos | pedido | P1 | bajo | en-revision | fusionar o rechazar el PR |
 
 ## En marcha
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
-| [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) | Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos | pedido | P1 | bajo | en-curso |
 | [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) | Contar el holdout por familia de estrategias en bt.auditoria | mejora | P1 | medio | en-curso |
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
 | [#62](https://github.com/fguzman01/backtesting-strategies/issues/62) | Corregir el conteo de «aprobadas» del chequeo de snooping en bt.auditoria | bug | P2 | bajo | en-curso |
