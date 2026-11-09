@@ -274,3 +274,17 @@ def test_robustez_de_metrics():
     rob = robustez(ts, sacar_mejores=1)
     assert rob["sinTop"]["n"] == 20 and rob["sinTop"]["avgRNeto"] == pytest.approx(0.0)
     assert rob["costos"]["avgRNeto"] == pytest.approx((5.0 + 0.1 * 20) / 21 - 0.15)
+
+
+def test_ficha_avisa_si_falta_el_numero_sin_sesgo(tmp_path):
+    from bt.auditoria import chequear_ficha
+
+    base = {"id": "x", "nivel": "observacion", "n_pruebas": 1, "holdout_contaminado": False,
+            "preregistro": {}, "max_drawdown_r": {}}
+    (tmp_path / "results").mkdir()
+    ruta = tmp_path / "results" / "approved.json"
+    ruta.write_text(json.dumps({"estrategias": [base]}))
+    c = chequear_ficha(tmp_path)
+    assert c.estado == AVISO and "sin_sesgo" in " ".join(c.detalle)
+    ruta.write_text(json.dumps({"estrategias": [{**base, "sin_sesgo": {"fuente": "s"}}]}))
+    assert chequear_ficha(tmp_path).estado == OK
