@@ -245,6 +245,23 @@ def test_desgaste_del_holdout(repo):
     assert c.estado == AVISO and "renovación" in c.detalle[1]
 
 
+def test_desgaste_del_holdout_por_familia(repo):
+    for i in range(3):
+        escribir_ev(repo, ev(sid=f"2026-11-1{i}-t{i}", holdout={"global": {}}, modulo="tendencia_donchian"))
+    escribir_ev(repo, ev(sid="2026-11-20-o", holdout={"global": {}}, modulo="otra"))
+    c = por_nombre(auditoria.auditar(repo))["Desgaste del holdout"]
+    assert c.estado == AVISO
+    assert any("familia tendencia_donchian" in d and "3 veces" in d for d in c.detalle)
+    assert not any("familia otra" in d for d in c.detalle)
+    assert any("otra=1" in d for d in c.detalle)
+
+
+def test_holdout_una_mirada_por_familia_no_avisa(repo):
+    escribir_ev(repo, ev(sid="2026-11-10-a", holdout={"global": {}}, modulo="a"))
+    escribir_ev(repo, ev(sid="2026-11-11-b", holdout={"global": {}}, modulo="b"))
+    assert por_nombre(auditoria.auditar(repo))["Desgaste del holdout"].estado == OK
+
+
 def test_clon_superficial_no_inventa_violaciones(repo, tmp_path_factory):
     escribir_spec(repo)
     git(repo, "add", "-A")
