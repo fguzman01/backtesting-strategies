@@ -1,0 +1,78 @@
+id: 2026-11-10-continuacion-volumen-4h
+estado: pre-registrada
+fuente: "Idea #13 de 02-DOCS/ideas.md (en cola, Felipe 2026-11-09). Bianchi, Babiak & Dickerson, Trading volume and liquidity provision in cryptocurrency markets, J. Banking & Finance 142 (2022); sólo resumen leído (evidencia C)"
+pregunta: "¿Seguir en la misma dirección tras una vela de volumen anormal con un movimiento previo grande de 24 h (continuación por shock de volumen) tiene edge neto de comisión en 4h?"
+
+hipotesis: >
+  Mecanismo: el flujo informado o forzado que llega con volumen inusual se incorpora al precio de a
+  poco; quien pierde es el que provee liquidez a destiempo contra ese flujo. El volumen solo casi no
+  predice; la interacción volumen × retorno previo sí (resumen del paper, efecto a 12–24 h). Regla,
+  UNA sola configuración fijada antes de correr: en 4h, volumen de la vela > percentil 90 del
+  volumen de las 180 velas anteriores (30 días) Y movimiento de las últimas 6 velas (24 h) >= 2 ATR14
+  en valor absoluto; entrar en la dirección del movimiento en la apertura siguiente. Stop inicial 2 ATR
+  y trailing 2 ATR desde la entrada (lo mueve el motor); sin objetivo. Tope de 18 velas (3 días): el
+  efecto reportado es de 12–24 h, así que un tope largo sólo diluiría, y con trailing la mediana
+  esperada queda por debajo de los 7 días del alcance (la lección de chandelier-14d). La comisión en
+  R es chica porque el stop es de varios porcentos en 4h (0.1% por lado = comisión + deslizamiento, que
+  aquí importa: se entra justo tras un pico de volumen). Universo dinámico top 20 (sin sesgo de
+  supervivencia). Cupo 3 por dirección como TREND_4H. La madre de control es TREND_4H con tope de 7 días:
+  si la continuación por volumen no le gana a un Donchian común, no agrega nada. Una sola idea: ningún
+  umbral se elige mirando datos; la estabilidad ×0.8/×1.2 se mide sola. Riesgos: evidencia C sólo por
+  resumen, el efecto puede ser más corto que una vela de 4h, y solapa con TREND_4H (un movimiento de
+  2 ATR con volumen suele ser también una ruptura de Donchian).
+
+ya_probado: >
+  decisiones.md: reversión tras salto de 1h con volumen anómalo, RECHAZADA (2026-11-03,
+  n=1219, -0.185): acá se apuesta a la continuación y con retorno de 24 h, un mecanismo distinto, no una
+  variante de parámetros. Tendencia por canal (TREND_4H, aprobada en observación) usa la ruptura de la
+  propia serie, no el volumen. Funding contrarian y estacionalidad por hora: cerradas, no relacionadas.
+  Volumen × retorno como disparador no figura en decisiones.md.
+
+horizonte:
+  tipo: swing
+  duracion_mediana_esperada: "1-2 días (trailing 2 ATR, tope 3 días)"
+
+familia: continuacion_volumen
+medicion: false
+pruebas_previas: 0          # ninguna variante medida fuera de este repo
+holdout_contaminado: false  # el holdout se miró con TREND_4H (madre), no con esta regla; si la evaluación lo deduce, manda ella
+madre:
+  nombre: "TREND_4H con tope de 7 días"
+  modulo: tendencia_donchian
+  params: {entrada: 20, salida: 10, atr_n: 20, ema_n: 200, stop_atr: 2.0}
+  config: {timeout_velas: 42}
+
+estrategia:
+  modulo: continuacion_volumen
+  params: {ventana_vol: 180, pct_volumen: 0.9, retorno_velas: 6, umbral_atr: 2.0, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 4h
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 18         # 3 días en 4h
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
