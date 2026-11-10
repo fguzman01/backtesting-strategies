@@ -4,15 +4,13 @@
 
 ## Recomendadas para esta semana
 
-1. **#61** Contar el holdout por familia de estrategias en bt.auditoria
-2. **#45** Motor intrabar para scalps (5m–30m)
-3. **#62** Corregir el conteo de «aprobadas» del chequeo de snooping en bt.auditoria
+1. **#45** Motor intrabar para scalps (5m–30m)
+2. **#62** Corregir el conteo de «aprobadas» del chequeo de snooping en bt.auditoria
+3. **#68** Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo
 
 ## Espera tu decisión
 
-| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
-|---|---|---|---|---|---|---|
-| [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) | Contar el holdout por familia de estrategias en bt.auditoria | mejora | P1 | medio | en-revision | fusionar o rechazar el PR |
+Nada.
 
 ## En marcha
 
@@ -31,5 +29,6 @@
 
 ## Hechas (últimas 20)
 
+- [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) Contar el holdout por familia de estrategias en bt.auditoria (2026-11-10)
 - [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos (2026-11-09)
 - [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) Fijar el umbral de estabilidad de parámetros por defecto (2026-11-07)
