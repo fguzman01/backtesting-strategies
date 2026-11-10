@@ -256,6 +256,17 @@ def test_desgaste_del_holdout_por_familia(repo):
     assert any("otra=1" in d for d in c.detalle)
 
 
+def test_familia_usa_el_modulo_de_la_madre(repo):
+    for i, mod in enumerate(["var_a", "var_b", "var_c"]):
+        e = ev(sid=f"2026-11-1{i}-m{i}", holdout={"global": {}}, modulo=mod)
+        e["spec"]["madre"] = {"modulo": "base"}
+        escribir_ev(repo, e)
+    c = por_nombre(auditoria.auditar(repo))["Desgaste del holdout"]
+    assert c.estado == AVISO
+    assert any("familia base" in d and "3 veces" in d for d in c.detalle)
+    assert not any("var_a" in d and "familia var_a" in d for d in c.detalle)
+
+
 def test_holdout_una_mirada_por_familia_no_avisa(repo):
     escribir_ev(repo, ev(sid="2026-11-10-a", holdout={"global": {}}, modulo="a"))
     escribir_ev(repo, ev(sid="2026-11-11-b", holdout={"global": {}}, modulo="b"))
