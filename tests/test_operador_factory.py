@@ -55,3 +55,28 @@ def test_comentarios_marcados_y_recordatorios():
                                [{"number": 60, "title": "PR x", "url": "u"}, {"number": 61, "title": "[rutina] y"}])
     assert [(x[0], x[2]) for x in r] == [("issue", 45), ("issue", 46), ("pr", 60)]
     assert r[0][1].startswith("🔁")
+
+
+def test_salud_avisa_lo_trabado_y_no_la_cola_del_desarrollador():
+    import datetime as dt
+
+    from bt.operador import salud, texto_cierre
+
+    ahora = dt.datetime(2026, 11, 10, 21, tzinfo=dt.UTC)
+    hace = lambda d: (ahora - dt.timedelta(days=d)).isoformat()  # noqa: E731
+    issues = [
+        {"number": 1, "labels": [{"name": "estado:aprobada"}], "updatedAt": hace(2)},      # diseñador no lo tomó
+        {"number": 2, "labels": [{"name": "estado:en-curso"}], "updatedAt": hace(9)},      # cola: no avisa
+        {"number": 3, "labels": [{"name": "estado:requiere-sesion"}], "updatedAt": hace(4)},
+        {"number": 4, "labels": [{"name": "estado:propuesta"}], "updatedAt": hace(1)},     # todavía a tiempo
+    ]
+    prs = [{"number": 9, "createdAt": hace(2)}, {"number": 10, "createdAt": hace(0)}]
+    runs = [{"workflowName": "ci"}, {"workflowName": "ci"}]
+    avisos = salud(issues, prs, runs, ahora)
+    texto = " ".join(avisos)
+    assert "#1 " in texto and "#3 " in texto and "#2 " not in texto and "#4 " not in texto
+    assert "PR #9" in texto and "PR #10" not in texto and "«ci» falló 2 veces" in texto
+    # Un aviso basta para mandar el cierre aunque no haya otro movimiento.
+    cierre = texto_cierre([], [], [], ahora.date(), avisos)
+    assert cierre and "Salud del proceso" in cierre
+    assert "nada trabado" in texto_cierre([], [], ["algo"], ahora.date(), [])

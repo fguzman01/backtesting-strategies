@@ -34,6 +34,7 @@ from bt.splits import HOLDOUT_DESDE
 
 RESULTADOS = Path("results")
 DECISIONES = Path("02-DOCS") / "decisiones.md"
+IDEAS = Path("02-DOCS") / "ideas.md"
 APROBADAS = "APROBADA"
 RECHAZADA = "RECHAZADA"
 NO_CONCLUYENTE = "NO_CONCLUYENTE"
@@ -640,6 +641,33 @@ def anotar_en_decisiones(ev: dict, ruta: Path = DECISIONES) -> None:
     ruta.write_text(texto.rstrip("\n") + "\n" + linea_decisiones(ev) + "\n", encoding="utf-8")
 
 
+def anotar_en_ideas(ev: dict, ruta: Path = IDEAS) -> bool:
+    """Cierra en la cola la idea que originó esta spec: a la fila cuyo estado dice «pre-registrada (<id>)»
+    le agrega «→ <veredicto>» con el número de desarrollo. Sin esa fila, o si ya está anotada, no hace nada."""
+    if not ruta.exists():
+        return False
+    lineas = ruta.read_text(encoding="utf-8").split("\n")
+    for i, linea in enumerate(lineas):
+        if not linea.startswith("| "):
+            continue
+        estado = linea.rstrip().rstrip("|").rsplit(" | ", 1)[-1]
+        if "pre-registrada" not in estado or f"({ev['id']}" not in estado or "→ **" in estado:
+            continue
+        g = ev["desarrollo"]["global"]
+        nivel = f", nivel {ev['nivel']}" if ev.get("nivel") == "observacion" else ""
+        veredicto = ev["veredicto"].lower().replace("_", " ")
+        nota = (f" → **{veredicto}**{nivel} ({ev['fecha'][:10]}): desarrollo n={g['n']} "
+                f"{g['avgRNeto']:+.3f} {_fmt_ic(g)}")
+        if ev["holdout"]:
+            nota += f", holdout n={ev['holdout']['global']['n']} {ev['holdout']['global']['avgRNeto']:+.3f}"
+        else:
+            nota += ", holdout no mirado"
+        lineas[i] = linea.rstrip().rstrip("|").rstrip() + nota.replace("|", "/") + " |"
+        ruta.write_text("\n".join(lineas), encoding="utf-8")
+        return True
+    return False
+
+
 def evaluada(sid: str, base: Path = RESULTADOS) -> bool:
     return (base / "evaluaciones" / f"{sid}.json").exists()
 
@@ -705,6 +733,7 @@ def main(argv: list[str] | None = None) -> int:
         guardar(ev)
         if DECISIONES.exists():
             anotar_en_decisiones(ev)
+        anotar_en_ideas(ev)
         evaluaciones.append(ev)
         print(f"{spec.id}: {ev['veredicto']}" + (f" — {'; '.join(ev['motivos'])}" if ev["motivos"] else ""))
 

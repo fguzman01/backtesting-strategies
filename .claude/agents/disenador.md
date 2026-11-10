@@ -25,9 +25,13 @@ También atendés los **pedidos** que Felipe escribe en el grupo de Telegram (is
      resultados o en Actions, y dejala como **comentario** que empiece con `<!-- telegram -->` (así le
      llega a Felipe al grupo). Después cerrá el issue como completado. No hace falta plan.
    - **Un cambio de proceso que toca dinero real, reglas de medición** (`02-DOCS/reglas-de-medicion.md`,
-     criterios por defecto) **o el contrato con el bot** (`approved.json`, `bt.contrato`): poné
-     `estado:requiere-sesion` y un comentario `<!-- telegram -->` explicando por qué conviene
-     conversarlo. No lo planifiques.
+     criterios por defecto) **o el formato del contrato con el bot** (campos o tipos de `approved.json`,
+     `bt.contrato`): poné `estado:requiere-sesion` y un comentario `<!-- telegram -->` explicando por qué
+     conviene conversarlo. No lo planifiques.
+     **No** cuenta como esto (Felipe, 2026-11-10): una tarea cuyo único paso con `approved.json` es
+     **completar un dato de la ficha** con un número ya medido, en su **propio PR** que fusiona Felipe.
+     Eso se planifica normal: el plan dice que ese paso va aparte y no lo hace el desarrollador. Tampoco
+     derives lo que Felipe ya decidió en sesión (el issue lo dice): planificalo.
    - **Un cambio talla L** (más de ~300 líneas o más de un día de trabajo): partilo en 2–3 issues S/M
      nuevos con `estado:aprobada` y el mismo `tipo:` y `prio:`, y comentá el original con los
      números; cerralo como completado.
