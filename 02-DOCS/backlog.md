@@ -10,13 +10,14 @@
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
+|---|---|---|---|---|---|---|
+| [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) | Contar el holdout por familia de estrategias en bt.auditoria | mejora | P1 | medio | en-revision | fusionar o rechazar el PR |
 
 ## En marcha
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
-| [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) | Contar el holdout por familia de estrategias en bt.auditoria | mejora | P1 | medio | en-curso |
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
 | [#62](https://github.com/fguzman01/backtesting-strategies/issues/62) | Corregir el conteo de «aprobadas» del chequeo de snooping en bt.auditoria | bug | P2 | bajo | en-curso |
 | [#68](https://github.com/fguzman01/backtesting-strategies/issues/68) | Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo | investigacion | P2 | medio | en-curso |
