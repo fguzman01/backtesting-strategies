@@ -54,7 +54,7 @@ jobs:
           # 1) Los resultados van SIEMPRE a main, también los de una aprobada: así la spec queda
           #    evaluada y ninguna corrida posterior vuelve a mirar su holdout (pasó con el #32 y el #36).
           git stash push -q -- results/approved.json 2>/dev/null || true
-          git add results 02-DOCS/decisiones.md
+          git add results 02-DOCS/decisiones.md 02-DOCS/ideas.md
           git commit -m "Evaluación: $IDS"
           git pull --rebase origin main  # main pudo avanzar mientras evaluaba
           git push origin HEAD:main

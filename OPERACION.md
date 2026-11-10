@@ -74,7 +74,7 @@ y, al pasar a `diseñada`, el **plan** como comentario.
 | **Tester** | CI, auditor determinista y chequeos del proyecto | En cada PR (Actions, sin tokens) | Estado del PR |
 | **Liberador** | Fusiona lo permitido sin ✅ (§6); lo demás lo manda a Telegram con [Fusionar] / [Rechazar] | Al pasar CI y revisión | Merge o tarjeta |
 | **Atención de pedidos** | Toma issues `tipo:pedido` (mensajes de Felipe), responde con un plan (vuelve al ciclo en `diseñada`) o con la respuesta si era una pregunta | Cada hora en horario activo | Respuesta en el grupo |
-| **Cronista** | Cierre del día: qué avanzó, qué espera decisión, qué viene mañana | Diario 21:00 (sin tokens) | Mensaje en el grupo |
+| **Cronista** | Cierre del día: qué avanzó, qué espera decisión, qué viene mañana y la **salud del proceso** (lo trabado) | Diario 21:00 (sin tokens) | Mensaje en el grupo |
 
 **[proyecto] Roles propios de la factory** (siguen como están): investigador (diario), explorador
 (sábado), auditor + puente (domingo), revisor de sesgos (en cada spec), evaluar / adelante / cartera
@@ -174,3 +174,4 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
 - **Tarjetas sin respuesta:** no vencen y se recuerdan en el cierre del día.
 - **Horario:** el ciclo de la factory corre en la ventana de la madrugada (§7). Confirmado por Felipe.
 - **Cierre del día:** sólo si hubo movimiento o hay decisiones pendientes. Confirmado por Felipe.
+- **Salud del proceso** (Felipe, 2026-11-10): el cierre avisa, sin Claude, de issues quietos más de lo esperado (`aprobada` 1 día; `propuesta`, `diseñada`, `en-revision`, `requiere-sesion` 3 días; `en-curso` no avisa porque es la cola), PRs abiertos hace más de 24 h y workflows que fallaron en el día. Un aviso basta para mandar el cierre. La revisión con Claude es semanal, no diaria.

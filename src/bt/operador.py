@@ -5,7 +5,8 @@ Arma el texto de las tarjetas y del cierre del día y los manda con `POST /tarje
 
     OPERADOR_URL=... OPERADOR_KEY=... python -m bt.operador issue evento.json
     python -m bt.operador pr pr.json
-    python -m bt.operador cierre --issues issues.json --prs prs.json --hechos hechos.json [--enviar]
+    python -m bt.operador cierre --issues issues.json --prs prs.json --hechos hechos.json \
+        [--runs runs.json] [--recordar]
 
 Sin OPERADOR_URL / OPERADOR_KEY imprime lo que mandaría y no falla.
 """
@@ -85,14 +86,47 @@ def recordatorios(issues: list[dict], prs: list[dict], maximo: int = 5) -> list[
     return out[:maximo]
 
 
-def texto_cierre(issues: list[dict], prs: list[dict], hechos: list[str], hoy: dt.date) -> str | None:
-    """Cierre del día: qué avanzó y qué espera a Felipe. None si no hubo nada (no se manda)."""
+# Salud del proceso (Felipe, 2026-11-10): lo que se trabó, sin gastar Claude. Días que puede estar un
+# issue sin movimiento en cada estado antes de avisar. `en-curso` no avisa: es la cola del desarrollador.
+TRABADO_DIAS = {"aprobada": 1, "propuesta": 3, "diseñada": 3, "en-revision": 3, "requiere-sesion": 3}
+PR_ABIERTO_HORAS = 24
+
+
+def _fecha(texto: str | None) -> dt.datetime | None:
+    try:
+        return dt.datetime.fromisoformat((texto or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def salud(issues: list[dict], prs: list[dict], runs: list[dict], ahora: dt.datetime) -> list[str]:
+    """Avisos de proceso: issues quietos más de lo esperado, PRs abiertos hace más de un día y workflows
+    que fallaron (la lista `runs` ya viene filtrada a las fallas de las últimas 24 h)."""
+    out = []
+    for i in sorted(issues, key=lambda x: x["number"]):
+        est, cuando = _etq(i, "estado"), _fecha(i.get("updatedAt") or i.get("updated_at"))
+        if est in TRABADO_DIAS and cuando and (ahora - cuando).days >= TRABADO_DIAS[est]:
+            out.append(f"#{i['number']} lleva {(ahora - cuando).days} días en {est} sin movimiento")
+    for p in sorted(prs, key=lambda x: x["number"]):
+        cuando = _fecha(p.get("createdAt") or p.get("created_at"))
+        if cuando and (ahora - cuando).total_seconds() >= PR_ABIERTO_HORAS * 3600:
+            out.append(f"PR #{p['number']} abierto hace {int((ahora - cuando).total_seconds() // 3600)} h")
+    for nombre in sorted({r.get("workflowName") or r.get("name") or "?" for r in runs}):
+        n = sum(1 for r in runs if (r.get("workflowName") or r.get("name") or "?") == nombre)
+        out.append(f"workflow «{nombre}» falló {n} {'veces' if n > 1 else 'vez'} en 24 h")
+    return out
+
+
+def texto_cierre(issues: list[dict], prs: list[dict], hechos: list[str], hoy: dt.date,
+                 avisos: list[str] | None = None) -> str | None:
+    """Cierre del día: qué avanzó, qué espera a Felipe y si algo se trabó. None si no hubo nada."""
     e = html.escape
+    avisos = avisos or []
     abiertos = [i for i in issues if (i.get("state") or "").upper() == "OPEN"]
     espera = [i for i in abiertos if _etq(i, "estado") in ("propuesta", "diseñada", "en-revision")]
     prs_abiertos = [p for p in prs if not p.get("title", "").startswith("[rutina]")]
     marcha = [i for i in abiertos if _etq(i, "estado") in ("aprobada", "en-curso")]
-    if not (hechos or espera or prs_abiertos):
+    if not (hechos or espera or prs_abiertos or avisos):
         return None
     lineas = [f"🌙 <b>Cierre del día</b> · {hoy:%d-%m}", ""]
     lineas += ["<b>Avanzó hoy</b>"] + ([f"• {e(h)}" for h in hechos] or ["• nada nuevo"])
@@ -103,6 +137,7 @@ def texto_cierre(issues: list[dict], prs: list[dict], hechos: list[str], hoy: dt
     if marcha:
         lineas += ["", "<b>Mañana se trabaja</b>"]
         lineas += [f"• #{i['number']} {e(i['title'])} — {_etq(i, 'estado')}" for i in marcha[:3]]
+    lineas += ["", "<b>Salud del proceso</b>"] + ([f"⚠️ {e(a)}" for a in avisos] or ["✅ nada trabado"])
     return "\n".join(lineas)
 
 
@@ -130,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
     pc.add_argument("--prs", type=Path, required=True)
     pc.add_argument("--hechos", type=Path, required=True)
     pc.add_argument("--recordar", action="store_true", help="reenviar las tarjetas de lo pendiente")
+    pc.add_argument("--runs", type=Path, help="workflows fallidos de las últimas 24 h (gh run list --json)")
     pm = sub.add_parser("comentario", help="evento `issue_comment` de GitHub")
     pm.add_argument("evento", type=Path)
     a = p.parse_args(argv)
@@ -154,8 +190,9 @@ def main(argv: list[str] | None = None) -> int:
         enviar("pr", texto_pr(pr), pr["number"], pr.get("html_url"))
     else:
         # El cierre corre a las 00:00 UTC, que en Chile todavía es el día anterior (21:00).
-        hoy = dt.datetime.now(ZoneInfo("America/Santiago")).date()
-        texto = texto_cierre(leer(a.issues), leer(a.prs), leer(a.hechos), hoy)
+        ahora = dt.datetime.now(ZoneInfo("America/Santiago"))
+        avisos = salud(leer(a.issues), leer(a.prs), leer(a.runs) if a.runs else [], ahora)
+        texto = texto_cierre(leer(a.issues), leer(a.prs), leer(a.hechos), ahora.date(), avisos)
         if texto is None:
             print("sin movimiento ni pendientes: no se manda cierre")
             return 0
