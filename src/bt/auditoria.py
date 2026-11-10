@@ -35,6 +35,7 @@ N_MIN_POR_TRAMO = 30
 BAJISTA = ("2022-01-01", "2022-12-31")  # el único año bajista completo de la historia disponible
 HUECOS_MAX_PCT = 0.5
 EVALUACIONES_CON_HOLDOUT_MAX = 10
+MIRADAS_HOLDOUT_FAMILIA_MAX = 3
 MARGEN_AL_BORDE_R = 0.03
 MAX_TIMEOUT_PCT = 0.5
 
@@ -387,6 +388,13 @@ def chequear_revisiones(raiz: Path, evs: dict[str, dict]) -> Chequeo:
                    avisos or ["todas las specs nuevas tienen su revisión"])
 
 
+def _familia(ev: dict) -> str:
+    """Estrategia base: el módulo de la madre si la spec declara una, si no el módulo propio."""
+    spec = ev.get("spec") or {}
+    madre = spec.get("madre") or {}
+    return (madre.get("modulo") or (spec.get("estrategia") or {}).get("modulo") or "?")
+
+
 def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     miradas = sorted(sid for sid, ev in evs.items() if ev.get("holdout") is not None)
     detalle = [f"el holdout (desde 2025-09-09) se miró en {len(miradas)} evaluación(es)"]
@@ -394,6 +402,15 @@ def chequear_desgaste_holdout(evs: dict[str, dict]) -> Chequeo:
     if len(miradas) >= EVALUACIONES_CON_HOLDOUT_MAX:
         estado = AVISO
         detalle.append("cada mirada lo gasta: planificar su renovación (un holdout nuevo con datos posteriores)")
+    familias: dict[str, list[str]] = {}
+    for sid in miradas:
+        familias.setdefault(_familia(evs[sid]), []).append(sid)
+    detalle.append("miradas por familia (madre.modulo si la spec la declara, si no estrategia.modulo): "
+                   + (", ".join(f"{f}={len(v)}" for f, v in sorted(familias.items())) or "ninguna"))
+    for f, v in sorted(familias.items()):
+        if len(v) >= MIRADAS_HOLDOUT_FAMILIA_MAX:
+            estado = AVISO
+            detalle.append(f"familia {f}: holdout mirado {len(v)} veces ({', '.join(v)}); cada variante nueva lo gasta")
     return Chequeo("Desgaste del holdout", "Regla 2", estado, detalle)
 
 
