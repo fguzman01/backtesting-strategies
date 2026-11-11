@@ -135,11 +135,15 @@ def chequear_holdout(raiz: Path, evs: dict[str, dict], bitacora: list[dict]) -> 
     return Chequeo("Holdout: sólo si pasa desarrollo, una vez", "Regla 2", estado, problemas + avisos)
 
 
+def _es_aprobada(ev: dict) -> bool:
+    """Aprobada u observación que va a approved.json: las de «sólo medición» no cuentan."""
+    return ev.get("veredicto") in ("APROBADA", "OBSERVACION") and not ev.get("soloMedicion")
+
+
 def chequear_aprobadas(raiz: Path, evs: dict[str, dict]) -> Chequeo:
     ruta = raiz / "results" / "approved.json"
     en_archivo = {e["id"] for e in json.loads(ruta.read_text())["estrategias"]} if ruta.exists() else set()
-    aprobadas = {sid for sid, ev in evs.items()
-                 if ev.get("veredicto") in ("APROBADA", "OBSERVACION") and not ev.get("soloMedicion")}
+    aprobadas = {sid for sid, ev in evs.items() if _es_aprobada(ev)}
     problemas = [f"{s}: está en approved.json sin evaluación APROBADA u OBSERVACION"
                  for s in sorted(en_archivo - aprobadas)]
     avisos = [f"{s}: aprobada/observación pero no está en approved.json (¿PR pendiente?)"
@@ -186,7 +190,7 @@ def chequear_snooping(evs: dict[str, dict]) -> Chequeo:
     por_modulo: dict[str, list[str]] = defaultdict(list)
     for sid, ev in evs.items():
         por_modulo[ev.get("spec", {}).get("estrategia", {}).get("modulo", "?")].append(sid)
-    aprobadas = sum(1 for ev in evs.values() if ev.get("veredicto") in ("APROBADA", "OBSERVACION"))
+    aprobadas = sum(1 for ev in evs.values() if _es_aprobada(ev))
     detalle = [f"{n} evaluaciones en total; por azar se esperan ~{n * FALSOS_POSITIVOS_POR_PRUEBA:.1f} que pasen "
                f"desarrollo sin tener edge (hay {aprobadas} aprobadas, que además pasaron holdout)"]
     estado = OK

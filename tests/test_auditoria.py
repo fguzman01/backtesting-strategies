@@ -149,6 +149,19 @@ def test_muchas_variantes_avisa_data_snooping(repo):
     assert c.estado == AVISO and "5 variantes" in c.detalle[1]
 
 
+def test_snooping_no_cuenta_solo_medicion_como_aprobadas(repo):
+    (repo / "results" / "approved.json").write_text(json.dumps({"estrategias": [{"id": "2026-11-01-a"}]}))
+    escribir_ev(repo, ev(sid="2026-11-01-a", veredicto="APROBADA", holdout={"global": {}}, dev_ok=True))
+    for sid in ("2026-11-02-m", "2026-11-03-m"):
+        escribir_ev(repo, ev(sid=sid, veredicto="OBSERVACION", holdout={"global": {}}, dev_ok=True)
+                    | {"soloMedicion": True})
+    chequeos = por_nombre(auditoria.auditar(repo))
+    snooping = chequeos["Cuántas pruebas se hicieron (data snooping)"]
+    assert "hay 1 aprobadas" in snooping.detalle[0]
+    # chequear_aprobadas mantiene su comportamiento: las soloMedicion no se exigen en approved.json
+    assert chequeos["approved.json coincide con las evaluaciones"].estado == OK
+
+
 def test_linea_de_decisiones_y_no_duplica(repo):
     e = ev()
     linea = linea_decisiones(e)
