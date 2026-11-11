@@ -4,8 +4,8 @@
 
 ## Recomendadas para esta semana
 
-1. **#45** Motor intrabar para scalps (5m–30m)
-2. **#68** Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo
+1. **#68** Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo
+2. **#45** Motor intrabar para scalps (5m–30m)
 3. **#47** Revisar la lista NO_CRIPTO del universo dinámico
 
 ## Espera tu decisión
@@ -16,8 +16,8 @@ Nada.
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
+| [#68](https://github.com/fguzman01/backtesting-strategies/issues/68) | Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo | investigacion | P1 | medio | en-curso |
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
-| [#68](https://github.com/fguzman01/backtesting-strategies/issues/68) | Comparar TREND_4H_T7 con su madre (TREND_4H sin tope) en desarrollo | investigacion | P2 | medio | en-curso |
 | [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | en-curso |
 
 ## Hechas (últimas 20)
