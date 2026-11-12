@@ -33,6 +33,11 @@ vez, sobre la candidata final. Una corrida que cruza el corte es "mixto" y no va
 Incidente: un `dias=365` relativo a la fecha de corrida cubría justo el período que horas después
 pasó a ser holdout; dos "resultados contradictorios" eran la misma ventana.
 
+**`solo_desarrollo: true`** (sólo con `medicion: true`): la spec mide únicamente el período de
+desarrollo. `evaluar()` no corre ningún tramo de holdout (ni hija, ni madre, ni estabilidad), el
+veredicto queda NO_CONCLUYENTE («holdout no mirado») y la corrida no cuenta como mirada del holdout.
+Sirve para comparar variantes de una familia cuyo holdout ya está agotado.
+
 ## Concluyente
 Mismas reglas que `btc-signal-web/src/lib/backtest/metrics.ts` (implementadas en `bt.metrics`).
 Un resultado **no** es concluyente si pasa cualquiera de estas:

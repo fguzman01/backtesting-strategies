@@ -368,3 +368,35 @@ def test_spec_de_medicion_nunca_va_a_approved(mundo, tmp_path):
     assert ev["veredicto"] == "APROBADA" and ev["soloMedicion"]
     ev_mod.guardar(ev, tmp_path)
     assert not (tmp_path / "approved.json").exists()
+
+
+def test_solo_desarrollo_sin_medicion_se_rechaza():
+    with pytest.raises(SpecInvalida, match="solo_desarrollo"):
+        desde_dict(con(solo_desarrollo=True))
+    assert desde_dict(con(medicion=True, solo_desarrollo=True)).solo_desarrollo
+
+
+def test_solo_desarrollo_nunca_mira_el_holdout(mundo, tmp_path, monkeypatch):
+    from bt import run as run_mod
+    from bt.splits import HOLDOUT_DESDE
+
+    cv, cf, _ = mundo
+    llamadas = []
+    original = run_mod.correr
+
+    def espia(*a, **k):
+        llamadas.append((k.get("holdout"), k.get("hasta")))
+        return original(*a, **k)
+
+    monkeypatch.setattr(run_mod, "correr", espia)
+    d = con(medicion=True, solo_desarrollo=True, madre={"nombre": "sin tope", "config": {"timeout_velas": 14}})
+    ev = ev_mod.evaluar(desde_dict(d), cv, cf, base=tmp_path)
+    assert llamadas and all(h is False for h, _ in llamadas)  # incluye la madre y los vecinos de estabilidad
+    assert ev["holdout"] is None and "holdout" not in ev["comparacionMadre"] and ev["soloDesarrollo"]
+    assert ev["veredicto"] == "NO_CONCLUYENTE" and any("holdout no mirado" in m for m in ev["motivos"])
+    assert ev["comparacionMadre"]["desarrollo"]["madre"] == "sin tope"
+    assert ev["desarrollo"]["ventana"][1] < str(HOLDOUT_DESDE)[:10]
+    ev_mod.guardar(ev, tmp_path)
+    assert not (tmp_path / "approved.json").exists()
+    # No cuenta como mirada del holdout para la familia.
+    assert not any(a["holdoutMirado"] for a in ev_mod.antecedentes(desde_dict(con(id="2026-11-02-otra")), tmp_path))

@@ -375,6 +375,10 @@ def evaluar(
         veredicto = veredicto_previo
     elif motivos:
         veredicto = RECHAZADA
+    elif spec.solo_desarrollo:
+        # Medición sólo en desarrollo: el holdout no se carga ni para la hija ni para la madre.
+        veredicto = NO_CONCLUYENTE
+        motivos.append("holdout no mirado (solo_desarrollo): sin holdout no hay veredicto de aprobación")
     else:
         # Pasó desarrollo: recién ahora, y una sola vez, el holdout.
         holdout = _tramo(spec, cargar_velas, cargar_funding, holdout=True)
@@ -423,6 +427,8 @@ def evaluar(
         "desarrollo": dev,
         "holdout": holdout,
     }
+    if spec.solo_desarrollo:
+        resultado["soloDesarrollo"] = True
     if spec.medicion:
         resultado["soloMedicion"] = True
     if veredicto in NIVEL and not spec.medicion:
