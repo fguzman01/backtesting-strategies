@@ -82,6 +82,7 @@ class Spec:
     holdout_contaminado: bool = False  # el período ya se miró con algo emparentado (p. ej. btc-signal-web)
     madre: dict | None = None  # estrategia de la que es variante: se corre al lado en el mismo período y tokens
     medicion: bool = False  # pregunta de medición, no estrategia para operar: nunca va a approved.json
+    solo_desarrollo: bool = False  # medición que nunca mira el holdout (ni de la hija, ni de la madre)
     pruebas_previas: int = 0  # variantes de la familia medidas FUERA de este repo (p. ej. btc-signal-web)
     dinamico_top: int | None = None  # universo dinámico: los `top` de cada mes (bt.universo)
     miembros: dict | None = field(default=None, repr=False)  # {símbolo: meses AAAA-MM}, lo resuelve evaluar
@@ -212,6 +213,10 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
     previas = d.get("pruebas_previas", 0)
     if not isinstance(previas, int) or previas < 0:
         raise SpecInvalida("`pruebas_previas` tiene que ser un entero ≥ 0 (variantes medidas fuera de este repo)")
+    solo_desarrollo = bool(d.get("solo_desarrollo", False))
+    if solo_desarrollo and not bool(d.get("medicion", False)):
+        raise SpecInvalida("`solo_desarrollo: true` sólo vale junto con `medicion: true` "
+                           "(una estrategia para operar tiene que pasar por el holdout)")
     cupo = c.get("max_por_direccion")
     if cupo is not None and (not isinstance(cupo, int) or cupo < 1):
         raise SpecInvalida("config.max_por_direccion tiene que ser un entero ≥ 1 (o no ponerlo)")
@@ -219,7 +224,7 @@ def desde_dict(d: dict, ruta: Path | None = None) -> Spec:
                 str(desde) if desde else None, criterio, ruta, d, historia_spot,
                 familia=familia, holdout_contaminado=bool(d.get("holdout_contaminado", False)),
                 madre=madre, max_por_direccion=cupo, pruebas_previas=previas, dinamico_top=top,
-                medicion=bool(d.get("medicion", False)))
+                medicion=bool(d.get("medicion", False)), solo_desarrollo=solo_desarrollo)
 
 
 def cargar(ruta: Path | str) -> Spec:
