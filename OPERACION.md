@@ -175,3 +175,4 @@ Servicio propio y chico, reutilizable en todos los proyectos (decisión de Felip
 - **Horario:** el ciclo de la factory corre en la ventana de la madrugada (§7). Confirmado por Felipe.
 - **Cierre del día:** sólo si hubo movimiento o hay decisiones pendientes. Confirmado por Felipe.
 - **Salud del proceso** (Felipe, 2026-11-10): el cierre avisa, sin Claude, de issues quietos más de lo esperado (`aprobada` 1 día; `propuesta`, `diseñada`, `en-revision`, `requiere-sesion` 3 días; `en-curso` no avisa porque es la cola), PRs abiertos hace más de 24 h y workflows que fallaron en el día. Un aviso basta para mandar el cierre. La revisión con Claude es semanal, no diaria.
+- **Auditoría del proceso con Felipe** (2026-11-12): cuando se audita lo que pasó, todo lo que salió mal o se puede mejorar **se aplica en el proceso en el momento** (agentes, workflows, reglas), no queda como nota. Se deja una línea acá o en el agente que cambió, con la fecha y el caso que lo motivó.

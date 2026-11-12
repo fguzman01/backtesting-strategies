@@ -41,6 +41,12 @@ Las ideas `en cola` vienen de Felipe, del auditor o del **explorador** semanal (
   sobrevivan a la comisión en R: en temporalidades chicas la comisión se come casi todo.
 - Agregala al final de `ideas.md` con estado `propuesta`, fuente, mecanismo y riesgo de snooping.
 - PR con título `[rutina] Propuesta: <idea>` que sólo toca `02-DOCS/ideas.md`. Terminá.
+- **Listón mínimo (Felipe, 2026-11-12):** proponé sólo si la idea tiene evidencia **A o B** (un estudio
+  fuera de muestra, idealmente en cripto y con costos) y no es una variante de una familia que ya
+  suma 10 pruebas o más (hoy `tendencia`: el ajuste por pruebas la vuelve casi inalcanzable). Si lo
+  mejor que encontraste es C/D o contradice lo medido, **no abras PR**: terminá con una línea que lo
+  diga. Un día sin propuesta es un resultado válido; el explorador llena la cola el sábado. Las
+  ideas 14, 15 y 16 (todas C/D) terminaron en pausa o descartadas sin evaluarse.
 
 ### 3. Pre-registrar (si hay idea en cola)
 Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) y completá:
