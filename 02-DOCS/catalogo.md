@@ -10,6 +10,24 @@ D (anécdota, foro, sin metodología).
 
 **Reglas:** resumen con palabras propias y link a la fuente; nunca código copiado ni texto de pago.
 
+## Familias prioritarias (Felipe, 2026-11-15)
+
+La cola se quedó vacía: lo que se encontraba era C/D o variantes de tendencia. Hasta que Felipe lo cambie,
+el explorador busca **primero** en estas dos familias, y las ideas que salgan llevan su número de idea:
+
+1. **Corte transversal diario** (idea 17): ordenar el universo dinámico top 20 por retorno de 1–3 días y
+   operar los extremos (momentum o reversión de corto plazo), con stop en ATR y duración de días.
+   Evidencia de partida A: Liu, Tsyvinski y Wu, *Common Risk Factors in Cryptocurrency*, Journal of
+   Finance (2022). Buscar réplicas a horizonte diario con costos. Distinta del momentum semanal
+   rechazado (btc-signal-web, 2026-10-11): horizonte diario, universo sin sesgo y stops en R. Necesita
+   que el motor ordene símbolos entre sí (#81).
+2. **Listado de perpetuos nuevos en Binance** (idea 18): qué hace el precio en los primeros días tras el
+   lanzamiento (deriva o reversión). Evidencia a confirmar: estudios de eventos de listados en exchanges.
+   La fecha sale de la primera vela de cada perpetuo; el universo dinámico ya trae los retirados.
+
+**Fuera de prioridad:** variantes de tendencia (la familia suma 15 pruebas), funding/base (cerrados) y
+estacionalidad (cerrada).
+
 ## Estrategias
 
 | Estrategia | Mecanismo (¿quién pierde del otro lado?) | Fuente(s) | Evidencia | Mercado / TF | ¿Alcance? | ¿Ya probada? | ¿Sobrevive comisión? | Estado |
