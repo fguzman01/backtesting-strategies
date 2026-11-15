@@ -5,7 +5,8 @@
 ## Recomendadas para esta semana
 
 1. **#45** Motor intrabar para scalps (5m–30m)
-2. **#47** Revisar la lista NO_CRIPTO del universo dinámico
+2. **#81** Motor: estrategias de corte transversal (ordenar símbolos entre sí cada vela)
+3. **#47** Revisar la lista NO_CRIPTO del universo dinámico
 
 ## Espera tu decisión
 
@@ -16,6 +17,7 @@ Nada.
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
+| [#81](https://github.com/fguzman01/backtesting-strategies/issues/81) | Motor: estrategias de corte transversal (ordenar símbolos entre sí cada vela) | mejora | P2 | medio | aprobada |
 | [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | en-curso |
 
 ## Hechas (últimas 20)
