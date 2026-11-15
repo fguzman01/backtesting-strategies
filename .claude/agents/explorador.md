@@ -30,6 +30,12 @@ cerradas), `02-DOCS/ideas.md` (qué hay en cola) y `02-DOCS/catalogo.md` (qué y
 qué fuentes se revisaron la semana pasada, para no repetir).
 
 ### 2. Explorar (rotá las fuentes semana a semana; la tabla de fuentes del catálogo dice cuál toca)
+**Primero, las familias prioritarias** de `02-DOCS/catalogo.md` (Felipe, 2026-11-15): dedicales la
+mayor parte de la corrida, sea cual sea la fuente que toque. Para la idea 18 (listados), si encontrás
+evidencia **A o B** (estudio de eventos con costos o efecto en varias fuentes), pasala vos a `en cola` y
+completá su fuente: Felipe ya la aprobó con esa condición. Para la 17 la evidencia de partida ya es A:
+sumá réplicas y el horizonte que mejor documenten (1, 2 o 3 días), sin elegirlo mirando datos.
+No propongas variantes de tendencia.
 - **Papers y research:** SSRN, arXiv (q-fin), research de exchanges y fondos cripto. Temas que
   suelen tener mecanismo: funding y basis, momentum de series de tiempo y cross-section, reversión
   tras liquidaciones, efectos de calendario/sesión, volatilidad, flujos de stablecoins, listados.
