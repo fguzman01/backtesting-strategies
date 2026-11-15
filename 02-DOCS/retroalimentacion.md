@@ -8,6 +8,12 @@ backtest quedó por encima del intervalo de ±2 EE del paper.
 Además se anotan acá los issues `retro` de la factory (comentarios del bot sobre una ficha o una
 aprobada) y qué se hizo con cada uno.
 
+## Informe del 2026-11-14 (PROD, commit fd8aa7a)
+
+| Estrategia | Nivel | Paper n | Paper avgR ±2 EE | Holdout backtest | Lectura | Madre en la misma ventana |
+|---|---|---|---|---|---|---|
+| `2026-11-02-trend4h-tope-7d` → TREND_4H_T7 | observacion | 8 (+3 abiertas) | -0.441 [-1.199, +0.318] | +0.036 (n=916) | muestra chica: no se concluye | TREND_4H: n=5 -0.844; diferencia +0.403 [-0.456, +1.262] |
+
 ## Informe del 2026-11-07 (PROD, commit 1c0d294)
 
 | Estrategia | Nivel | Paper n | Paper avgR ±2 EE | Holdout backtest | Lectura | Madre en la misma ventana |
