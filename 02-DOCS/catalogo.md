@@ -20,7 +20,7 @@ el explorador busca **primero** en estas dos familias, y las ideas que salgan ll
    Evidencia de partida A: Liu, Tsyvinski y Wu, *Common Risk Factors in Cryptocurrency*, Journal of
    Finance (2022). Buscar réplicas a horizonte diario con costos. Distinta del momentum semanal
    rechazado (btc-signal-web, 2026-10-11): horizonte diario, universo sin sesgo y stops en R. Necesita
-   que el motor ordene símbolos entre sí (issue aparte).
+   que el motor ordene símbolos entre sí (#81).
 2. **Listado de perpetuos nuevos en Binance** (idea 18): qué hace el precio en los primeros días tras el
    lanzamiento (deriva o reversión). Evidencia a confirmar: estudios de eventos de listados en exchanges.
    La fecha sale de la primera vela de cada perpetuo; el universo dinámico ya trae los retirados.
