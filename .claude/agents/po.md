@@ -35,8 +35,13 @@ mejoras al sistema.
 
 ## Fuentes (lo de la última semana)
 
-1. La auditoría más reciente (`02-DOCS/auditorias/`, también la del PR abierto si todavía no se
-   fusionó): sus «Mejoras propuestas» se vuelven issues si no existen.
+1. La auditoría **de esta semana**: el auditor corre el domingo a las 05:13 y su PR casi nunca está
+   fusionado cuando corrés vos. Si `02-DOCS/auditorias/<fecha de hoy>.md` no está en `main`, traela del
+   PR abierto: `gh api "repos/fguzman01/backtesting-strategies/pulls?state=open"` → la rama del PR de
+   auditoría → `git fetch origin <rama> && git show FETCH_HEAD:02-DOCS/auditorias/<fecha>.md`. Sus
+   «Mejoras propuestas» se vuelven issues si no existen (las que son decisión de Felipe, como issue
+   `tipo:investigacion` para que le llegue la tarjeta). **Nunca uses la auditoría de la semana anterior
+   como si fuera la última** (pasó el 2026-11-15: se perdieron las 5 mejoras de esa semana).
 2. `02-DOCS/retroalimentacion.md` (lo que vuelve del bot) y los issues `retro` abiertos.
 3. `results/reports/adelante.md` y `python -m bt.auditoria`: avisos que se repiten son deuda.
 4. Corridas fallidas de Actions de la semana: un workflow que falla dos veces por lo mismo es un `tipo:bug`.

@@ -7,7 +7,7 @@
 > `MARCO.md`. Al cambiar algo del marco, se actualizan los dos.
 
 **Estado (2026-11-08): fases 1 a 4 en marcha** (§9). Grupo de Telegram «Factory Backtesting»; rutinas
-del marco: diseñador 04:45 y 19:45, desarrollador 05:15 lun–vie, PO domingo 07:47.
+del marco: diseñador 19:45, desarrollador 05:15 lun–vie, PO domingo 07:47.
 
 ## 1. El problema [marco]
 
@@ -124,7 +124,7 @@ termina antes de que Felipe despierte. Las tarjetas lo esperan en la mañana.
 | Hora (Chile) | Rol | Modelo | Corre sólo si |
 |---|---|---|---|
 | 03:37 | Investigador (ya existe) | el de siempre | — |
-| 04:45 y 19:45 | Diseñador + atención de pedidos (`disenador.md`) | sonnet | hay un issue `aprobada` (mejoras aprobadas y pedidos) |
+| 19:45 (desde 2026-11-10; antes también 04:45) | Diseñador + atención de pedidos (`disenador.md`) | sonnet | hay un issue `aprobada` (mejoras aprobadas y pedidos) |
 | 05:15 (lun–vie) | Desarrollador + revisor de código (`desarrollador.md`, `revisor-codigo.md`) | el de siempre | hay un issue `en-curso` (plan aprobado) y nada trabado |
 | 21:00 | Cronista | — (Actions) | hubo movimiento o hay decisiones pendientes |
 

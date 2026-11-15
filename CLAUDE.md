@@ -64,7 +64,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `OPERACION.md` | **Marco de operación autónoma** en la factory (roles diarios, Telegram, qué pasa solo y qué pide ✅). El marco genérico y canónico está en `MARCO.md` de fguzman01/operador |
 | `src/bt/operador.py` | Tarjetas y cierre del día al grupo de Telegram vía el operador (`tarjetas.yml`, `cierre.yml` 21:00) |
 | `.operador.yml` | Configuración del marco para este repo: etiquetas de los issues, grupo de Telegram |
-| `.claude/agents/disenador.md` | Diseñador + atención de pedidos (04:45 y 19:45): plan en el issue → `estado:diseñada` → tarjeta a Felipe |
+| `.claude/agents/disenador.md` | Diseñador + atención de pedidos (19:45): plan en el issue → `estado:diseñada` → tarjeta a Felipe |
 | `.claude/agents/desarrollador.md` | Desarrollador (05:15 lun–vie): UN issue `en-curso` → PR `[dev]` con `Closes #N`, revisado por `revisor-codigo` |
 | `.claude/agents/po.md` | Analista/PO: mantiene las tareas del sistema como GitHub Issues (`estado:` `tipo:` `prio:` `riesgo:`) |
 | `02-DOCS/backlog.md` | Vista **generada** desde los issues (`bt.backlog`, `backlog.yml`); no se edita a mano |
