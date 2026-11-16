@@ -95,3 +95,57 @@ def test_indice_distinto_falla():
     df = velas([(100, 101, 99, 100)] * 3)
     with pytest.raises(ValueError):
         simular(df, senal(df, {}).iloc[1:], SIN_FEE)
+
+
+# --- modo intrabar (velas de 1m dentro de la vela de la estrategia) ---
+def _m1(filas, inicio="2024-01-01 00:10"):
+    return velas(filas, inicio=inicio, freq="1min")
+
+
+def _caso_5m():
+    # vela 0: señal; vela 1 (00:05) entra a 100; vela 2 (00:10) toca stop 95 y objetivo 110.
+    df = velas([(100, 101, 99, 100), (100, 100.5, 99.5, 100), (100, 111, 94, 100)], freq="5min")
+    return df, senal(df, {0: dict(direccion=1, stop=95, objetivo=110)})
+
+
+def test_intrabar_el_orden_real_en_1m_decide():
+    df, s = _caso_5m()
+    primero_obj = _m1([(100, 111, 100, 110), (110, 110, 94, 95)])
+    primero_stop = _m1([(100, 100, 94, 95), (95, 111, 95, 110)])
+    for modelo in ("conservador", "optimista"):
+        assert simular(df, s, SIN_FEE, modelo, intrabar=primero_obj)[0].motivo == "TP"
+        assert simular(df, s, SIN_FEE, modelo, intrabar=primero_stop)[0].motivo == "SL"
+
+
+def test_intrabar_dentro_de_una_vela_1m_rige_el_modelo_de_llenado():
+    df, s = _caso_5m()
+    m1 = _m1([(100, 111, 94, 100)])
+    assert simular(df, s, SIN_FEE, "conservador", intrabar=m1)[0].motivo == "SL"
+    assert simular(df, s, SIN_FEE, "optimista", intrabar=m1)[0].motivo == "TP"
+
+
+def test_intrabar_sin_1m_en_la_ventana_cae_al_supuesto_por_vela():
+    df, s = _caso_5m()
+    lejos = _m1([(100, 111, 100, 110)], inicio="2024-01-02")
+    assert simular(df, s, SIN_FEE, intrabar=lejos)[0].motivo == "SL"
+
+
+def test_sin_intrabar_el_resultado_no_cambia():
+    df, s = _caso_5m()
+    assert simular(df, s, SIN_FEE) == simular(df, s, SIN_FEE, intrabar=None)
+    assert simular_ambos(df, s, SIN_FEE) == simular_ambos(df, s, SIN_FEE, intrabar=None)
+
+
+def test_intrabar_tp1_parcial_y_luego_stop():
+    df, s = _caso_5m()
+    cfg = Config(fee_pct_por_lado=0.0, tp1_r=1.0, tp1_cierre=0.5)
+    m1 = _m1([(100, 105, 100, 105), (105, 105, 94, 95)])
+    tr = simular(df, s, cfg, intrabar=m1)[0]
+    assert tr.motivo == "TP1+SL"
+    assert tr.r_bruto == pytest.approx(0.5 * 1.0 + 0.5 * -1.0)
+
+
+def test_intrabar_pide_columnas_ohlc():
+    df, s = _caso_5m()
+    with pytest.raises(ValueError):
+        simular(df, s, SIN_FEE, intrabar=_m1([(1, 1, 1, 1)])[["open"]])

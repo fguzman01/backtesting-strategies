@@ -31,6 +31,11 @@ compuerta/llenado sesgó a btc-signal-web hasta el 2026-10-11). Todo ajuste del 
 breakeven) se decide con la vela cerrada y rige desde la siguiente: dentro de una vela no se sabe en
 qué orden pasaron el máximo y el mínimo.
 
+Modo `intrabar` (opcional, `simular(..., intrabar=velas_1m)`): cuando stop y objetivo/TP1 caen en la
+misma vela de la estrategia, el orden lo deciden las velas de 1m de esa ventana en vez del modelo
+de llenado (que sólo rige dentro de una vela de 1m). Sin 1m en la ventana cae al supuesto por vela.
+Sin el parámetro, los resultados son idénticos a antes.
+
 Funding (futuros perpetuos): se le cobra al trade la suma de las tasas con instante en
 (apertura, cierre], con signo según la dirección. El instante del cierre sigue esta convención,
 la misma de btc-signal-web: salida a la apertura de una vela → esa apertura; stop/objetivo dentro
@@ -119,9 +124,46 @@ class _Funding:
         return float(hasta - self.acum[np.searchsorted(self.ts, a_ms, "right")])
 
 
+class _Intrabar:
+    """Velas de 1m para decidir el orden cuando stop y objetivo caen en la misma vela de la estrategia."""
+
+    def __init__(self, m1: pd.DataFrame):
+        faltan = {"open", "high", "low", "close"} - set(m1.columns)
+        if faltan:
+            raise ValueError(f"intrabar: faltan columnas {sorted(faltan)}")
+        m1 = m1.sort_index()
+        self.ts = pd.DatetimeIndex(m1.index).as_unit("ms").asi8
+        self.h = m1["high"].to_numpy(dtype=float)
+        self.lo = m1["low"].to_numpy(dtype=float)
+
+    def resolver(self, a_ms, b_ms, d, stop, obj, tp1, adverso_primero):
+        """Recorre las velas de 1m en [a, b). Devuelve (tp1_tocado, final) con final en SL | TP | None.
+
+        Dentro de una vela de 1m el orden sigue sin conocerse: se aplica el modelo de llenado.
+        None = sin datos de 1m en la ventana (el motor cae al supuesto por vela)."""
+        i0, i1 = np.searchsorted(self.ts, [a_ms, b_ms], "left")
+        if i0 == i1:
+            return False, None
+        tp1_tocado = False
+        for m in range(i0, i1):
+            fav, adv = (self.h[m], self.lo[m]) if d > 0 else (self.lo[m], self.h[m])
+            st = adv * d <= stop * d
+            ob = obj is not None and fav * d >= obj * d
+            t1 = tp1 is not None and not tp1_tocado and fav * d >= tp1 * d
+            if st and (ob or t1) and not adverso_primero:
+                # Favorable primero: gana el objetivo; si sólo hay TP1, se cierra la parte y luego sale el stop.
+                return tp1_tocado or t1, ("TP" if ob else "SL")
+            if st:
+                return tp1_tocado, "SL"
+            if ob:
+                return tp1_tocado or t1, "TP"
+            tp1_tocado = tp1_tocado or t1
+        return tp1_tocado, None
+
+
 def simular(
     df: pd.DataFrame, sen: pd.DataFrame, cfg: Config, modelo: str = "conservador",
-    funding: pd.Series | None = None,
+    funding: pd.Series | None = None, intrabar: pd.DataFrame | None = None,
 ) -> list[Trade]:
     if modelo not in ("conservador", "optimista"):
         raise ValueError(modelo)
@@ -145,6 +187,7 @@ def simular(
         -1: _col(sen, "salida_corto", False).astype(bool) if "salida_corto" in sen else salida_comun,
     }
     fund = _Funding(funding)
+    intra = _Intrabar(intrabar) if intrabar is not None else None
     adverso_primero = modelo == "conservador"
     n = len(df)
     trades: list[Trade] = []
@@ -206,6 +249,13 @@ def simular(
             toca_obj = obj is not None and favorable * d >= obj * d
             toca_tp1 = tp1 is not None and not tp1_hecho and favorable * d >= tp1 * d
             momento = t_ms[k] + paso // 2
+            if intra is not None and toca_stop and (toca_obj or toca_tp1):
+                t1_hit, final = intra.resolver(t_ms[k], t_ms[k] + paso, d, stop_act, obj, tp1, adverso_primero)
+                if final is not None:
+                    if t1_hit and toca_tp1:
+                        r_parcial, abierta, tp1_hecho = cfg.tp1_cierre * r_de(tp1), 1 - cfg.tp1_cierre, True
+                    salida, motivo = (stop_act, "SL") if final == "SL" else (obj, "TP")
+                    break
             if toca_stop and (toca_obj or toca_tp1) and adverso_primero:
                 salida, motivo = stop_act, "SL"
             elif toca_stop and not (toca_obj or toca_tp1):
@@ -280,6 +330,7 @@ def _trade(d, ts, ta, tc, entrada, stop, obj, salida, motivo, r_bruto, fee_r, ma
 
 
 def simular_ambos(
-    df: pd.DataFrame, sen: pd.DataFrame, cfg: Config, funding: pd.Series | None = None
+    df: pd.DataFrame, sen: pd.DataFrame, cfg: Config, funding: pd.Series | None = None,
+    intrabar: pd.DataFrame | None = None,
 ) -> dict[str, list[Trade]]:
-    return {m: simular(df, sen, cfg, m, funding) for m in ("conservador", "optimista")}
+    return {m: simular(df, sen, cfg, m, funding, intrabar) for m in ("conservador", "optimista")}
