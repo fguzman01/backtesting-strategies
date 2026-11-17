@@ -45,6 +45,17 @@ def correr(
     # por la vela de ENTRADA: se anulan las señales cuya entrada (vela siguiente) cae antes de `desde`.
     df_v = df[df.index < v.hasta]
     sen = strategies.cargar(estrategia)(df_v, **params)
+    return _simular_senales(
+        estrategia, df_v, sen, v, avisos, simbolo=simbolo, intervalo=intervalo, mercado=mercado,
+        cfg=cfg, params=params, nota=nota, funding=funding,
+    )
+
+
+def _simular_senales(
+    estrategia: str, df_v: pd.DataFrame, sen: pd.DataFrame, v, avisos: list[str], *, simbolo: str,
+    intervalo: str, mercado: str, cfg: Config, params: dict, nota: str | None, funding: pd.Series | None,
+) -> Resultado:
+    """Del DataFrame de señales al resultado: lo comparten `correr` y `correr_corte`."""
     entra_en = pd.Series(df_v.index, index=df_v.index).shift(-1)
     sen.loc[(entra_en < v.desde).to_numpy(), "direccion"] = 0
 
@@ -65,6 +76,49 @@ def correr(
         informe=inf, avisos=avisos, nota=nota,
     )
     return Resultado(f, inf, modelos)
+
+
+def alinear(velas: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+    """Las velas de todos los símbolos sobre el mismo índice (la unión de fechas); NaN donde un
+    símbolo no tiene vela. Así la estrategia de corte transversal compara en cada fecha."""
+    idx = sorted(set().union(*(df.index for df in velas.values())))
+    idx = pd.DatetimeIndex(idx, name="time")
+    return {s: df.reindex(idx) for s, df in velas.items()}
+
+
+def correr_corte(
+    estrategia: str, velas: dict[str, pd.DataFrame], *, miembros: dict[str, list[str]] | None = None,
+    intervalo: str, mercado: str = "futures", desde=None, hasta=None, holdout: bool = False,
+    cfg: Config | None = None, params: dict | None = None, nota: str | None = None,
+    funding: dict[str, pd.Series] | None = None,
+) -> dict[str, Resultado]:
+    """Estrategia de corte transversal: `senales_corte(velas, miembros, **params)` ve todos los
+    símbolos alineados por fecha y devuelve un DataFrame de señales por símbolo. Desde ahí cada
+    símbolo se simula con el motor de siempre (R neto, comisión, stops, bitácora)."""
+    cfg = cfg or Config()
+    params = params or {}
+    funding = funding or {}
+    inicio = min(df.index[0] for df in velas.values())
+    fin = max(df.index[-1] for df in velas.values())
+    desde = _ts(desde) if desde is not None else inicio
+    hasta = _ts(hasta) if hasta is not None else fin + pd.Timedelta(1, "ns")
+    v = resolver_ventana(desde, hasta, holdout)
+
+    # Sin velas posteriores a la ventana (igual que `correr`); el ranking de `t` sólo ve hasta `t`.
+    recortadas = {s: df[df.index < v.hasta] for s, df in velas.items()}
+    recortadas = {s: df for s, df in recortadas.items() if len(df)}
+    alineadas = alinear(recortadas)
+    sen_todas = strategies.cargar_corte(estrategia)(alineadas, miembros, **params)
+
+    out: dict[str, Resultado] = {}
+    for s, df_v in recortadas.items():
+        sen = sen_todas[s].reindex(df_v.index)
+        sen["direccion"] = sen["direccion"].fillna(0).astype(int)
+        out[s] = _simular_senales(
+            estrategia, df_v, sen, v, [v.aviso] if v.aviso else [], simbolo=s, intervalo=intervalo,
+            mercado=mercado, cfg=cfg, params=params, nota=nota, funding=funding.get(s),
+        )
+    return out
 
 
 def _valor(s: str):
