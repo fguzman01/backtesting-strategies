@@ -158,7 +158,7 @@ def chequear_lookahead_tests(raiz: Path) -> Chequeo:
     for mod in sorted((raiz / "src" / "bt" / "strategies").glob("*.py")):
         if mod.stem == "__init__":
             continue
-        patron = re.compile(rf"chequear_lookahead\(\s*{mod.stem}\.senales")
+        patron = re.compile(rf"chequear_lookahead(?:_corte)?\(\s*{mod.stem}\.senales(?:_corte)?\b")
         if not patron.search(tests):
             faltan.append(f"{mod.stem}: ningún test le corre chequear_lookahead")
     return Chequeo("Toda estrategia tiene test de look-ahead", "Regla 5", FALLA if faltan else OK, faltan)

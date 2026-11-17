@@ -26,7 +26,7 @@ from statistics import median
 
 import pandas as pd
 
-from bt import bitacora, data, metrics, run
+from bt import bitacora, data, metrics, run, strategies
 from bt.engine import Trade
 from bt.nulo import control_nulo
 from bt.spec import DURACION_MEDIANA_MAX_DIAS, FAMILIA_POR_MODULO, Spec, SpecInvalida, cargar, listar
@@ -83,17 +83,53 @@ def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding,
     ventana: list[pd.Timestamp] = []
     calidad: dict[str, dict] = {}
     sin_datos: list[str] = []
+
+    def _velas(s: str) -> pd.DataFrame:
+        if spec.historia_spot and cargar_velas is data.cargar:
+            return data.cargar_extendida(s, spec.intervalo)
+        return cargar_velas(s, spec.intervalo, spec.mercado)
+
+    # Corte transversal: el ranking necesita las velas de todos los símbolos a la vez; el resto del
+    # tramo (cupo, métricas, nulo) es igual. Sin el flag `CORTE_TRANSVERSAL`, nada de esto corre.
+    previos: dict[str, tuple[pd.DataFrame, pd.Series | None, run.Resultado]] = {}
+    if strategies.es_corte(spec.modulo):
+        velas_c: dict[str, pd.DataFrame] = {}
+        for s in spec.simbolos:
+            try:
+                velas_c[s] = _velas(s)
+            except (ValueError, FileNotFoundError) as e:
+                if spec.miembros is None:
+                    raise
+                sin_datos.append(f"{s}: {e}")
+        fund_c = {s: cargar_funding(s) for s in velas_c} if spec.funding else {}
+        try:
+            rs = run.correr_corte(
+                spec.modulo, velas_c, miembros=spec.miembros, intervalo=spec.intervalo, mercado=spec.mercado,
+                desde=desde, hasta=hasta, holdout=holdout, cfg=spec.cfg, params=spec.params, nota=nota,
+                funding=fund_c,
+            )
+        except (ValueError, FileNotFoundError) as e:
+            if spec.miembros is None:
+                raise
+            sin_datos.append(str(e))
+            rs = {}
+        previos = {s: (velas_c[s], fund_c.get(s), r) for s, r in rs.items()}
+
     for s in spec.simbolos:
         try:
-            if spec.historia_spot and cargar_velas is data.cargar:
-                df = data.cargar_extendida(s, spec.intervalo)
+            if previos:
+                if s not in previos:
+                    continue
+                df, fund, r = previos[s]
             else:
-                df = cargar_velas(s, spec.intervalo, spec.mercado)
-            fund = cargar_funding(s) if spec.funding else None
-            r = run.correr(
-                spec.modulo, df, simbolo=s, intervalo=spec.intervalo, mercado=spec.mercado, desde=desde,
-                hasta=hasta, holdout=holdout, cfg=spec.cfg, params=spec.params, funding=fund, nota=nota,
-            )
+                if strategies.es_corte(spec.modulo):
+                    continue  # sin ningún símbolo con velas: ya quedó en sin_datos
+                df = _velas(s)
+                fund = cargar_funding(s) if spec.funding else None
+                r = run.correr(
+                    spec.modulo, df, simbolo=s, intervalo=spec.intervalo, mercado=spec.mercado, desde=desde,
+                    hasta=hasta, holdout=holdout, cfg=spec.cfg, params=spec.params, funding=fund, nota=nota,
+                )
         except (ValueError, FileNotFoundError) as e:
             # Con universo dinámico, un retirado puede no tener velas en este tramo: no es un error.
             if spec.miembros is None:

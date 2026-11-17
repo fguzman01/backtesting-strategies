@@ -36,6 +36,36 @@ def chequear_lookahead(
     return problemas
 
 
+def chequear_lookahead_corte(
+    senales_corte: Callable[..., dict[str, pd.DataFrame]], velas: dict[str, pd.DataFrame],
+    miembros: dict[str, list[str]] | None = None, cortes: int = 5, **params
+) -> list[str]:
+    """Como `chequear_lookahead`, pero con todos los símbolos: las señales de cada símbolo en `t` no
+    pueden cambiar según haya o no velas posteriores a `t` (en ningún símbolo)."""
+    from bt.run import alinear
+
+    alineadas = alinear(velas)
+    completo = senales_corte(alineadas, miembros, **params)
+    indice = next(iter(alineadas.values())).index
+    problemas: list[str] = []
+    for pos in np.linspace(len(indice) // 3, len(indice) - 2, cortes).astype(int):
+        parcial = senales_corte({s: d.iloc[: pos + 1] for s, d in alineadas.items()}, miembros, **params)
+        for s, p in parcial.items():
+            a = completo[s].iloc[: pos + 1]
+            for col in p.columns:
+                x, y = a[col].to_numpy(), p[col].to_numpy()
+                if x.dtype.kind == "f" or y.dtype.kind == "f":
+                    igual = np.isclose(x.astype(float), y.astype(float), equal_nan=True, rtol=1e-9, atol=1e-12)
+                else:
+                    igual = x == y
+                if not igual.all():
+                    problemas.append(
+                        f"look-ahead en {s}/'{col}': cambia en {indice[int(np.argmin(igual))]} "
+                        f"al cortar en {indice[pos]}"
+                    )
+    return problemas
+
+
 def chequear_determinismo(
     senales: Callable[..., pd.DataFrame], df: pd.DataFrame, cfg: Config, **params
 ) -> list[str]:
