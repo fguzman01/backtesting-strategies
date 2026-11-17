@@ -698,6 +698,9 @@ def anotar_en_ideas(ev: dict, ruta: Path = IDEAS) -> bool:
         g = ev["desarrollo"]["global"]
         nivel = f", nivel {ev['nivel']}" if ev.get("nivel") == "observacion" else ""
         veredicto = ev["veredicto"].lower().replace("_", " ")
+        if (ev.get("spec") or {}).get("solo_desarrollo"):  # cribado (reglas-de-medicion.md)
+            pasa = ev["veredicto"] == "NO_CONCLUYENTE" and all("holdout no mirado" in m for m in ev["motivos"])
+            veredicto = "pasa el cribado: va a pre-registro completo" if pasa else "no pasa el cribado"
         nota = (f" → **{veredicto}**{nivel} ({ev['fecha'][:10]}): desarrollo n={g['n']} "
                 f"{g['avgRNeto']:+.3f} {_fmt_ic(g)}")
         if ev["holdout"]:

@@ -29,7 +29,10 @@ Leé `CLAUDE.md`, `02-DOCS/alcance.md`, `02-DOCS/decisiones.md`, `02-DOCS/ideas.
 `02-DOCS/auditorias/` (si propone cambios para specs futuras, aplicalos).
 
 ### 2. Elegir
-Tomá la primera idea con estado `en cola` en `02-DOCS/ideas.md`.
+Tomá la primera idea con estado `en cola` en `02-DOCS/ideas.md`. Si dice **cribado**, la spec es de etapa 1:
+`medicion: true` y `solo_desarrollo: true`, con el criterio de desarrollo completo (`reglas-de-medicion.md`
+§ Cribado). Si una idea dice **«pasa el cribado»**, va **primero**: escribí la spec de etapa 2 con la misma
+regla y los mismos parámetros, sin `medicion` (no cambies nada de lo cribado).
 
 **Antes de elegir:** si alguna idea aprobada dice que espera un issue (`espera #N`, «pasa a `en cola`
 cuando #N se cierre») y ese issue ya está cerrado, pasala a `en cola` en este mismo PR y tomala. Si no,
@@ -49,7 +52,10 @@ Las ideas `en cola` vienen de Felipe, del auditor o del **explorador** semanal (
   fuera de muestra, idealmente en cripto y con costos) y no es una variante de una familia que ya
   suma 10 pruebas o más (hoy `tendencia`: el ajuste por pruebas la vuelve casi inalcanzable). Si lo
   mejor que encontraste es C/D o contradice lo medido, **no abras PR**: terminá con una línea que lo
-  diga. Un día sin propuesta es un resultado válido; el explorador llena la cola el sábado. Las
+  diga. Un día sin propuesta es un resultado válido; el explorador llena la cola miércoles y sábado.
+  **Excepción (2026-11-17):** una idea **C** con mecanismo claro, dentro del alcance y de familia abierta
+  puede entrar como `en cola (cribado, investigador, fecha)` y la tomás en la misma corrida como etapa 1
+  (`reglas-de-medicion.md` § Cribado). Las D siguen afuera. Las
   ideas 14, 15 y 16 (todas C/D) terminaron en pausa o descartadas sin evaluarse.
 
 ### 3. Pre-registrar (si hay idea en cola)
@@ -62,7 +68,7 @@ Copiá `specs/PLANTILLA.yaml` a `specs/<AAAA-MM-DD>-<slug>.yaml` (fecha de hoy) 
   sólo si la pregunta es sobre esos tokens (p. ej. los 14 del bot), y entonces decilo en `hipotesis`:
   una lista de tokens que sobrevivieron hasta hoy infla cualquier estrategia que compre.
 - `config`: comisión realista (0.0005 por lado como mínimo; 0.001 si hay deslizamiento relevante),
-  funding en futuros, `timeout_velas` ≤ 14 días y coherente con una mediana ≤ 7 días.
+  funding en futuros, `timeout_velas` ≤ 28 días y coherente con una mediana ≤ 14 días (alcance ampliado el 2026-11-17).
 - `criterio_aprobacion`: **exigente por defecto** — `n_minimo` acorde a la frecuencia (≥ 100 si la
   estrategia opera seguido), `ic95_excluye_cero: true`, `supera_nulo_p95: true`,
   `tramos_positivos_minimo: 3`, holdout positivo. Si aflojás algo, justificalo en la hipótesis.
@@ -81,7 +87,7 @@ afinados: la versión nueva tiene que diferir en el mecanismo.
 **Antes de pre-registrar, chequeá que la idea pueda pasar el alcance** (lección de
 `2026-11-01-trend1d-chandelier-14d`, que falló por diseño): la evaluación exige duración mediana
 ≤ 7 días. Si la estrategia no tiene objetivo y sus salidas por regla son lentas, las operaciones
-van a terminar en el timeout: con `timeout_velas` de 14 días la mediana queda en 14 y se rechaza
+van a terminar en el timeout: con `timeout_velas` igual al tope la mediana queda en el tope y se rechaza
 sola. Usá la duración de la madre en `results/evaluaciones/` como referencia, y si la idea sólo
 tiene sentido con operaciones más largas, no la fuerces: anotalo en `ideas.md` para que Felipe
 decida sobre el alcance.

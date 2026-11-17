@@ -72,10 +72,19 @@ con origen = `catálogo: <nombre>`.
 - dentro del alcance y de una familia que NO esté cerrada en `alcance.md`/`decisiones.md`;
 - no medida antes (ni igual ni casi igual);
 - se puede implementar con el motor actual (ver el docstring de `bt.engine`);
-- como mucho **2 por familia** por semana y **5 en total** por semana (cada idea gasta presupuesto y
+- como mucho **2 por familia** por corrida y **5 en total** por corrida (cada idea gasta presupuesto y
   holdout).
 
-Estado: `en cola (explorador, AAAA-MM-DD)`. El resto entra como `propuesta` para que Felipe decida.
+Estado: `en cola (explorador, AAAA-MM-DD)`.
+
+**Cribado** (Felipe, 2026-11-17): las de evidencia **C** que cumplan lo demás (alcance, familia abierta, no
+medida, implementable, mecanismo que explique por qué alguien pierde del otro lado) entran como
+`en cola (cribado, explorador, AAAA-MM-DD)`: el investigador las mide sólo en desarrollo
+(`reglas-de-medicion.md` § Cribado). Las D y las que contradicen lo medido van a `propuesta` o se descartan.
+
+**Meta:** que al terminar la corrida haya **al menos 3 ideas `en cola`** (contando cribado). Corrés dos veces
+por semana (miércoles y sábado). Si no llegás a 3 con lo que cumple las reglas, decilo en el PR con el motivo:
+no se rellena con ideas que no las cumplen.
 Felipe puede descartar o reordenar cualquiera.
 
 ### 5. Entregar

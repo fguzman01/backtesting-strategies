@@ -2,7 +2,7 @@
 
 Una spec se escribe ANTES de correr nada. Fija la hipótesis, las reglas, el universo, la ventana y
 el criterio de aprobación. La validación aplica también el alcance de 02-DOCS/alcance.md: señal
-entre 5m y 1d y un timeout de como mucho 14 días.
+entre 5m y 1d y un timeout de como mucho 28 días (ampliado el 2026-11-17).
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from bt.engine import Config
 
 INTERVALOS = {"5m": 5, "15m": 15, "30m": 30, "1h": 60, "2h": 120, "4h": 240, "6h": 360, "8h": 480,
               "12h": 720, "1d": 1440}
-TIMEOUT_MAX_DIAS = 14
-DURACION_MEDIANA_MAX_DIAS = 7
+TIMEOUT_MAX_DIAS = 28  # 14 hasta el 2026-11-17 (alcance.md)
+DURACION_MEDIANA_MAX_DIAS = 14  # 7 hasta el 2026-11-17
 TIPOS = {"scalp", "swing", "diario"}
 ESTADOS = {"borrador", "pre-registrada", "referencia"}
 CRITERIOS = {"n_minimo", "ic95_excluye_cero", "concluyente", "tramos_positivos_minimo", "supera_nulo_p95",

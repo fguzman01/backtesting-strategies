@@ -50,7 +50,7 @@ def test_spec_valida():
 
 @pytest.mark.parametrize("cambio, mensaje", [
     ({"universo__intervalo": "1w"}, "fuera del alcance"),
-    ({"config__timeout_velas": 15}, "14 como máximo"),
+    ({"config__timeout_velas": 29}, "28 como máximo"),
     ({"config__timeout_velas": None}, "timeout_velas"),
     ({"config__fee_pct_por_lado": 0}, "comisión"),
     ({"estado": "lista"}, "estado"),
@@ -65,10 +65,10 @@ def test_spec_invalida(cambio, mensaje):
 
 
 def test_timeout_en_horas_se_mide_en_dias():
-    d = con(universo__intervalo="1h", config__timeout_velas=24 * 14, horizonte__tipo="swing")
-    assert desde_dict(d).cfg.timeout_velas == 336
+    d = con(universo__intervalo="1h", config__timeout_velas=24 * 28, horizonte__tipo="swing")
+    assert desde_dict(d).cfg.timeout_velas == 672
     with pytest.raises(SpecInvalida):
-        desde_dict(con(universo__intervalo="1h", config__timeout_velas=24 * 14 + 1))
+        desde_dict(con(universo__intervalo="1h", config__timeout_velas=24 * 28 + 1))
 
 
 def test_id_debe_coincidir_con_el_archivo(tmp_path):
