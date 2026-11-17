@@ -31,6 +31,10 @@ Leé `CLAUDE.md`, `02-DOCS/alcance.md`, `02-DOCS/decisiones.md`, `02-DOCS/ideas.
 ### 2. Elegir
 Tomá la primera idea con estado `en cola` en `02-DOCS/ideas.md`.
 
+**Antes de elegir:** si alguna idea aprobada dice que espera un issue (`espera #N`, «pasa a `en cola`
+cuando #N se cierre») y ese issue ya está cerrado, pasala a `en cola` en este mismo PR y tomala. Si no,
+queda trabada sin que nadie lo note (pasó con la idea 17 y #81, 2026-11-17).
+
 Las ideas `en cola` vienen de Felipe, del auditor o del **explorador** semanal (con su evidencia en
 `02-DOCS/catalogo.md`: leé la fila de la estrategia antes de escribir la hipótesis).
 
