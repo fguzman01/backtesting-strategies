@@ -86,7 +86,7 @@ afinados: la versión nueva tiene que diferir en el mecanismo.
 
 **Antes de pre-registrar, chequeá que la idea pueda pasar el alcance** (lección de
 `2026-11-01-trend1d-chandelier-14d`, que falló por diseño): la evaluación exige duración mediana
-≤ 7 días. Si la estrategia no tiene objetivo y sus salidas por regla son lentas, las operaciones
+≤ 14 días. Si la estrategia no tiene objetivo y sus salidas por regla son lentas, las operaciones
 van a terminar en el timeout: con `timeout_velas` igual al tope la mediana queda en el tope y se rechaza
 sola. Usá la duración de la madre en `results/evaluaciones/` como referencia, y si la idea sólo
 tiene sentido con operaciones más largas, no la fuerces: anotalo en `ideas.md` para que Felipe
