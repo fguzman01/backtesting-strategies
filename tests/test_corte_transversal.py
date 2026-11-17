@@ -109,3 +109,38 @@ def test_tramo_de_evaluar_usa_el_corte_transversal():
                        lambda s: None, holdout=False)
     assert set(t["porSimbolo"]) == set(datos)
     assert t["global"]["n"] > 0
+
+
+def test_un_simbolo_con_corte_da_lo_mismo_que_correr_y_sin_velas_no_tumba_a_los_demas():
+    u = _universo()
+    # Con un solo símbolo no hay ranking (n < 2): para comparar usamos una estrategia de un símbolo
+    # envuelta como corte, que debe dar exactamente lo mismo que `correr`.
+    from bt.strategies import donchian_breakout
+
+    class Envuelta:
+        CORTE_TRANSVERSAL = True
+
+        @staticmethod
+        def senales_corte(velas, miembros=None, **p):
+            return {s: donchian_breakout.senales(d, **p) for s, d in velas.items()}
+
+    import sys
+    import types
+
+    mod = types.ModuleType("bt.strategies._envuelta")
+    mod.CORTE_TRANSVERSAL = True
+    mod.senales_corte = Envuelta.senales_corte
+    mod.senales = donchian_breakout.senales
+    sys.modules["bt.strategies._envuelta"] = mod
+    try:
+        base = run.correr("_envuelta", u["BBB"], simbolo="BBB", intervalo="1d")
+        corte = run.correr_corte("_envuelta", {"BBB": u["BBB"]}, intervalo="1d")["BBB"]
+        assert corte.trades == base.trades
+        # un retirado sin velas en la ventana se omite; los demás siguen
+        r = run.correr_corte("_envuelta", u, intervalo="1d", desde="2024-02-01", hasta="2024-03-01")
+        assert set(r) == set(u)
+        viejo = {**u, "ZZZ": _df(100 * np.ones(10), IDX[:10])}
+        r = run.correr_corte("_envuelta", viejo, intervalo="1d", desde="2024-02-01", hasta="2024-03-01")
+        assert "ZZZ" not in r and "AAA" in r
+    finally:
+        del sys.modules["bt.strategies._envuelta"]

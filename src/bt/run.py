@@ -112,12 +112,19 @@ def correr_corte(
 
     out: dict[str, Resultado] = {}
     for s, df_v in recortadas.items():
+        if s not in sen_todas:
+            raise KeyError(f"la estrategia de corte `{estrategia}` no devolvió señales para {s}")
         sen = sen_todas[s].reindex(df_v.index)
         sen["direccion"] = sen["direccion"].fillna(0).astype(int)
-        out[s] = _simular_senales(
-            estrategia, df_v, sen, v, [v.aviso] if v.aviso else [], simbolo=s, intervalo=intervalo,
-            mercado=mercado, cfg=cfg, params=params, nota=nota, funding=funding.get(s),
-        )
+        try:
+            out[s] = _simular_senales(
+                estrategia, df_v, sen, v, [v.aviso] if v.aviso else [], simbolo=s, intervalo=intervalo,
+                mercado=mercado, cfg=cfg, params=params, nota=nota, funding=funding.get(s),
+            )
+        except ValueError:
+            continue  # sin velas en la ventana (p. ej. un retirado): no tumba a los demás
+    if not out:
+        raise ValueError(f"no hay velas entre {v.desde} y {v.hasta}")
     return out
 
 
