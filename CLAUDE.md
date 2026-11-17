@@ -49,7 +49,7 @@ de scalp a diario (señal entre 5m y 1d, trades de horas a pocos días). Nada se
 | `src/bt/bitacora.py` | Registro de corridas |
 | `src/bt/run.py` | CLI: corre una estrategia y registra |
 | `src/bt/validacion.py` | Casos conocidos de btc-signal-web que el motor debe reproducir (Fase 2) |
-| `src/bt/spec.py` | Carga y valida pre-registros (incluye el alcance: 5m–1d, timeout ≤ 14 días) |
+| `src/bt/spec.py` | Carga y valida pre-registros (incluye el alcance: 5m–1d, timeout ≤ 28 días) |
 | `src/bt/evaluar.py` | Evalúa una spec: desarrollo → criterio → holdout una vez → reporte / approved.json |
 | `src/bt/nulo.py` | Control nulo: entradas al azar con la misma duración y riesgo |
 | `src/bt/sitio.py` | Dashboard estático para GitHub Pages |

@@ -13,15 +13,15 @@ pase el criterio pre-registrado, neto de comisión, en desarrollo y en holdout.
 |---|---|---|
 | Scalp | 5m, 15m, 30m, 1h | minutos a horas |
 | Swing | 1h, 4h | horas a pocos días |
-| Diario | 1d | algunos días |
+| Diario | 1d | algunos días a ~2 semanas |
+| Swing largo (desde 2026-11-17) | 4h, 1d | hasta ~4 semanas |
 
-**No:** estrategias de largo plazo. Nada semanal (1w) ni mensual, nada de posiciones que
-duren semanas o meses, nada de buy-and-hold.
+**No:** nada con señal semanal (1w) o mensual, nada de posiciones de meses, nada de buy-and-hold.
 
-Regla operativa (ajustable si Felipe lo pide):
+Regla operativa (Felipe, 2026-11-17; antes mediana ≤ 7 y tope ≤ 14 días):
 - La señal se genera entre **5m y 1d**.
-- La **duración mediana** del trade es de **7 días o menos**, y la spec debe fijar un
-  `timeout_velas` que corte como máximo a los **14 días**.
+- La **duración mediana** del trade es de **14 días o menos**, y la spec debe fijar un
+  `timeout_velas` que corte como máximo a los **28 días**.
 
 Recordatorio de `decisiones.md`: en temporalidades chicas la comisión pesa mucho en R
 (un stop de 0.47% paga ~0.2R). Una idea de scalp en 5m tiene que explicar por qué su edge bruto
@@ -44,6 +44,13 @@ Después se abre a otros tipos y activos. La rutina diaria alterna entre "mejora
 conocido" (otros símbolos, otras temporalidades dentro del rango) e "idea nueva".
 
 ## Decisiones de alcance (Felipe)
+
+- **2026-11-17 · Se amplía el horizonte a trades de hasta 4 semanas** (mediana ≤ 14 días, tope ≤ 28). Motivo: en 17
+  días se evaluaron 8 estrategias y sólo pasó una; a 5m–1d con trades de horas la comisión (0,2 % ida y vuelta) se
+  come casi todo, y lo que tiene mejor evidencia en cripto (momentum y tendencia a semanas) quedaba afuera o en el
+  borde. El bot ya maneja posiciones de días (TREND). Lo ya medido no se re-evalúa: una pregunta cerrada por
+  alcance (p. ej. chandelier-14d, rechazada por mediana 14 d > 7) sólo vuelve como spec nueva con su pre-registro,
+  y cuenta en la corrección por pruebas de su familia.
 
 - **2026-11-01 · Familia de tendencia diaria (TREND_1D y variantes).** El edge crece con la
   duración (+0.087 con tope de 7 días → +0.148 con 14 → +0.545 sin tope, ~22 días de media), así que

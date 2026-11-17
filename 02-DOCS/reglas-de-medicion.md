@@ -132,6 +132,21 @@ cero, con `z` de Bonferroni sobre `n_pruebas` (las variantes de la familia en es
 propósito: las variantes de una familia se parecen y no son pruebas independientes. Las
 evaluaciones ya hechas no cambian.
 
+## Cribado en dos etapas (desde 2026-11-17)
+
+Para que entren más ideas al embudo sin gastar el holdout (Felipe, 2026-11-17):
+
+1. **Etapa 1, cribado:** una idea con evidencia **C** (o una B dudosa) se mide con una spec de medición
+   (`medicion: true`, `solo_desarrollo: true`) con el **criterio de desarrollo completo** (avgR neto y ±2 EE,
+   tramos, nulo, estabilidad, ajuste por pruebas). Nunca mira el holdout. Si pasa todo lo de desarrollo, el
+   veredicto es NO_CONCLUYENTE con el único motivo «holdout no mirado» y `ideas.md` anota **«pasa el cribado»**.
+2. **Etapa 2, confirmación:** la idea que pasó el cribado se pre-registra de nuevo **con la misma regla y los
+   mismos parámetros** (nada se afina con lo visto), sin `medicion`. Su desarrollo ya se sabe que pasa: **lo que
+   decide es el holdout**, mirado una vez, con el criterio de holdout de siempre.
+
+Las dos etapas cuentan como pruebas de la familia en la corrección por número de pruebas. Una idea que no pasa
+el cribado queda rechazada como cualquier otra (`decisiones.md`). La evidencia **D** no entra ni al cribado.
+
 ## Control nulo
 Cuando aplique, comparar contra entradas al azar con la misma frecuencia y salida (TREND_1D en oro
 se rechazó porque el azar rendía más que la regla).

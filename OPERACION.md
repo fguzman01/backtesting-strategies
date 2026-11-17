@@ -114,7 +114,7 @@ cuenta completa, no un proyecto. Ocupación al 2026-11-06 (hora de Chile):
 |---|---|---|
 | 20:00–01:00 | QA btc 20:00 (opus) · informe btc 22:00 (opus) · desarrollador btc 00:00 (opus) | **alta** |
 | 01:00–03:30 | — | libre |
-| **03:37–08:37** | investigador factory 03:37 · Seedbox analista 08:23; sáb. explorador 04:23; dom. auditor 05:13 y PO factory 07:47 | **baja entre semana** |
+| **03:37–08:37** | investigador factory 03:37 · Seedbox analista 08:23; mié. y sáb. explorador 04:23; dom. auditor 05:13 y PO factory 07:47 | **baja entre semana** |
 | 09:00–14:00 | desarrollador btc 09:00 (sonnet); lun. PO btc 10:00 (opus); sesiones de Felipe | media |
 | 14:00–20:00 | sesiones de Felipe; dom. arquitecto btc 18:00 (opus) | la usa Felipe |
 
