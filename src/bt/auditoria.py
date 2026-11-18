@@ -324,6 +324,21 @@ def chequear_ficha(raiz: Path) -> Chequeo:
     return Chequeo("Ficha de cada aprobada completa", "btc-signal-web (2026-11-02)", AVISO if avisos else OK, avisos)
 
 
+def chequear_madre(raiz: Path) -> Chequeo:
+    """Una variante aprobada debería ganarle a su madre; si el intervalo contiene el cero, no está demostrado."""
+    ruta = raiz / "results" / "approved.json"
+    entradas = json.loads(ruta.read_text())["estrategias"] if ruta.exists() else []
+    avisos = []
+    for e in entradas:
+        for tramo, c in (e.get("comparacion_madre") or {}).items():
+            ic = c.get("ic95") if isinstance(c, dict) else None
+            if ic and ic[0] <= 0 <= ic[1]:
+                avisos.append(f"{e.get('id')}: su ventaja sobre la madre no está demostrada en {tramo} "
+                              f"({c.get('diferencia', 0):+.3f} [{ic[0]:+.3f}, {ic[1]:+.3f}] contiene el cero)")
+    return Chequeo("Las variantes le ganan a su madre", "auditoría 2026-11-15", AVISO if avisos else OK,
+                   avisos or ["ninguna variante con el cero dentro del intervalo"])
+
+
 def chequear_paper(raiz: Path) -> Chequeo:
     """Lo que vuelve del bot: ¿alguna aprobada rinde en paper peor de lo que predijo el backtest?"""
     from bt.puente import alertas_vigentes
@@ -438,6 +453,7 @@ def auditar(raiz: Path = Path(".")) -> list[Chequeo]:
         chequear_robustez(evs),
         chequear_desgaste_holdout(evs),
         chequear_ficha(raiz),
+        chequear_madre(raiz),
         chequear_paper(raiz),
         chequear_adelante(raiz),
         chequear_estabilidad(evs),

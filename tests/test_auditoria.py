@@ -329,3 +329,20 @@ def test_ficha_avisa_si_falta_el_numero_sin_sesgo(tmp_path):
     assert c.estado == AVISO and "sin_sesgo" in " ".join(c.detalle)
     ruta.write_text(json.dumps({"estrategias": [{**base, "sin_sesgo": {"fuente": "s"}}]}))
     assert chequear_ficha(tmp_path).estado == OK
+
+
+def test_madre_avisa_si_el_intervalo_contiene_el_cero(tmp_path):
+    from bt.auditoria import chequear_madre
+
+    def cmp(ic):
+        return {"desarrollo": {"diferencia": 0.0, "ic95": ic}}
+
+    (tmp_path / "results").mkdir()
+    ruta = tmp_path / "results" / "approved.json"
+    ruta.write_text(json.dumps({"estrategias": [{"id": "t7", "comparacion_madre": cmp([-0.137, 0.081])}]}))
+    c = chequear_madre(tmp_path)
+    assert c.estado == AVISO and "t7" in " ".join(c.detalle)
+    ruta.write_text(json.dumps({"estrategias": [{"id": "t7", "comparacion_madre": cmp([0.02, 0.2])}]}))
+    assert chequear_madre(tmp_path).estado == OK
+    ruta.write_text(json.dumps({"estrategias": [{"id": "t7"}]}))
+    assert chequear_madre(tmp_path).estado == OK
