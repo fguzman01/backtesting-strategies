@@ -10,14 +10,15 @@
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
+|---|---|---|---|---|---|---|
+| [#84](https://github.com/fguzman01/backtesting-strategies/issues/84) | bt.auditoria: avisar cuando una aprobada no le gana a su madre | mejora | P2 | bajo | en-revision | fusionar o rechazar el PR |
 
 ## En marcha
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
-| [#84](https://github.com/fguzman01/backtesting-strategies/issues/84) | bt.auditoria: avisar cuando una aprobada no le gana a su madre | mejora | P2 | bajo | en-curso |
 | [#85](https://github.com/fguzman01/backtesting-strategies/issues/85) | Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades) | mejora | P2 | medio | en-curso |
 | [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | en-curso |
 
