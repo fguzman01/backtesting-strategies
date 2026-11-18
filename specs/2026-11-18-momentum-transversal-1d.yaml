@@ -1,0 +1,86 @@
+id: 2026-11-18-momentum-transversal-1d
+estado: pre-registrada
+fuente: "Idea #17 de 02-DOCS/ideas.md (en cola, aprobada por Felipe 2026-11-15). Liu, Tsyvinski & Wu, Common Risk Factors in Cryptocurrency, Journal of Finance (2022): el momentum de corto plazo (retorno de 1 a 4 semanas) es uno de los factores del corte transversal cripto. Evidencia B (fuera de muestra en cripto, factores sin costos de operación explícitos para carteras con stops)."
+pregunta: "¿Momentum de corte transversal diario (largo los mejores, corto los peores por retorno de 7 días) en el universo dinámico top 20, con stop en ATR, tiene edge neto de comisión?"
+
+hipotesis: >
+  Mecanismo: la atención y los flujos llegan escalonados entre monedas; las que más subieron en la última
+  semana siguen siendo comparadas favorablemente por quienes llegan tarde, y las que más cayeron siguen
+  liberando posiciones de quienes capitulan de a poco. Quien pierde es el que vende a destiempo contra el
+  flujo (o compra la caída ya agotada). Regla, UNA sola configuración fijada antes de correr, desde la
+  literatura y no desde datos: cada vela diaria, entre los símbolos vigentes del top 20 del mes se rankea
+  el retorno de 7 cierres (el horizonte de 1 semana del factor de momentum de Liu, Tsyvinski & Wu; la
+  idea #17 decía «1–3 días» y se fija 7 porque es el horizonte con soporte publicado, no por mirar
+  resultados); largo los 3 mejores, corto los 3 peores (≈ 15% de 20 en cada extremo; sólo si hay al menos 6
+  vigentes). Sentido: momentum, fijado antes de correr; la reversión no se prueba aparte. Entrada en la
+  apertura de la vela siguiente. Stop a 2 ATR(14) desde la entrada y trailing a 2 ATR desde el mejor precio
+  desde la entrada (lo mueve el motor); sin objetivo; tope 5 velas diarias (5 días). Con stop de 2 ATR
+  diario (~5–7% en cripto líquida) la comisión de 0.1% por lado (0.05% + 0.05% de deslizamiento) pesa
+  ~0.03–0.04R; el riesgo central es que el efecto de 7 días se agote antes de los 5 días de tenencia o
+  que la parte corta pague caro el rebote de los más castigados (squeeze). Cupo de 3 por dirección: lo
+  mismo que operaría el bot con TREND_4H y es el número natural de la regla. Universo dinámico top 20 (sin
+  sesgo de supervivencia: los retirados que más cayeron entran, y como cortos ayudarían: esto es
+  correcto y buscado). Criterio exigente por defecto.
+
+  Riesgos declarados: (1) la señal se repite todos los días para el mismo símbolo mientras siga en el
+  extremo; el motor opera una posición a la vez por símbolo, así que las operaciones no son independientes
+  entre símbolos (comparten el mismo mercado): el IC con ±2 EE es optimista, y el control nulo y los tramos
+  son el contrapeso; (2) la dirección neta puede acumular riesgo de mercado (3 largos vs 3 cortos no está
+  neutralizado por beta); (3) el holdout se declara contaminado (ver `holdout_contaminado`).
+
+ya_probado: >
+  decisiones.md: «¿Momentum relativo cross-sectional (largo top-3 / corto bottom-3, rebalanceo semanal)?
+  No. Desarrollo +1.0%/semana, holdout −0.56% y 1/4 tramos» (btc-signal-web, 2026-10-11). Es la misma
+  pregunta de fondo en otro diseño: allí era una cartera rebalanceada cada semana sin stops, sobre 14
+  tokens vivos hoy (sesgo de supervivencia) y medida en retorno de cartera; acá es una regla diaria con
+  stop y trailing en ATR (resultado en R neto de comisión por operación), sobre el universo dinámico top
+  20 y con control nulo. Es una pregunta nueva con su propio pre-registro, no una re-evaluación. La
+  tendencia de la propia serie (Donchian, TREND_*) no es esto: el disparador acá es el rango relativo
+  entre monedas, no la ruptura de un canal; reversión (6 diseños rechazados) y continuación por volumen
+  (rechazada) tienen otro disparador. TREND_4H aprobó en observación con la tendencia absoluta, lo que
+  sugiere (sin garantizarlo) que existe momentum en cripto a esa escala.
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "3 días (trailing 2 ATR, tope 5 días)"
+
+familia: corte_transversal
+medicion: false
+solo_desarrollo: false
+pruebas_previas: 1          # btc-signal-web: momentum relativo semanal top-3/bottom-3 (rechazado, 2026-10-11). Las de este repo se cuentan solas
+holdout_contaminado: true   # ese momentum relativo semanal miró el holdout en btc-signal-web (−0.56%/semana): emparentado, así que como máximo observación
+
+estrategia:
+  modulo: momentum_transversal
+  params: {lookback: 7, k: 3, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 5          # 5 días en 1d
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
