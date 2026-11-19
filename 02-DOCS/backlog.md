@@ -5,14 +5,11 @@
 ## Recomendadas para esta semana
 
 1. **#45** Motor intrabar para scalps (5m–30m)
-2. **#85** Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades)
-3. **#47** Revisar la lista NO_CRIPTO del universo dinámico
+2. **#47** Revisar la lista NO_CRIPTO del universo dinámico
 
 ## Espera tu decisión
 
-| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
-|---|---|---|---|---|---|---|
-| [#85](https://github.com/fguzman01/backtesting-strategies/issues/85) | Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades) | mejora | P2 | medio | en-revision | fusionar o rechazar el PR |
+Nada.
 
 ## En marcha
 
@@ -23,6 +20,7 @@
 
 ## Hechas (últimas 20)
 
+- [#85](https://github.com/fguzman01/backtesting-strategies/issues/85) Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades) (2026-11-19)
 - [#84](https://github.com/fguzman01/backtesting-strategies/issues/84) bt.auditoria: avisar cuando una aprobada no le gana a su madre (2026-11-18)
 - [#81](https://github.com/fguzman01/backtesting-strategies/issues/81) Motor: estrategias de corte transversal (ordenar símbolos entre sí cada vela) (2026-11-17)
 - [#86](https://github.com/fguzman01/backtesting-strategies/issues/86) Verificar si el motor cobra el funding en futuros 4h y declararlo en la ficha (2026-11-16)
