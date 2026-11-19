@@ -103,6 +103,9 @@ proponé comparar paper contra backtest en la misma ventana (btc-signal-web tien
 meses de prueba hacia adelante) y si ya se cumple alguno. Si se cumple, es la mejora n.º 1 del informe
 y se le avisa a Felipe; no se cambian los umbrales ni el nivel por cuenta propia.
 
+Para la revisión de T7 usá `python -m bt.puente <informe.json> --cupo 3 --desde <inicio del paper>`: da el backtest
+con el cupo del bot (±2 EE) en la ventana del paper, al lado del avgR del paper.
+
 ### 5. Mejoras
 
 Máximo 5, ordenadas por impacto en la confiabilidad. Cada una: qué cambiar, dónde, por qué (qué
