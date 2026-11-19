@@ -71,10 +71,12 @@ def _en_universo(spec: Spec, s: str, trades: list[Trade]) -> list[Trade]:
 
 
 def _tramo(spec: Spec, cargar_velas: CargarVelas, cargar_funding: CargarFunding, holdout: bool,
-           desde_forzado: str | None = None, nota: str | None = None) -> dict:
+           desde_forzado: str | None = None, nota: str | None = None, hasta_forzado: str | None = None) -> dict:
     desde, hasta = (HOLDOUT_DESDE, None) if holdout else (spec.desde, None)
     if desde_forzado is not None:
         desde = desde_forzado
+    if hasta_forzado is not None:
+        hasta = hasta_forzado
     nota = nota or f"evaluacion {spec.id} ({'holdout' if holdout else 'desarrollo'})"
     por_simbolo: dict[str, list[Trade]] = {}
     opt_por_simbolo: dict[str, list[Trade]] = {}
