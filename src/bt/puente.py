@@ -14,7 +14,8 @@ markdown y lo anota en `02-DOCS/retroalimentacion.md`, que es lo que lee el audi
 `--cupo` corre la spec de cada estrategia del informe con `max_por_direccion=N` en la ventana del paper
 (el esquema del informe no documenta el inicio del paper: se toma de `paper.desde` si el bot lo
 agrega, y si no hay que pasar `--desde` con la fecha del primer trade del paper; `--hasta` por defecto es
-la fecha del informe) y muestra su avgR ±2 EE junto al del paper. Es una medición de paridad (queda en `results/mediciones.jsonl`): no escribe
+la fecha del informe) y muestra su avgR ±2 EE junto al del paper. Es una medición de paridad (queda en
+`results/mediciones.jsonl`): no escribe
 evaluaciones ni toca approved.json, y no alimenta ninguna decisión de aprobación.
 
 No decide nada: no cambia veredictos ni approved.json. Marca, para que alguien mire, cuando el paper
