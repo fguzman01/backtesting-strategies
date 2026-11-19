@@ -1,0 +1,88 @@
+id: 2026-11-19-momentum-transversal-1d-ret1
+estado: pre-registrada
+fuente: "Idea #19 de 02-DOCS/ideas.md (en cola, explorador 2026-11-18). Catálogo: momentum diario en las monedas más grandes. Up or down? Short-term reversal, momentum, and liquidity effects in cryptocurrency markets, IRFA 78 (2021), y EFMA 2022: reversión en general, pero continuación (momentum) a un día en las monedas más operadas. Sólo resúmenes leídos: evidencia C+, sin costos explícitos para carteras con stops."
+pregunta: "¿Momentum de corte transversal de 1 día (largo los 3 con mayor retorno del día, corto los 3 con menor retorno) en el universo dinámico top 20, con stop y trailing en ATR, tiene edge neto de comisión?"
+
+hipotesis: >
+  Mecanismo: en las monedas más líquidas el retorno del día anterior continúa al siguiente porque los flujos
+  y la atención llegan escalonados; la reversión es propia de las ilíquidas, y el universo dinámico top 20
+  son justamente las más operadas de cada mes. Quien pierde es el que vende a destiempo contra el flujo del
+  día (o compra la caída ya agotada). Regla, UNA sola configuración fijada antes de correr y tomada de la
+  fuente, no de datos: cada vela diaria `t`, entre los símbolos vigentes del top 20 del mes se rankea el
+  retorno de 1 cierre (cierre_t / cierre_{t-1} − 1); largo los 3 mejores, corto los 3 peores (sólo si hay
+  al menos 6 vigentes). Sentido: momentum, fijado antes de correr; la reversión de 1 día (el signo
+  dominante del resto del universo según la misma literatura) NO se prueba aparte, y tampoco los horizontes
+  de 2 o 3 días. Entrada en la apertura de la vela siguiente. Stop a 2 ATR(14) desde la entrada y trailing a
+  2 ATR desde el mejor precio desde la entrada (lo mueve el motor); sin objetivo; tope 5 velas diarias.
+  Costos: 0.1% por lado (0.05% comisión + 0.05% deslizamiento) y funding de futuros; con stop de 2 ATR
+  diario (~5–7% en cripto líquida) la comisión pesa ~0.03–0.04R por operación.
+
+  Riesgos declarados: (1) es la mitad de la idea #17 que quedó sin medir y su madre se rechazó con 7 días
+  (−0.012): si el retorno de 1 día tampoco paga, la familia queda cerrada; (2) la rotación diaria y la
+  comisión se comen un efecto de un día (Han, Kang & Ryu); un retorno de 1 día es también la señal más
+  expuesta a la reversión por rebote del día siguiente; (3) las señales de 3+3 símbolos del mismo mercado no
+  son independientes, el IC de ±2 EE es optimista y el control nulo y los tramos son el contrapeso; (4) la
+  dirección neta no está neutralizada por beta; (5) el holdout se declara contaminado (ver
+  `holdout_contaminado`). Criterio exigente por defecto, sin aflojar nada.
+
+ya_probado: >
+  decisiones.md: «¿Momentum relativo cross-sectional (largo top-3 / corto bottom-3, rebalanceo semanal)? No»
+  (btc-signal-web, 2026-10-11, retorno de cartera semanal sin stops, 14 tokens vivos) y
+  `2026-11-18-momentum-transversal-1d`: mismo diseño con retorno de 7 días en el top 20 dinámico, RECHAZADA
+  (n=2857, −0.012 [−0.045, +0.021], 2/4 tramos, bajo el p95 del nulo). Madre: esa spec, declarada en `madre`
+  y corrida al lado en el mismo período, universo y cupo para ver si el horizonte de 1 día agrega algo sobre el de 7. Lo que cambia es el horizonte del disparador (1 día en vez de
+  7) con un respaldo distinto en la literatura (momentum diario en las más operadas, no el factor semanal de
+  Liu, Tsyvinski & Wu); no se afinan parámetros con lo visto: los 3 extremos y el stop de 2 ATR se mantienen
+  tal cual. Es la 3.ª variante de la familia (la corrección por pruebas la cuenta sola: 2 en este repo + 1
+  externa). La reversión (6 diseños, todos rechazados) y la continuación por volumen (rechazada) tienen otro
+  disparador.
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "3 días (trailing 2 ATR, tope 5 días)"
+
+familia: corte_transversal
+medicion: false
+solo_desarrollo: false
+pruebas_previas: 1          # btc-signal-web: momentum relativo semanal top-3/bottom-3 (rechazado, 2026-10-11). Las de este repo se cuentan solas
+holdout_contaminado: true   # el momentum relativo semanal miró el holdout en btc-signal-web (−0.56%/semana): emparentado, así que como máximo observación
+
+madre:
+  nombre: "momentum transversal 7 días (2026-11-18)"
+  modulo: momentum_transversal
+  params: {lookback: 7, k: 3, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+estrategia:
+  modulo: momentum_transversal
+  params: {lookback: 1, k: 3, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 5          # 5 días en 1d
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
