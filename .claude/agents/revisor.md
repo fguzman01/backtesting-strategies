@@ -30,7 +30,12 @@ que va a salir podría mentir. No la mejorás vos: la criticás. El autor ya est
 5. **Universo**: ¿`dinamico` (sin sesgo de supervivencia)? Si es lista fija, ¿la hipótesis dice por qué?
 6. **Costos**: ¿la comisión en R (comisión × 2 / distancia del stop) se come el edge esperado? Con
    stops chicos en 5m–1h casi siempre.
-7. **Alcance**: con las salidas que tiene, ¿la duración mediana puede quedar ≤ 7 días?
+7. **Alcance**: con las salidas que tiene, ¿la duración mediana puede quedar ≤ 14 días (tope ≤ 28, desde
+   2026-11-17)?
+7b. **Fiel a la idea**: ¿la spec respeta lo que la idea de `ideas.md` dejó fijado (horizonte, sentido, universo,
+   tenencia)? Si se aparta (p. ej. la idea dice «retorno de 1–3 días» y la spec usa 7), es **bloquea** salvo que la
+   spec explique por qué con una fuente: cada desvío gasta una prueba de la familia y obliga a otra spec para medir
+   lo que la idea pedía (pasó con las ideas 17 y 19, 2026-11-18/19).
 8. **Look-ahead en el código**: índices hacia adelante (`shift(-k)`, `.iloc[i+1]`), indicadores que
    usan la vela en curso para decidir en ella, `rolling` centrado. ¿El test llama a
    `chequear_lookahead` con los params de la spec?
