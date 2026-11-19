@@ -114,3 +114,18 @@ def test_paridad_cupo_md_imprime_backtest_y_paper(tmp_path):
     inf["estrategias"][0]["paper"].pop("desde")
     with pytest.raises(puente.InformeInvalido):
         puente.paridad_cupo_md(inf, 3, None, None, specs=tmp_path)
+
+
+def test_ventana_en_el_holdout_se_pide_explicita_y_no_se_recorta():
+    kw = dict(cargar_velas=lambda s, i, m="futures": _velas_sinteticas(int(s[1]), 800), cargar_funding=lambda s: None)
+    bt = puente.backtest_con_cupo(_spec_sintetica(), "2025-10-01", "2026-02-01", 3, **kw)
+    assert bt["ventana"][0][:10] >= "2025-10-01" and bt["global"]["n"] > 0
+
+
+def test_main_cupo_invalido_o_spec_inexistente_sale_con_2(tmp_path, capsys):
+    import json
+
+    ruta = tmp_path / "inf.json"
+    ruta.write_text(json.dumps(informe()), encoding="utf-8")
+    assert puente.main([str(ruta), "--cupo", "0", "--desde", "2024-01-01"]) == 2
+    assert puente.main([str(ruta), "--cupo", "3", "--desde", "2024-01-01"]) == 2  # no hay specs/<id>.yaml en tmp
