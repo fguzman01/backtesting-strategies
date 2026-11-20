@@ -106,3 +106,9 @@ def test_lectura():
     assert adelante.lectura(50, 0.3, [0.1, 0.5], 0.2, "observacion") == ("positiva", "candidata a subir a aprobada")
     assert adelante.lectura(50, -0.3, [-0.5, -0.1], 0.2, "aprobada")[1].startswith("candidata a bajar")
     assert adelante.lectura(50, 0.0, [-0.1, 0.1], 0.3, "aprobada")[0] == "incierta_peor_que_desarrollo"
+
+
+def test_no_cripto_confirmados_quedan_excluidos():
+    for sim in ("SPCXUSDT", "DRAMUSDT", "SNXXUSDT"):
+        assert not universo.es_candidato(sim)
+    assert universo.es_candidato("SOLUSDT")
