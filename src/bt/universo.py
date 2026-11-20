@@ -47,8 +47,11 @@ ESTABLES = {"USDC", "BUSD", "TUSD", "FDUSD", "USDP", "DAI", "EUR", "GBP", "AEUR"
 # Perpetuos de activos tradicionales (acciones, ETF, materias primas, oro tokenizado) que Binance lista
 # desde 2025: cotizan con horario de mercado y otra dinámica. El universo por defecto es CRIPTO; una
 # pregunta sobre estos va con lista fija. Lista a mano (no hay un campo en los datos históricos que lo
-# diga): revisarla cuando aparezcan nuevos en el top. Confirmados por fuente (2026-11-20): SPCX
-# = SpaceX (pre-IPO, luego Nasdaq), SNXX = ETF 2x sobre SNDK, DRAM = índice/ETF de memoria (Roundhill).
+# diga): revisarla cuando aparezcan nuevos en el top. Revisados el 2026-11-20 (fuentes):
+# SPCX = SpaceX, pre-IPO y luego perpetuo TradFi sobre Nasdaq (crypto.news, 2026-05/06);
+# SNXX = ETF 2x sobre SNDK de Tradr (crypto.news, lanzamiento de perpetuos de acciones);
+# DRAM = índice TradFi del ETF de memoria de Roundhill (DefiLlama RWA perps «binance:dramusdt»,
+# Coinalyze); es la evidencia menos directa, pero igual no es cripto.
 NO_CRIPTO = {
     "XAU", "XAG", "PAXG", "XAUT", "CL", "BZ",                              # metales y petróleo
     "NVDA", "TSLA", "GOOGL", "INTC", "MRVL", "MSTR", "MU", "CRCL", "SNDK",  # acciones EE. UU.
