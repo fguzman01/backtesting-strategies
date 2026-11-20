@@ -1,0 +1,89 @@
+id: 2026-11-20-efecto-max-1d
+estado: pre-registrada
+fuente: "Idea #20 de 02-DOCS/ideas.md (en cola, cribado, explorador 2026-11-18). Catálogo: Efecto MAX. Özdamar et al., Financial Innovation 2021, y Zhang, IRFA 2021: signo positivo (continuación) a frecuencia semanal; Yadav 2025: signo negativo intradía. Evidencia C+ (2014–2020, monedas chicas, sin costos, un estudio en contra)."
+pregunta: "¿Efecto MAX de corte transversal (largo los 3 con mayor retorno diario máximo de los últimos 30 días, corto los 3 con menor) en el universo dinámico top 20, con stop y trailing en ATR y tope de 7 días, tiene edge neto de comisión?"
+
+hipotesis: >
+  Mecanismo: demanda por activos «lotería». Las monedas con una suba extrema reciente atraen atención
+  y compradores minoristas que buscan el siguiente salto, y siguen unos días; quien pierde es el que
+  vende a destiempo (o abre el corto contra la atención). La señal es el extremo (el mayor retorno
+  diario de la ventana), no el retorno acumulado, así que no es el momentum de corte transversal ya
+  cerrado (7 y 1 día, las dos ≈ 0).
+
+  Regla, UNA sola configuración fijada antes de correr y tomada de la fuente, no de datos: cada vela
+  diaria `t`, entre los símbolos vigentes del top 20 del mes, MAX = mayor retorno de 1 cierre
+  (cierre_s / cierre_{s-1} − 1) de las últimas 30 velas hasta el cierre de `t`; largo los 3 con MAX más
+  alto y corto los 3 con MAX más bajo (sólo si hay al menos 6 vigentes). Sentido: continuación (el signo
+  de las dos fuentes a frecuencia semanal); el signo contrario (el de Yadav, intradía) NO se prueba
+  aparte, y tampoco otras ventanas. Entrada en la apertura de la vela siguiente. Stop a 2 ATR(14) desde
+  la entrada y trailing a 2 ATR desde el mejor precio desde la entrada (lo mueve el motor); sin objetivo;
+  tope 7 velas diarias. Costos: 0.1% por lado (0.05% comisión + 0.05% deslizamiento) y funding de
+  futuros; con stop de 2 ATR diario (~5–7%) la comisión pesa ~0.03–0.04R por operación.
+
+  Es una ETAPA 1 (cribado, `reglas-de-medicion.md` § Cribado): mide sólo desarrollo, con el criterio
+  de desarrollo completo y sin mirar nunca el holdout. Si pasa todo, queda NO_CONCLUYENTE por «holdout
+  no mirado» y se pre-registra la etapa 2 con la misma regla y los mismos parámetros.
+
+  Riesgos declarados: (1) evidencia C+: los estudios usan monedas chicas y frecuencia semanal sin
+  costos, y uno halla el signo contrario; el universo top 20 son las más líquidas, donde el efecto
+  lotería debería ser más débil; (2) el MAX de 30 días cambia despacio, así que la señal persiste y las
+  entradas se repiten en los mismos símbolos tras cada salida (el cupo de 3 por dirección y el tope de
+  7 días acotan la exposición; las muestras se solapan y el IC de ±2 EE es optimista: el control nulo y
+  los tramos son el contrapeso); (3) cercana a las ideas 17 y 19 (momentum de corte transversal): un MAX
+  alto suele coincidir con retorno reciente alto, y la dirección neta no está neutralizada por beta;
+  (4) el holdout se declara contaminado por la familia. Criterio exigente por defecto, sin aflojar nada.
+
+ya_probado: >
+  decisiones.md: momentum de corte transversal cerrado el 2026-11-19 (Felipe): 7 días −0.012 y 1 día
+  −0.022 en el top 20 dinámico, más el momentum relativo semanal rechazado en btc-signal-web (2026-10-11).
+  El motor de corte transversal sigue para mecanismos distintos y el efecto MAX es uno de ellos: el
+  disparador es el retorno extremo de un solo día dentro de 30 (preferencia por lotería), no el retorno
+  acumulado a 1 o 7 días. No se afinan parámetros con lo visto (ventana 30, k=3, stop 2 ATR, tope 7 d
+  vienen de la idea y de las specs hermanas). Es la 3.ª variante de la familia `corte_transversal` en
+  este repo (la corrección por pruebas la cuenta sola: 2 en este repo + 1 externa). Reversión (6 diseños)
+  y continuación por volumen (rechazada) tienen otro disparador.
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "3-4 días (trailing 2 ATR, tope 7 días)"
+
+familia: corte_transversal
+medicion: true
+solo_desarrollo: true
+pruebas_previas: 1          # btc-signal-web: momentum relativo semanal top-3/bottom-3 (rechazado, 2026-10-11). Las de este repo se cuentan solas
+holdout_contaminado: true   # el momentum relativo semanal miró el holdout en btc-signal-web: emparentado
+
+estrategia:
+  modulo: efecto_max
+  params: {ventana: 30, k: 3, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 7          # 7 días en 1d
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
