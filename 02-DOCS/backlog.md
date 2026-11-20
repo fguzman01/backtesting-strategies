@@ -9,14 +9,15 @@
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
+|---|---|---|---|---|---|---|
+| [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | en-revision | fusionar o rechazar el PR |
 
 ## En marcha
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
-| [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) | Revisar la lista NO_CRIPTO del universo dinámico | mejora | P3 | bajo | en-curso |
 
 ## Hechas (últimas 20)
 
