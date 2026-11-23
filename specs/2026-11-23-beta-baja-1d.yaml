@@ -1,0 +1,88 @@
+id: 2026-11-23-beta-baja-1d
+estado: pre-registrada
+fuente: "Idea #21 de 02-DOCS/ideas.md (en cola, cribado, explorador 2026-11-18). Catálogo: Beta a la baja. HSE, working paper 2020 (sólo resumen secundario): quintiles por beta a la baja, patrón monótono, ~2.6 %/semana largo-corto bruto. Evidencia C (un working paper, sin fuera de muestra ni costos)."
+pregunta: "¿Beta a la baja de corte transversal (largo los 3 con mayor beta a la baja contra BTC en 120 días, corto los 3 con menor) en el universo dinámico top 20, con stop y trailing en ATR y tope de 7 días, tiene edge neto de comisión?"
+
+hipotesis: >
+  Mecanismo: prima por riesgo de cola. Las monedas que caen más cuando BTC cae cargan con un riesgo que
+  el inversor quiere cubrir; quien lo cubre (o evita) paga de más, y quien lo carga cobra la prima. Esto
+  es distinto de tendencia y de momentum de corte transversal (ya cerrados): el ranking no depende del
+  retorno pasado sino de la sensibilidad a las caídas del mercado.
+
+  Regla, UNA sola configuración fijada antes de correr, de la fuente y del punto medio de la banda
+  90–180 de la idea, no de datos: cada vela diaria `t`, entre los símbolos vigentes del top 20 del mes,
+  beta a la baja = cov(r_s, r_BTC) / var(r_BTC) usando sólo los días de las últimas 120 velas hasta el
+  cierre de `t` en que BTC cayó (r_BTC < 0), con al menos 30 de esos días y ventana completa de retornos
+  (con huecos o historia corta no hay beta). Largo los 3 con mayor beta y corto los 3 con menor (sólo si
+  hay al menos 6 vigentes). Sentido: el de la fuente (largo el beta alto); el inverso NO se prueba, y
+  tampoco otras ventanas ni otro umbral de caída. BTC es la referencia y también rankea si es vigente.
+  Entrada en la apertura de la vela siguiente. Stop a 2 ATR(14) desde la entrada y trailing a 2 ATR desde
+  el mejor precio desde la entrada (lo mueve el motor); sin objetivo; tope 7 velas diarias. Costos: 0.1%
+  por lado (0.05% comisión + 0.05% deslizamiento) y funding de futuros.
+
+  Es una ETAPA 1 (cribado, `reglas-de-medicion.md` § Cribado): mide sólo desarrollo, con el criterio
+  de desarrollo completo y sin mirar nunca el holdout. Si pasa todo, queda NO_CONCLUYENTE por «holdout
+  no mirado» y se pre-registra la etapa 2 con la misma regla y los mismos parámetros.
+
+  Riesgos declarados: (1) evidencia C: working paper sin costos ni fuera de muestra y sólo un resumen
+  secundario; en el top 20 el efecto debería ser más débil; (2) largo beta alto y corto beta bajo no es
+  neutral al mercado en los trades (stop y tope de 7 días lo acotan), pero el premio puede ser el mercado
+  alcista y las monedas de beta alto suben en bloque: el control nulo y los tramos son el contrapeso;
+  (3) el beta de 120 días cambia despacio: las entradas se repiten en los mismos símbolos (el cupo de 3
+  por dirección y el tope de 7 días acotan la exposición; las muestras se solapan y el IC de ±2 EE es
+  optimista); (4) el holdout se declara contaminado por la familia. Criterio exigente por defecto.
+
+ya_probado: >
+  decisiones.md: momentum de corte transversal cerrado el 2026-11-19 (Felipe; 7 d −0.012, 1 d −0.022),
+  efecto MAX rechazado (−0.068) y momentum relativo semanal rechazado en btc-signal-web (2026-10-11).
+  El motor de corte transversal sigue para mecanismos distintos: acá el ranking es la sensibilidad a las
+  caídas de BTC (riesgo de cola), no el retorno pasado ni su extremo. La auditoría 2026-11-22 pide no
+  abrir más variantes de corte transversal sin un mecanismo realmente nuevo; el beta a la baja es una
+  prima por riesgo y no una señal de precio pasado, pero es la 4.ª prueba de la familia en este repo
+  (la corrección por pruebas la cuenta sola: 3 en este repo + 1 externa) y el listón de Bonferroni sube.
+  No se afinan parámetros con lo visto (ventana 120, k 3, stop 2 ATR, tope 7 d).
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "3-4 días (trailing 2 ATR, tope 7 días)"
+
+familia: corte_transversal
+medicion: true
+solo_desarrollo: true
+pruebas_previas: 1          # btc-signal-web: momentum relativo semanal top-3/bottom-3 (rechazado, 2026-10-11). Las de este repo se cuentan solas
+holdout_contaminado: true   # el momentum relativo semanal miró el holdout en btc-signal-web: emparentado
+
+estrategia:
+  modulo: beta_baja
+  params: {ventana: 120, k: 3, min_dias_baja: 30, referencia: BTCUSDT, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 7          # 7 días en 1d
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
