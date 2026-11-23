@@ -122,10 +122,84 @@ def test_ventana_en_el_holdout_se_pide_explicita_y_no_se_recorta():
     assert bt["ventana"][0][:10] >= "2025-10-01" and bt["global"]["n"] > 0
 
 
-def test_main_cupo_invalido_o_spec_inexistente_sale_con_2(tmp_path, capsys):
+def test_main_cupo_invalido_o_spec_inexistente_sale_con_2(tmp_path, capsys, monkeypatch):
     import json
+
+    monkeypatch.setattr(puente, "bajar_faltantes", lambda s: [])  # sin red en los tests
 
     ruta = tmp_path / "inf.json"
     ruta.write_text(json.dumps(informe()), encoding="utf-8")
     assert puente.main([str(ruta), "--cupo", "0", "--desde", "2024-01-01"]) == 2
     assert puente.main([str(ruta), "--cupo", "3", "--desde", "2024-01-01"]) == 2  # no hay specs/<id>.yaml en tmp
+
+
+def _spec_con_funding():
+    import dataclasses
+    return dataclasses.replace(_spec_sintetica(3), funding=True)
+
+
+def test_bajar_faltantes_baja_solo_lo_que_falta(tmp_path):
+    from bt import data
+
+    spec = _spec_con_funding()
+    velas, fund = tmp_path / "klines", tmp_path / "funding"
+    llamadas = []
+
+    def desc(s, i, desde, mercado, base):
+        llamadas.append(("velas", s))
+        data.ruta_local(s, i, mercado, base).parent.mkdir(parents=True, exist_ok=True)
+        data.ruta_local(s, i, mercado, base).write_text("time\n")
+
+    def desc_f(s, desde, base):
+        llamadas.append(("funding", s))
+        base.mkdir(parents=True, exist_ok=True)
+        (base / f"{s}.csv").write_text("time,rate\n")
+
+    kw = dict(descargar=desc, descargar_funding=desc_f, base_velas=velas, base_funding=fund)
+    bajado = puente.bajar_faltantes(spec, **kw)
+    assert len(bajado) == 2 * len(spec.simbolos)
+    assert {c[1] for c in llamadas} == set(spec.simbolos)
+    # segunda pasada: todo está, no se baja nada
+    llamadas.clear()
+    assert puente.bajar_faltantes(spec, **kw) == [] and llamadas == []
+    # falta un solo archivo: sólo ese
+    (fund / f"{spec.simbolos[0]}.csv").unlink()
+    assert puente.bajar_faltantes(spec, **kw) == [f"funding {spec.simbolos[0]}"]
+
+
+def test_cupo_en_clon_sin_klines_baja_y_termina_con_informe(tmp_path, monkeypatch):
+    import json
+
+    from bt import data
+
+    monkeypatch.chdir(tmp_path)  # clon limpio: no hay data/klines
+    spec = _spec_sintetica()
+    bajados = []
+
+    def falso(spec_):
+        bajados.append(spec_.id)
+        return [f"velas {s}" for s in spec_.simbolos]
+
+    kw = dict(cargar_velas=_cargar_sintetico, cargar_funding=lambda s: None)
+    assert not data.DIR_DATOS.exists()
+    bt = puente.backtest_con_cupo(spec, "2024-03-01", "2024-12-31", 3, bajar_faltantes_fn=falso, **kw)
+    assert bajados == [spec.id] and bt["global"]["n"] > 0
+    # sin cargadores inyectados, el camino real pide la descarga de faltantes antes de cargar
+    llamado = []
+    monkeypatch.setattr(puente, "bajar_faltantes", lambda s: llamado.append(s.id) or [])
+    with pytest.raises(FileNotFoundError):
+        puente.backtest_con_cupo(spec, "2024-03-01", "2024-12-31", 3)
+    assert llamado == [spec.id]
+    json.dumps(bt["global"])
+
+
+def test_main_cupo_con_descarga_fallida_sale_con_2(tmp_path, monkeypatch):
+    import json
+
+    def falla(s):
+        raise RuntimeError("sin datos")
+
+    monkeypatch.setattr(puente, "bajar_faltantes", falla)
+    ruta = tmp_path / "inf.json"
+    ruta.write_text(json.dumps(informe()), encoding="utf-8")
+    assert puente.main([str(ruta), "--cupo", "3", "--desde", "2024-01-01"]) == 2

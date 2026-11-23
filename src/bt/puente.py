@@ -129,7 +129,43 @@ def alertas_vigentes(ruta: Path = DOC) -> list[str]:
     return [p.strip("`, ") for p in linea.split(":**", 1)[-1].split(",") if p.strip("`, ")]
 
 
-def backtest_con_cupo(spec, desde: str, hasta: str, cupo: int = 3, cargar_velas=None, cargar_funding=None) -> dict:
+def bajar_faltantes(spec, descargar=None, descargar_funding=None, base_velas: Path | None = None,
+                    base_funding: Path | None = None) -> list[str]:
+    """Baja sólo las velas (y el funding) de `spec` que no están en `data/`. Devuelve lo que bajó.
+
+    En un clon limpio (el caso de las rutinas) no hay caché: sin esto `--cupo` falla con «no existe».
+    Lo que ya está no se vuelve a bajar. Las funciones de descarga se inyectan para los tests.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    from bt import data, evaluar
+
+    descargar = descargar or data.descargar
+    descargar_funding = descargar_funding or data.descargar_funding
+    base_velas = base_velas or data.DIR_DATOS
+    base_funding = base_funding or data.DIR_FUNDING
+    spec = evaluar.resolver_universo(spec)
+    tareas: list[tuple[str, object]] = []
+    for s in spec.simbolos:
+        if not data.ruta_local(s, spec.intervalo, spec.mercado, base_velas).exists():
+            tareas.append((f"velas {spec.mercado} {s} {spec.intervalo}",
+                           lambda s=s: descargar(s, spec.intervalo, "2020-01", spec.mercado, base_velas)))
+        if spec.historia_spot and not data.ruta_local(s, spec.intervalo, "spot", base_velas).exists():
+            def _spot(s=s):
+                try:
+                    descargar(s, spec.intervalo, "2017-01", "spot", base_velas)
+                except RuntimeError:
+                    pass  # sin spot en data.binance.vision: se usa sólo futuros (igual que evaluar)
+            tareas.append((f"velas spot {s} {spec.intervalo}", _spot))
+        if spec.funding and not (base_funding / f"{s.upper()}.csv").exists():
+            tareas.append((f"funding {s}", lambda s=s: descargar_funding(s, "2020-01", base_funding)))
+    with ThreadPoolExecutor(8) as ex:
+        list(ex.map(lambda t: t[1](), tareas))
+    return [t[0] for t in tareas]
+
+
+def backtest_con_cupo(spec, desde: str, hasta: str, cupo: int = 3, cargar_velas=None, cargar_funding=None,
+                      bajar_faltantes_fn=None) -> dict:
     """Backtest de `spec` con cupo de cartera `cupo` por dirección, sólo en [desde, hasta).
 
     La ventana del paper cae en el holdout: se pide de forma explícita (`holdout=True`) cuando cruza el
@@ -141,6 +177,11 @@ def backtest_con_cupo(spec, desde: str, hasta: str, cupo: int = 3, cargar_velas=
     if cupo < 1:
         raise ValueError("el cupo tiene que ser ≥ 1")
     spec = dataclasses.replace(spec, max_por_direccion=cupo)
+    if bajar_faltantes_fn is None and cargar_velas is None:
+        bajar_faltantes_fn = bajar_faltantes  # cargadores reales: completar la caché local
+    if bajar_faltantes_fn is not None:
+        for x in bajar_faltantes_fn(spec):
+            print(f"  bajado: {x}", file=sys.stderr, flush=True)
     return evaluar._tramo(
         spec, cargar_velas or data.cargar, cargar_funding or data.cargar_funding,
         holdout=clasificar(desde, hasta) != "desarrollo", desde_forzado=desde, hasta_forzado=hasta,
@@ -182,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         print(resumen_md(inf))
         if a.cupo is not None:
             print(paridad_cupo_md(inf, a.cupo, a.desde, a.hasta))
-    except (json.JSONDecodeError, InformeInvalido, FileNotFoundError, ValueError) as e:
+    except (json.JSONDecodeError, InformeInvalido, FileNotFoundError, ValueError, RuntimeError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 2
     if a.anotar:
