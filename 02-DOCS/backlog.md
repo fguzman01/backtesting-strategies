@@ -4,15 +4,13 @@
 
 ## Recomendadas para esta semana
 
-1. **#102** bt.puente --cupo: bajar solo las velas que faltan en un clon limpio
-2. **#103** Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7)
-3. **#45** Motor intrabar para scalps (5m–30m)
+1. **#103** Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7)
+2. **#45** Motor intrabar para scalps (5m–30m)
+3. **#104** Decidir cómo cuentan las pruebas_previas externas en la penalización Bonferroni
 
 ## Espera tu decisión
 
-| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
-|---|---|---|---|---|---|---|
-| [#102](https://github.com/fguzman01/backtesting-strategies/issues/102) | bt.puente --cupo: bajar solo las velas que faltan en un clon limpio | bug | P1 | bajo | en-revision | fusionar o rechazar el PR |
+Nada.
 
 ## En marcha
 
@@ -24,6 +22,7 @@
 
 ## Hechas (últimas 20)
 
+- [#102](https://github.com/fguzman01/backtesting-strategies/issues/102) bt.puente --cupo: bajar solo las velas que faltan en un clon limpio (2026-11-23)
 - [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) Revisar la lista NO_CRIPTO del universo dinámico (2026-11-20)
 - [#85](https://github.com/fguzman01/backtesting-strategies/issues/85) Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades) (2026-11-19)
 - [#84](https://github.com/fguzman01/backtesting-strategies/issues/84) bt.auditoria: avisar cuando una aprobada no le gana a su madre (2026-11-18)
