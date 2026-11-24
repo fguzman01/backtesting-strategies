@@ -20,11 +20,11 @@ Nada.
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
-| [#103](https://github.com/fguzman01/backtesting-strategies/issues/103) | Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7) | investigacion | P1 | medio | requiere-sesion |
 | [#104](https://github.com/fguzman01/backtesting-strategies/issues/104) | Decidir cómo cuentan las pruebas_previas externas en la penalización Bonferroni | investigacion | P2 | medio | requiere-sesion |
 
 ## Hechas (últimas 20)
 
+- [#103](https://github.com/fguzman01/backtesting-strategies/issues/103) Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7) (2026-11-24)
 - [#102](https://github.com/fguzman01/backtesting-strategies/issues/102) bt.puente --cupo: bajar solo las velas que faltan en un clon limpio (2026-11-23)
 - [#47](https://github.com/fguzman01/backtesting-strategies/issues/47) Revisar la lista NO_CRIPTO del universo dinámico (2026-11-20)
 - [#85](https://github.com/fguzman01/backtesting-strategies/issues/85) Backtest de T7 con cupo 3 por dirección en la ventana del paper (para la revisión de los 60 trades) (2026-11-19)
