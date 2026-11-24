@@ -4,8 +4,7 @@
 
 ## Recomendadas para esta semana
 
-1. **#103** Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7)
-2. **#45** Motor intrabar para scalps (5m–30m)
+1. **#45** Motor intrabar para scalps (5m–30m)
 
 ## Espera tu decisión
 
@@ -15,13 +14,13 @@ Nada.
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
-| [#103](https://github.com/fguzman01/backtesting-strategies/issues/103) | Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7) | investigacion | P1 | medio | en-curso |
 | [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
 
 ## Requiere sesión con Felipe
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
+| [#103](https://github.com/fguzman01/backtesting-strategies/issues/103) | Verificar si el paper del bot cobra funding en posiciones de ~3 días (T7) | investigacion | P1 | medio | requiere-sesion |
 | [#104](https://github.com/fguzman01/backtesting-strategies/issues/104) | Decidir cómo cuentan las pruebas_previas externas en la penalización Bonferroni | investigacion | P2 | medio | requiere-sesion |
 
 ## Hechas (últimas 20)
