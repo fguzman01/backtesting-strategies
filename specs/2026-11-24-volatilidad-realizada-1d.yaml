@@ -1,0 +1,88 @@
+id: 2026-11-24-volatilidad-realizada-1d
+estado: pre-registrada
+fuente: "Idea #23 de 02-DOCS/ideas.md (en cola, cribado, explorador 2026-11-21). Catálogo: Baja/alta volatilidad en el corte transversal. Lee & Wang, JFQA 2025 (60(4), 1859-1890). Evidencia B- (revista, pero el premio está en monedas chicas y Bitwise no halla efecto en el top 50)."
+pregunta: "¿Volatilidad realizada de corte transversal (largo los 3 de menor desviación estándar de retornos diarios en 30 días, corto los 3 de mayor) en el universo dinámico top 20, con stop y trailing en ATR y tope de 7 días, tiene edge neto de comisión?"
+
+hipotesis: >
+  Mecanismo: preferencia minorista por activos «lotería». La demanda por monedas de varianza alta las
+  sobrevalúa y rinden menos las semanas siguientes; el comprador de lotería pierde y quien vende esa
+  varianza (corto de alta volatilidad) o prefiere lo estable (largo de baja volatilidad) cobra. La
+  señal es la dispersión de los retornos, no su nivel pasado: distinta de tendencia y de momentum.
+
+  Regla, UNA sola configuración fijada antes de correr, tomada de la idea (ventana de 30 días, la misma
+  que el efecto MAX para no abrir otro grado de libertad), no de datos: cada vela diaria `t`, entre los
+  símbolos vigentes del top 20 del mes, VOL = desviación estándar de los retornos diarios de las últimas
+  30 velas hasta el cierre de `t` (ventana completa: con huecos o historia corta no hay señal). Largo los
+  3 de menor VOL y corto los 3 de mayor (sólo si hay al menos 6 vigentes). Sentido: el de la fuente; el
+  inverso NO se prueba, ni otras ventanas ni otros estimadores de volatilidad. Entrada en la apertura de
+  la vela siguiente. Stop a 2 ATR(14) desde la entrada y trailing a 2 ATR desde el mejor precio desde la
+  entrada (lo mueve el motor); sin objetivo; tope 7 velas diarias. Costos: 0.1% por lado (0.05%
+  comisión + 0.05% deslizamiento) y funding de futuros.
+
+  Es una ETAPA 1 (cribado, `reglas-de-medicion.md` § Cribado): mide sólo desarrollo, con el criterio de
+  desarrollo completo y sin mirar nunca el holdout. Si pasa todo, queda NO_CONCLUYENTE por «holdout no
+  mirado» y se pre-registra la etapa 2 con la misma regla y los mismos parámetros.
+
+  Riesgos declarados: (1) evidencia B-: el premio de la fuente está en monedas chicas y un análisis
+  independiente no lo halla en el top 50; en el top 20 debería ser más débil; (2) es la 3.ª prueba de la
+  familia «lotería» (MAX −0.068 y beta a la baja −0.055 no pasaron el cribado), así que el ajuste por
+  pruebas pesa; (3) el corto de alta volatilidad pierde en mercado alcista y el largo de baja
+  volatilidad (stablecoin-like, ATR chico) tiene stop muy cercano en precio: el control nulo y los
+  tramos son el contrapeso; (4) la volatilidad cambia despacio: las entradas se repiten en los mismos
+  símbolos y las muestras se solapan, el IC de ±2 EE es optimista; (5) el holdout se declara
+  contaminado por la familia.
+
+ya_probado: >
+  decisiones.md: momentum de corte transversal cerrado el 2026-11-19 (Felipe; 7 d −0.012, 1 d −0.022),
+  efecto MAX rechazado (−0.068), beta a la baja sin pasar el cribado (−0.055) y momentum relativo semanal
+  rechazado en btc-signal-web (2026-10-11). La auditoría 2026-11-22 pide no abrir más variantes de corte
+  transversal sin un mecanismo realmente nuevo; acá el ranking es la dispersión de retornos (prima por
+  varianza de lotería), no el retorno pasado, su extremo ni la sensibilidad a BTC, pero comparte el
+  motor y la idea de «lotería» con MAX y beta. La corrección por pruebas lo cuenta sola (4 en este repo
+  + 1 externa) y el listón de Bonferroni sube. No se afinan parámetros con lo visto (ventana 30, k 3,
+  stop 2 ATR, tope 7 d).
+
+horizonte:
+  tipo: diario
+  duracion_mediana_esperada: "3-4 días (trailing 2 ATR, tope 7 días)"
+
+familia: corte_transversal
+medicion: true
+solo_desarrollo: true
+pruebas_previas: 1          # btc-signal-web: momentum relativo semanal top-3/bottom-3 (rechazado, 2026-10-11). Las de este repo se cuentan solas
+holdout_contaminado: true   # el momentum relativo semanal miró el holdout en btc-signal-web: emparentado
+
+estrategia:
+  modulo: volatilidad_realizada
+  params: {ventana: 30, k: 3, atr_n: 14, stop_atr: 2.0, trailing_atr: 2.0}
+
+universo:
+  mercado: futures
+  dinamico: {top: 20}
+  intervalo: 1d
+  funding: true
+
+config:
+  fee_pct_por_lado: 0.001   # comisión 0.05% + deslizamiento 0.05%
+  deslizamiento_pct: 0.0
+  timeout_velas: 7          # 7 días en 1d
+  objetivo_r: null
+  cerrar_al_final: true
+  max_por_direccion: 3
+
+ventana_desarrollo:
+  desde: "2020-04-01"       # primer mes de la tabla del universo dinámico
+
+criterio_aprobacion:
+  n_minimo: 300
+  ic95_excluye_cero: true
+  ajuste_por_pruebas: true
+  concluyente: true
+  tramos_positivos_minimo: 3
+  supera_nulo_p95: true
+  estabilidad_minima: 0.5
+  holdout:
+    avgRNeto_positivo: true
+    aguanta_costos: true
+    sin_mejores_no_negativo: true
+    fraccion_desarrollo_minima: 0.33
