@@ -132,6 +132,11 @@ cero, con `z` de Bonferroni sobre `n_pruebas` (las variantes de la familia en es
 propósito: las variantes de una familia se parecen y no son pruebas independientes. Las
 evaluaciones ya hechas no cambian.
 
+**Pruebas externas (Felipe, 2026-11-24, #104):** las mediciones de la misma familia hechas fuera de este repo
+(btc-signal-web, otro activo u otra variante de la estrategia) **cuentan igual** en `pruebas_previas`. Es la opción
+conservadora: una familia muy probada exige más, venga de donde venga la prueba. No se descuentan pruebas de
+otro activo ni de otra temporalidad.
+
 ## Cribado en dos etapas (desde 2026-11-17)
 
 Para que entren más ideas al embudo sin gastar el holdout (Felipe, 2026-11-17):
