@@ -36,6 +36,8 @@ evidencia **A o B** (estudio de eventos con costos o efecto en varias fuentes), 
 completá su fuente: Felipe ya la aprobó con esa condición. Para la 17 la evidencia de partida ya es A:
 sumá réplicas y el horizonte que mejor documenten (1, 2 o 3 días), sin elegirlo mirando datos.
 No propongas variantes de tendencia.
+**Rotación:** si una familia lleva 3 mediciones seguidas sin pasar (`results/evaluaciones/` y `ideas.md`), no le
+agregues ideas: buscá en otras (regla de `catalogo.md`). Cada corrida trae ideas de **al menos 2 familias distintas**.
 - **Papers y research:** SSRN, arXiv (q-fin), research de exchanges y fondos cripto. Temas que
   suelen tener mecanismo: funding y basis, momentum de series de tiempo y cross-section, reversión
   tras liquidaciones, efectos de calendario/sesión, volatilidad, flujos de stablecoins, listados.

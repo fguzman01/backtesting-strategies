@@ -25,7 +25,15 @@ el explorador busca **primero** en estas dos familias, y las ideas que salgan ll
    lanzamiento (deriva o reversión). Evidencia a confirmar: estudios de eventos de listados en exchanges.
    La fecha sale de la primera vela de cada perpetuo; el universo dinámico ya trae los retirados.
 
-**Fuera de prioridad:** variantes de tendencia (la familia suma 15 pruebas), funding/base (cerrados) y
+**Actualización 2026-11-24:** la familia 1 (corte transversal diario) suma 5 mediciones sin pasar: momentum de 7
+días −0.012 y de 1 día −0.022, efecto MAX −0.068, beta a la baja −0.055 y volatilidad realizada +0.004. **Sale de
+prioridad** por la regla de abajo; el motor transversal queda disponible. Sus ideas en cola pasan a pausa.
+
+**Regla de rotación (2026-11-24):** una familia con **3 mediciones seguidas que no pasan** (rechazada o «no pasa el
+cribado») sale de prioridad, y sus ideas en cola pasan a `en pausa (rotación)` hasta que Felipe decida. El explorador
+trae ideas de **otras** familias. Así no se gasta una semana entera de pruebas en una familia que no da.
+
+**Fuera de prioridad:** corte transversal diario (desde 2026-11-24), variantes de tendencia (la familia suma 15 pruebas), funding/base (cerrados) y
 estacionalidad (cerrada).
 
 ## Estrategias
