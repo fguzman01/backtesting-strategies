@@ -38,4 +38,8 @@ aprobó, nada más. Una tarea por corrida.
 5. Si usaste `Closes`, cambiá el issue a `estado:en-revision`; si usaste `Refs`, dejalo `en-curso` y
    marcá en un comentario del issue el paso hecho. Cuando el CI pase, Felipe recibe la tarjeta con
    ✅ Fusionar / ❌ Rechazar; con `Closes`, al fusionarse el issue se cierra solo y queda `estado:hecha`.
+**Si un paso necesita algo fuera de tu alcance** (otro repo, `approved.json`, `decisiones.md`, bajar datos,
+una decisión de Felipe): no lo dejes `en-curso`. Pasá el issue a `estado:requiere-sesion` con un comentario
+`<!-- telegram -->` que diga qué falta y quién lo puede hacer, y tomá otro issue. Un `en-curso` trabado ocupa
+la cola sin que nadie lo vea (pasó con #45: 10 días esperando un caso de btc-signal-web, 2026-11-16 → 26).
 6. Terminá con 3 líneas: qué issue, link al PR, qué dijo el revisor.
