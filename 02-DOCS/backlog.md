@@ -9,14 +9,14 @@
 
 ## Espera tu decisión
 
-Nada.
+| # | Tarea | Tipo | Prio | Riesgo | Estado | Qué decidir |
+|---|---|---|---|---|---|---|
+| [#111](https://github.com/fguzman01/backtesting-strategies/issues/111) | Universo de perpetuos recién listados (desbloquea la idea 18) | mejora | P1 | medio | diseñada | aprobar el plan |
+| [#112](https://github.com/fguzman01/backtesting-strategies/issues/112) | Bajar las métricas de futuros (open interest, largos/cortos, volumen de compradores) de data.binance.vision | mejora | P1 | medio | diseñada | aprobar el plan |
 
 ## En marcha
 
-| # | Tarea | Tipo | Prio | Riesgo | Estado |
-|---|---|---|---|---|---|
-| [#111](https://github.com/fguzman01/backtesting-strategies/issues/111) | Universo de perpetuos recién listados (desbloquea la idea 18) | mejora | P1 | medio | aprobada |
-| [#112](https://github.com/fguzman01/backtesting-strategies/issues/112) | Bajar las métricas de futuros (open interest, largos/cortos, volumen de compradores) de data.binance.vision | mejora | P1 | medio | aprobada |
+Nada.
 
 ## Hechas (últimas 20)
 
