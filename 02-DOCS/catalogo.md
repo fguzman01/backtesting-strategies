@@ -33,6 +33,11 @@ prioridad** por la regla de abajo; el motor transversal queda disponible. Sus id
 cribado») sale de prioridad, y sus ideas en cola pasan a `en pausa (rotación)` hasta que Felipe decida. El explorador
 trae ideas de **otras** familias. Así no se gasta una semana entera de pruebas en una familia que no da.
 
+**Próxima familia prioritaria (Felipe, 2026-11-26): posicionamiento y apalancamiento**, en cuanto la factory baje
+las métricas de futuros de Binance (#112: open interest, relación largos/cortos, volumen de compradores vs vendedores).
+Desde esa corrida, el explorador busca ahí primero: cambios de open interest con precio, extremos de largos/cortos,
+desbalance de tomadores con posicionamiento. Las ideas C de esta familia entran a cribado.
+
 **Fuera de prioridad:** corte transversal diario (desde 2026-11-24), variantes de tendencia (la familia suma 15 pruebas), funding/base (cerrados) y
 estacionalidad (cerrada).
 
