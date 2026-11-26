@@ -4,7 +4,8 @@
 
 ## Recomendadas para esta semana
 
-1. **#45** Motor intrabar para scalps (5m–30m)
+1. **#111** Universo de perpetuos recién listados (desbloquea la idea 18)
+2. **#112** Bajar las métricas de futuros (open interest, largos/cortos, volumen de compradores) de data.binance.vision
 
 ## Espera tu decisión
 
@@ -14,7 +15,8 @@ Nada.
 
 | # | Tarea | Tipo | Prio | Riesgo | Estado |
 |---|---|---|---|---|---|
-| [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) | Motor intrabar para scalps (5m–30m) | mejora | P2 | medio | en-curso |
+| [#111](https://github.com/fguzman01/backtesting-strategies/issues/111) | Universo de perpetuos recién listados (desbloquea la idea 18) | mejora | P1 | medio | aprobada |
+| [#112](https://github.com/fguzman01/backtesting-strategies/issues/112) | Bajar las métricas de futuros (open interest, largos/cortos, volumen de compradores) de data.binance.vision | mejora | P1 | medio | aprobada |
 
 ## Hechas (últimas 20)
 
@@ -32,3 +34,7 @@ Nada.
 - [#61](https://github.com/fguzman01/backtesting-strategies/issues/61) Contar el holdout por familia de estrategias en bt.auditoria (2026-11-10)
 - [#49](https://github.com/fguzman01/backtesting-strategies/issues/49) Prueba del operador: agregar al resumen del lunes cuántos issues hay abiertos (2026-11-09)
 - [#46](https://github.com/fguzman01/backtesting-strategies/issues/46) Fijar el umbral de estabilidad de parámetros por defecto (2026-11-07)
+
+## Descartadas (últimas 20)
+
+- [#45](https://github.com/fguzman01/backtesting-strategies/issues/45) Motor intrabar para scalps (5m–30m)
