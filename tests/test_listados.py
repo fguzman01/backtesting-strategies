@@ -68,3 +68,12 @@ def test_listados_determinista_e_incremental(monkeypatch, tmp_path):
 def test_tabla_dinamica_no_cambia():
     vol = {"A": {m: 1.0 for m in ("2020-01", "2020-02", "2020-03", "2020-04")}}
     assert universo.armar_tabla(vol, "2020-05") == {"2020-04": ["A"], "2020-05": ["A"]}
+
+
+def test_si_falla_el_primer_mes_no_se_usa_uno_posterior(monkeypatch):
+    _falso(monkeypatch, ZIPS)
+    bueno = universo._get
+    monkeypatch.setattr(universo.time, "sleep", lambda _: None)
+    monkeypatch.setattr(universo, "_get", lambda u: None if "NEWUSDT-1d-2020-09" in u else bueno(u))
+    out = universo.fechas_listado()
+    assert "NEWUSDT" not in out and out["LUNAUSDT"] == "2021-01-21"

@@ -153,9 +153,16 @@ def fecha_listado(simbolo: str) -> str | None:
         (m.group(1), k) for k in archivos if (m := re.search(r"-1d-(\d{4}-\d{2})\.zip$", k))
     )
     for _, clave in meses:
-        blob = _get(f"{DESCARGA}/{clave}") or _get(f"{DESCARGA}/{clave}")
-        fecha = _primera_vela(blob) if blob else None
-        if fecha:
+        blob = None
+        for intento in range(4):
+            blob = _get(f"{DESCARGA}/{clave}")
+            if blob is not None:
+                break
+            time.sleep(2 ** intento)
+        if blob is None:  # falló la bajada: no saltar a un mes posterior (la fecha quedaría corrida)
+            return None
+        fecha = _primera_vela(blob)
+        if fecha:  # un zip vacío sí se saltea
             return fecha
     return None
 
@@ -167,7 +174,9 @@ def fechas_listado(
 
     Es una tabla aparte del universo dinámico: no exige historia mínima. Incremental: la primera vela de
     un símbolo ya conocido no cambia, así que no se vuelve a bajar. Si un par se relistó con historia
-    partida se toma la primera vela publicada. Salida ordenada (determinista)."""
+    partida se toma la primera vela publicada. Salida ordenada (determinista). Los símbolos cuyo primer mes falla
+    en la bajada quedan fuera y se reintentan en la próxima corrida. Los listados del mes en curso aún
+    no tienen zip mensual y entran el mes siguiente."""
     simbolos = listar_simbolos() if simbolos is None else [s for s in simbolos if es_candidato(s)]
     out = dict(existentes or {})
     faltan = [s for s in simbolos if s not in out]
