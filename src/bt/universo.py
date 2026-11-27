@@ -11,6 +11,7 @@ dólares en el mes M-1, entre los que tienen al menos `MESES_MINIMOS` meses comp
 no hay look-ahead. Una spec elige `top` ≤ `TOP_MAX`.
 
     python -m bt.universo --construir     # baja volúmenes mensuales (incremental) y escribe la tabla
+    python -m bt.universo --listados      # fecha de listado (primera vela diaria) de cada perpetuo
 
 La tabla se versiona en `results/universo/futures-usdt.json`: misma tabla, mismo universo
 (determinismo). La actualiza cada mes el workflow `adelante`.
@@ -37,6 +38,7 @@ DESCARGA = S3  # el mismo contenido que data.binance.vision; responde también d
 PREFIJO = "data/futures/um/monthly/klines/"
 DIR_VOL = Path("data") / "universo" / "volumen"
 TABLA = Path("results") / "universo" / "futures-usdt.json"
+LISTADOS = Path("results") / "universo" / "listados.json"
 TOP_MAX = 50
 MESES_MINIMOS = 3
 PRIMER_MES = "2019-12"  # los perpetuos USDT empiezan en sep-2019
@@ -127,6 +129,63 @@ def volumen_mensual(simbolo: str, hoy: dt.date | None = None, base: Path = DIR_V
     return actual
 
 
+def _primera_vela(blob: bytes) -> str | None:
+    """Fecha (AAAA-MM-DD, UTC) de la primera vela diaria de un zip mensual."""
+    primera = None
+    with zipfile.ZipFile(io.BytesIO(blob)) as z:
+        for nombre in z.namelist():
+            for linea in z.read(nombre).decode().splitlines():
+                campo = linea.split(",")[0].strip()
+                if campo.isdigit():
+                    t = int(campo)
+                    primera = t if primera is None else min(primera, t)
+    if primera is None:
+        return None
+    if primera > 10**14:  # microsegundos (spot desde 2025); futuros publican milisegundos
+        primera //= 1000
+    return dt.datetime.fromtimestamp(primera / 1000, dt.UTC).strftime("%Y-%m-%d")
+
+
+def fecha_listado(simbolo: str) -> str | None:
+    """Primera vela diaria publicada de un símbolo (el primer zip mensual `1d`)."""
+    _, archivos = _listar(f"{PREFIJO}{simbolo}/1d/")
+    meses = sorted(
+        (m.group(1), k) for k in archivos if (m := re.search(r"-1d-(\d{4}-\d{2})\.zip$", k))
+    )
+    for _, clave in meses:
+        blob = _get(f"{DESCARGA}/{clave}") or _get(f"{DESCARGA}/{clave}")
+        fecha = _primera_vela(blob) if blob else None
+        if fecha:
+            return fecha
+    return None
+
+
+def fechas_listado(
+    simbolos: list[str] | None = None, existentes: dict[str, str] | None = None, hilos: int = 16
+) -> dict[str, str]:
+    """{símbolo: fecha de listado} de todos los perpetuos USDT candidatos (vivos y retirados).
+
+    Es una tabla aparte del universo dinámico: no exige historia mínima. Incremental: la primera vela de
+    un símbolo ya conocido no cambia, así que no se vuelve a bajar. Si un par se relistó con historia
+    partida se toma la primera vela publicada. Salida ordenada (determinista)."""
+    simbolos = listar_simbolos() if simbolos is None else [s for s in simbolos if es_candidato(s)]
+    out = dict(existentes or {})
+    faltan = [s for s in simbolos if s not in out]
+    with ThreadPoolExecutor(hilos) as ex:
+        for s, f in zip(faltan, ex.map(fecha_listado, faltan), strict=True):
+            if f:
+                out[s] = f
+    return dict(sorted(out.items()))
+
+
+def construir_listados(ruta: Path = LISTADOS) -> Path:
+    existentes = json.loads(ruta.read_text(encoding="utf-8")) if ruta.exists() else {}
+    tabla = fechas_listado(existentes=existentes)
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    ruta.write_text(json.dumps(tabla, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+    return ruta
+
+
 def _mes(s: str, delta: int) -> str:
     y, m = int(s[:4]), int(s[5:7]) + delta
     y, m = y + (m - 1) // 12, (m - 1) % 12 + 1
@@ -185,7 +244,11 @@ def miembros(top: int, tabla: dict[str, list[str]], desde: str | None = None) ->
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--construir", action="store_true")
+    p.add_argument("--listados", action="store_true", help="escribe results/universo/listados.json")
     a = p.parse_args(argv)
+    if a.listados:
+        ruta = construir_listados()
+        print(f"{ruta}: {len(json.loads(ruta.read_text(encoding='utf-8')))} perpetuos con fecha de listado")
     if a.construir:
         ruta = construir()
         meses = cargar_tabla(ruta)

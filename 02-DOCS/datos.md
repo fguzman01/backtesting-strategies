@@ -35,6 +35,8 @@ volumen en USDT; las `1mo` dejaron de publicarse en 2024) a `data/universo/volum
 más operados de cada mes según el mes anterior. Usa la dirección S3 del bucket
 (`s3-ap-northeast-1.amazonaws.com/data.binance.vision`), que sirve lo mismo y responde también desde
 redes que no llegan a `data.binance.vision`.
+`python -m bt.universo --listados` escribe aparte `results/universo/listados.json` `{símbolo: fecha}` con la primera
+vela diaria de cada perpetuo (vivos y retirados, sin exigir historia mínima); no altera `futures-usdt.json`.
 
 ## Historia extendida con spot (desde 2026-11-01)
 Con `universo.historia_spot: true` en la spec, cada símbolo usa velas de **spot antes del primer día
